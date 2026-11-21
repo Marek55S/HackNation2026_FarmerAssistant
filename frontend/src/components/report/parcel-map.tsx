@@ -31,21 +31,44 @@ function bounds(ring: LngLat[]): [LngLat, LngLat] {
 const RASTER_KEYS = ["sucho", "teren", "gleba"] as const;
 
 /**
- * Raster grid → small PNG (one pixel per cell). MapLibre stretches it over the bbox with linear
- * resampling, so 10 m cells read as a smooth field instead of hard squares; cells outside the parcel
- * are transparent and fade out at the boundary.
+ * Raster grid → PNG for an image source. The grid (one pixel per cell) is scaled up with smoothing, so 10 m
+ * cells read as a smooth field instead of hard squares, and then cut exactly to the parcel boundary
+ * (nothing sticks out beyond the parcel).
  */
-function rasterImage(g: RasterGrid, palette: [number, number, number, number][]): string {
-  const c = document.createElement("canvas");
-  c.width = g.cols;
-  c.height = g.rows;
-  const ctx = c.getContext("2d")!;
-  const img = ctx.createImageData(g.cols, g.rows);
+function rasterImage(g: RasterGrid, palette: [number, number, number, number][], ring: LngLat[]): string {
+  const small = document.createElement("canvas");
+  small.width = g.cols;
+  small.height = g.rows;
+  const sctx = small.getContext("2d")!;
+  const img = sctx.createImageData(g.cols, g.rows);
   g.values.forEach((v, k) => {
     const [r, gr, b, a] = v >= 0 ? palette[v] ?? [0, 0, 0, 0] : [0, 0, 0, 0];
     img.data.set([r, gr, b, Math.round(a * 255)], k * 4);
   });
-  ctx.putImageData(img, 0, 0);
+  sctx.putImageData(img, 0, 0);
+
+  const scale = Math.max(1, Math.min(16, Math.floor(1024 / Math.max(g.cols, g.rows))));
+  const c = document.createElement("canvas");
+  c.width = g.cols * scale;
+  c.height = g.rows * scale;
+  const ctx = c.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(small, 0, 0, c.width, c.height);
+  if (ring.length >= 3) {
+    // keep only the part inside the parcel (lon/lat → canvas pixels over the raster bbox)
+    const [w, s, e, n] = g.bbox;
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.beginPath();
+    ring.forEach(([lon, lat], i) => {
+      const x = ((lon - w) / (e - w)) * c.width;
+      const y = ((n - lat) / (n - s)) * c.height;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+  }
   return c.toDataURL("image/png");
 }
 
@@ -133,7 +156,7 @@ export default function ParcelMap({
       // One image source + layer per raster view, toggled by visibility (swapping data in one source left stale tiles at high zoom).
       for (const k of RASTER_KEYS) {
         const g = data.rasters[k];
-        if (g) map.addSource(`raster-${k}`, { type: "image", url: rasterImage(g, RASTER_RGBA[k]), coordinates: corners(g) });
+        if (g) map.addSource(`raster-${k}`, { type: "image", url: rasterImage(g, RASTER_RGBA[k], parcel), coordinates: corners(g) });
       }
       map.addSource("obiekty", {
         type: "geojson",

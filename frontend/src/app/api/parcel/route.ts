@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backend, BackendError, toLookup, type BackendParcel } from "@/lib/backend";
-import { cropFromArimr } from "@/lib/crops";
 import { isValidIso, todayIso } from "@/lib/dates";
 
 // Parcel lookup via the backend (ULDK + crop hint for the year of the analysis date + IUNG land cover):
-// ?id=…  |  ?gmina=…&obreb=…&nr=…  |  ?mapa=xy:<lon>,<lat>&roslina=<ARiMR crop>&rok=… (click on a crop field); all with &data=yyyy-mm-dd
+// ?id=…  |  ?gmina=…&obreb=…&nr=…  |  ?mapa=xy:<lon>,<lat> (click on a crop field – crop of the field under the point); all with &data=yyyy-mm-dd
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
   const raw = q.get("data");
@@ -35,12 +34,6 @@ export async function GET(req: NextRequest) {
     const found = toLookup(b);
     if (!found) {
       return NextResponse.json({ error: b.powod ?? "Nie ma takiej działki w ewidencji. Sprawdź identyfikator albo wskaż ją na mapie." }, { status: 404 });
-    }
-    // Clicked crop field: its ARiMR crop is a better hint than the parcel-wide overlap.
-    const roslina = (q.get("roslina") ?? "").slice(0, 80);
-    const crop = cropFromArimr(roslina);
-    if (map?.startsWith("xy:") && crop && !found.outOfScope) {
-      found.cropHint = { crop, source: `deklaracja ARiMR ${q.get("rok") || date.slice(0, 4)}: ${roslina}` };
     }
     return NextResponse.json(found);
   } catch (e) {

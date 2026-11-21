@@ -136,7 +136,10 @@ def analiza_terenu(dem: dict, rings) -> dict:
                     near = pad[ii[:, 0], ii[:, 1]].any()
                 if near:
                     vol = float(depth[ii[:, 0], ii[:, 1]].sum() * cell)
+                    hx, hy = abs(tr.a) / 2, abs(tr.e) / 2
+                    rogi = [(LON[a, b] + sx * hx, LAT[a, b] + sy * hy) for a, b in cells for sx in (-1, 1) for sy in (-1, 1)]
                     comps.append({"pow_ha": len(cells) * cell / 1e4, "objetosc_m3": vol,
+                                  "udzial_w": float(inside[ii[:, 0], ii[:, 1]].mean()), "obrys": geo.otoczka(rogi),
                                   "lon": float(LON[ii[:, 0], ii[:, 1]].mean()), "lat": float(LAT[ii[:, 0], ii[:, 1]].mean()),
                                   "w_dzialce": bool(inside[ii[:, 0], ii[:, 1]].mean() > 0.5), "cells": cells})
     comps.sort(key=lambda c: -c["objetosc_m3"])

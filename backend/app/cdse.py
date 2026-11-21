@@ -82,13 +82,20 @@ async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | No
         im = np.asarray(Image.open(io.BytesIO(content)).convert("RGB"))
     except Exception:  # noqa: BLE001
         return rok, None
+    # Tylko piksele w prostokącie działki (działka to ułamek kwadratu 2,5 km), transformacja wektorowo.
+    fwd = Transformer.from_crs(4326, 3035, always_xy=True)
     inv = Transformer.from_crs(3035, 4326, always_xy=True)
+    x0, y0, x1, y1 = geo.bbox(rings)
+    ex, ny = fwd.transform([x0, x1, x0, x1], [y0, y0, y1, y1])
+    j0, j1 = max(0, int((min(ex) - E0) // 10) - 1), min(250, int((max(ex) - E0) // 10) + 2)
+    i0, i1 = max(0, int((N0 + 2500 - max(ny)) // 10) - 1), min(250, int((N0 + 2500 - min(ny)) // 10) + 2)
     licz: Counter = Counter()
     n = 0
-    for i in range(0, 250):
-        for j in range(0, 250):
-            lon, lat = inv.transform(E0 + (j + 0.5) * 10, N0 + 2500 - (i + 0.5) * 10)
-            if geo.inside_any((lon, lat), rings):
+    if i1 > i0 and j1 > j0:
+        jj, ii = np.meshgrid(np.arange(j0, j1), np.arange(i0, i1))
+        lon, lat = inv.transform(E0 + (jj + 0.5) * 10, N0 + 2500 - (ii + 0.5) * 10)
+        for i, j, lo, la in zip(ii.ravel(), jj.ravel(), lon.ravel(), lat.ravel()):
+            if geo.inside_any((lo, la), rings):
                 n += 1
                 k = _klasa(tuple(int(x) for x in im[i, j]))
                 if k is not None:
@@ -100,8 +107,8 @@ async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | No
     return rok, {"kod": kod, "nazwa": nazwa, "key": key, "udzial": cnt / n, "pikseli": n}
 
 
-async def uprawy_clms(client: httpx.AsyncClient, rings) -> Wynik:
-    """Uprawa w każdym roku 2017–2024 wg mapy CLMS (dominanta pikseli 10 m w działce)."""
+async def uprawy_clms(client: httpx.AsyncClient, rings, tylko_rok: int | None = None) -> Wynik:
+    """Uprawa w każdym roku 2017–2024 wg mapy CLMS (dominanta pikseli 10 m w działce); `tylko_rok` = jeden rok."""
     from pyproj import Transformer
     t0 = time.perf_counter()
     zr = "CLMS Crop Types 2017–2024 (CDSE)"
@@ -120,6 +127,10 @@ async def uprawy_clms(client: httpx.AsyncClient, rings) -> Wynik:
     lata = {}
     for it in items:                       # jeden kafel na rok (pierwszy pasujący)
         lata.setdefault(int(it["properties"]["datetime"][:4]), it)
+    if tylko_rok is not None:
+        lata = {r: it for r, it in lata.items() if r == tylko_rok}
+        if not lata:
+            return Wynik(zr, None, powod=f"mapa upraw Copernicus obejmuje 2017–2024 (nie {tylko_rok})")
     wyn = await asyncio.gather(*[_uprawa_rok(client, it, rings, E0, N0) for it in lata.values()])
     dane = {rok: v for rok, v in wyn if v}
     if not dane:

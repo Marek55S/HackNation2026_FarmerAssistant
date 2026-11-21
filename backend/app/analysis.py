@@ -55,7 +55,9 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         d = w.dane
         if not terrain.nmt_gotowy(d["rings"]):
             asyncio.get_running_loop().run_in_executor(None, terrain.pobierz_nmt, d["rings"])
-        a, cl, wi = await asyncio.gather(sources.arimr_uprawa(client, d["rings"], D.year), cdse.uprawy_clms(client, d["rings"]),
+        punkt = (lon, lat) if lon is not None and lat is not None else None
+        a, cl, wi = await asyncio.gather(sources.arimr_uprawa(client, d["rings"], D.year, punkt),
+                                         cdse.uprawy_clms(client, d["rings"], D.year),   # tylko rok daty – szybko
                                          sources.iung_kategoria(client, d["rings"]))
     zadeklarowana = a.ok and a.dane["udzial"] >= 0.1      # pole uprawne ARiMR na działce = grunt rolny, nawet gdy IUNG widzi las
     kod = wi.dane["nierolnicza_kod"] if wi.ok and wi.dane["nierolnicza"] and not zadeklarowana else None
@@ -66,7 +68,8 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         key = z_arimr(a.dane["roslina"])
         if key:
             sug = {"key": key, "nazwa": UPRAWY[key].nazwa, "roslina": a.dane["roslina"], "rok": D.year,
-                   "udzial": a.dane["udzial"], "zrodlo": f"wg deklaracji ARiMR {D.year}: {a.dane['roslina']}"}
+                   "udzial": a.dane["udzial"], "zrodlo": f"{'kliknięte pole – ' if a.dane.get('pod_punktem') else 'wg '}"
+                                                         f"deklaracji ARiMR {D.year}: {a.dane['roslina']}"}
     if not sug:
         c = _clms_rok(cl, D.year)
         if c:
@@ -196,6 +199,8 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
         elif _clms_rok(wcl, D.year):
             c = _clms_rok(wcl, D.year)
             uprawa, zrodlo_uprawy = c["key"], f"mapa upraw Copernicus {D.year}: {c['nazwa']}"
+        elif wi.ok and wi.dane["nierolnicza"] and not (wa.ok and wa.dane["udzial"] >= 0.1):
+            uprawa, zrodlo_uprawy = "inna", "—"      # grunt nierolny: uprawa nie jest potrzebna, raport „poza zakresem”
         else:
             return {"ok": False, "potrzebna_uprawa": True, "powod": "Brak deklaracji ARiMR i mapy upraw Copernicus dla tej działki i roku — wybierz uprawę.",
                     "zrodla": zrodla}
@@ -370,7 +375,8 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     S_cn = s_cn(CN)
     ulewy = P10[P10 > 10]
     F7b = float(sum(odplyw(float(x), S_cn) for x in ulewy) / ulewy.sum()) if len(ulewy) else 0.0
-    zagl = [z for z in ter.get("zaglebienia", []) if z["w_dzialce"] or z["pow_ha"] <= 2.0]
+    # tylko zagłębienia leżące w ≥ 30% na działce – na cudzym gruncie rolnik oczka nie zrobi
+    zagl = [z for z in ter.get("zaglebienia", []) if z.get("udzial_w", 1.0 if z["w_dzialce"] else 0.0) >= 0.3]
     F8 = max(zagl, key=lambda z: z["objetosc_m3"]) if zagl else None
     najbl = (hyd or {}).get("najblizsze", {})
     rowy = [x for x in (najbl.get("SWRM_L"), najbl.get("SWKN_L")) if x]
@@ -459,7 +465,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     if F8 and (F8["objetosc_m3"] >= 100 or F8["pow_ha"] >= 0.05) and potrzeba:
         v = F8["objetosc_m3"]
         akcje.append(dict(id="R2", cat="ret", layer="teren", title="Zatrzymaj wodę w zagłębieniu",
-                          where=f"zagłębienie ok. {fmt(F8['pow_ha'], 2)} ha {'w działce' if F8['w_dzialce'] else 'przy granicy działki'} (punkt na mapie)",
+                          where=f"zagłębienie ok. {fmt(F8['pow_ha'], 2)} ha na działce (punkt na mapie)",
                           when=("teraz lub wczesną wiosną" if not w_sez else "po zbiorze, poza wegetacją"),
                           cause="tu zbiera się deszcz — zagłębienie bez odpływu",
                           gain=(f"ok. {fmt(round(v, -1))} m³ wody — ok. {fmt(v / (200 * d['pow_ha']), 1)} dawki 20 mm dla całej działki" if v >= 200 * d["pow_ha"] else f"ok. {fmt(round(v, -1))} m³ wody — dawka 20 mm dla ok. {fmt(v / 200, 1)} ha"),
@@ -717,7 +723,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
         {"t": f"tło suszy — EDO ({edo['klasa']})" if edo else "tło suszy — EDO", "ok": bool(edo)},
     ]
     out["surowe"] = {"rings": d["rings"], "ter": ter if ter.get("dostepny") else None, "sat": sat, "hyd": hyd,
-                     "F8": F8, "wyp": wyp, "kat": kat, "nmt": nmt, "pow_ha": d["pow_ha"]}
+                     "F8": F8, "F9": F9, "wyp": wyp, "kat": kat, "nmt": nmt, "pow_ha": d["pow_ha"]}
     out.update({
         "teren": svg_teren(d["rings"], ter, hyd) if ter.get("dostepny") else None,
         "sucho": svg_sucho(d["rings"], sat) if sat else None,

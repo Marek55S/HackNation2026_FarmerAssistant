@@ -55,7 +55,7 @@ def _raster_teren(ter: dict) -> dict | None:
     for la in lats:
         for lo in lons:
             c = idx.get((lo, la))
-            vals.append(klasa(c[2]) if c and c[4] else -1)
+            vals.append(klasa(c[2]) if c else -1)
     cell_m = round(kt * 110574)
     return {"bbox": [lons[0] - kl / 2, lats[-1] - kt / 2, lons[-1] + kl / 2, lats[0] + kt / 2],
             "cols": len(lons), "rows": len(lats), "values": vals, "cellM": cell_m}
@@ -94,8 +94,8 @@ def _raster_gleba(rings, kat: int) -> dict:
     vals = []
     for i in range(rows):
         for j in range(cols):
-            p = (x0 + (j + 0.5) * dx, y1 - (i + 0.5) * dy)
-            vals.append(klasa if geo.inside_any(p, rings) else -1)
+            pts = [(x0 + (j + fx) * dx, y1 - (i + fy) * dy) for fx in (0, 0.5, 1) for fy in (0, 0.5, 1)]
+            vals.append(klasa if any(geo.inside_any(p, rings) for p in pts) else -1)
     return {"bbox": [x0, y1 - rows * dy, x1, y1], "cols": cols, "rows": rows, "values": vals,
             "cellM": round(dx * math.cos(math.radians(lat0)) * 111320)}
 
@@ -136,15 +136,57 @@ def _mapa(out: dict, sur: dict, reguly: set) -> dict:
     if sat:
         rasters["sucho"] = _raster_sucho(sat)
     rasters["gleba"] = _raster_gleba(rings, sur.get("kat", 2))
-    for l in (hyd or {}).get("linie", []):
-        if l["typ"] in ("SWRM_L", "SWKN_L", "SWRS_L") and len(l["c"]) >= 2:
-            feats.append({"kind": "row", "regula": "R1" if "R1" in reguly and l["typ"] != "SWRS_L" else None,
-                          "geometry": {"type": "LineString", "coordinates": [[round(a, 6), round(b, 6)] for a, b in l["c"]]},
+    # Rowy i cieki: tylko w pobliżu działki (tło), a jako zastawkę (R1) wyróżniony tylko najbliższy rów.
+    cx, cy = geo.centroid(rings)
+    kx, ky = 111320 * math.cos(math.radians(cy)), 110574
+    gran = [((x - cx) * kx, (y - cy) * ky) for x, y in _ring(rings)]
+    def odl(c):                       # najmniejsza odległość wierzchołków linii od wierzchołków granicy (m, przybliżenie)
+        return min(math.hypot((x - cx) * kx - gx, (y - cy) * ky - gy) for x, y in c for gx, gy in gran)
+    F9 = sur.get("F9")
+    linie = [l for l in (hyd or {}).get("linie", []) if l["typ"] in ("SWRM_L", "SWKN_L", "SWRS_L") and len(l["c"]) >= 2]
+    blisko = [(l, odl(l["c"])) for l in linie]
+    blisko = [(l, d) for l, d in blisko if d <= 150]
+    r1 = None
+    if "R1" in reguly and F9:
+        r1 = min((l for l, _ in blisko if l["typ"] != "SWRS_L"),
+                 key=lambda l: min(math.hypot((x - F9["lon"]) * kx, (y - F9["lat"]) * ky) for x, y in l["c"]), default=None)
+    # tło: tylko te fragmenty rowów, które leżą ≤ 150 m od granicy działki
+    import numpy as np
+    def gesto_m(c, krok):
+        out = []
+        for (x1, y1), (x2, y2) in zip(c[:-1], c[1:]):
+            n = max(1, int(math.hypot((x2 - x1) * kx, (y2 - y1) * ky) / krok))
+            out += [(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n) for k in range(n)]
+        return out + [tuple(c[-1])]
+    gr = np.array([((x - cx) * kx, (y - cy) * ky) for x, y in gesto_m(_ring(rings) + [_ring(rings)[0]], 10)])
+    for l, _ in blisko:
+        pts = gesto_m(l["c"], 5)
+        xy = np.array([((x - cx) * kx, (y - cy) * ky) for x, y in pts])
+        dmin = np.sqrt(((xy[:, None, :] - gr[None, :, :]) ** 2).sum(-1)).min(1)
+        odc = []
+        for (x, y), dd in zip(pts, dmin):
+            if dd <= 150:
+                odc.append([round(x, 6), round(y, 6)])
+            elif odc:
+                if len(odc) >= 2:
+                    feats.append({"kind": "row", "regula": None, "geometry": {"type": "LineString", "coordinates": odc}, "layers": ["plan", "teren"]})
+                odc = []
+        if len(odc) >= 2:
+            feats.append({"kind": "row", "regula": None, "geometry": {"type": "LineString", "coordinates": odc}, "layers": ["plan", "teren"]})
+    if r1 is not None:                # zastawka: tylko odcinek rowu ~120 m wokół punktu najbliżej działki
+        gesto = []
+        for (x1, y1), (x2, y2) in zip(r1["c"][:-1], r1["c"][1:]):
+            n = max(1, int(math.hypot((x2 - x1) * kx, (y2 - y1) * ky) / 5))
+            gesto += [(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n) for k in range(n)]
+        gesto.append(tuple(r1["c"][-1]))
+        odc = [[round(x, 6), round(y, 6)] for x, y in gesto if math.hypot((x - F9["lon"]) * kx, (y - F9["lat"]) * ky) <= 60]
+        if len(odc) >= 2:
+            feats.append({"kind": "row", "regula": "R1", "geometry": {"type": "LineString", "coordinates": odc},
                           "layers": ["plan", "teren"]})
     if F8:
+        obrys = F8.get("obrys") or _kolo(F8["lon"], F8["lat"], F8["pow_ha"])
         feats.append({"kind": "zaglebienie", "regula": "R2" if "R2" in reguly else None,
-                      "geometry": {"type": "Polygon", "coordinates": [_kolo(F8["lon"], F8["lat"], F8["pow_ha"])]},
-                      "layers": ["plan", "teren"]})
+                      "geometry": {"type": "Polygon", "coordinates": [obrys]}, "layers": ["plan", "teren"]})
         labels.append({"punkt": [F8["lon"], F8["lat"]], "text": f"zagłębienie ~{round(F8['objetosc_m3'], -1):.0f} m³",
                        "layers": ["teren"], "tone": "blue", "minor": True})
     if sat and sat.get("sucho_ha", 0) >= 0.2:

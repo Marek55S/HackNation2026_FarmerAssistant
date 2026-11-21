@@ -55,11 +55,7 @@ export function ParcelPicker({
         : mode === "name"
           ? new URLSearchParams({ gmina: name.gmina, obreb: name.obreb, nr: name.nr })
           : mapPick?.startsWith("xy:")
-            ? (() => {
-                // real crop field clicked: "xy:<lon>,<lat>;<ARiMR crop>;<year>"
-                const [xy, roslina = "", rok = ""] = mapPick.split(";");
-                return new URLSearchParams({ mapa: xy, roslina, rok });
-              })()
+            ? new URLSearchParams({ mapa: mapPick })
             : new URLSearchParams({ mapa: mapPick ?? "" });
     q.set("data", date);
     const empty = mode === "id" ? !id.trim() : mode === "name" ? !name.obreb || !name.nr : !mapPick;

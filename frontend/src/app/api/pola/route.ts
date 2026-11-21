@@ -67,11 +67,10 @@ export async function GET(req: NextRequest) {
         g.type === "Polygon"
           ? (g.coordinates as number[][][]).map((ring) => ring.map(round))
           : (g.coordinates as number[][][][]).map((poly) => poly.map((ring) => ring.map(round)));
-      const p = f.properties ?? {};
       return {
         type: "Feature",
         geometry: { type: g.type, coordinates },
-        properties: { fid: String(f.id ?? i), roslina: String(p.roslina ?? ""), pow: Number(p.pow ?? 0) },
+        properties: { fid: String(f.id ?? i) }, // rodzaj uprawy dopiero po kliknięciu (backend: /api/dzialka)
       };
     });
 
