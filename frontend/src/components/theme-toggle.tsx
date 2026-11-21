@@ -13,6 +13,8 @@ const read = (): Look => (document.documentElement.dataset.theme === "trace" ? "
 function setLook(look: Look) {
   if (look === "trace") document.documentElement.dataset.theme = "trace";
   else delete document.documentElement.dataset.theme;
+  // Status bar colour follows the look (mobile-native §10)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", look === "trace" ? "#0c1113" : "#FBFBF7");
   try {
     localStorage.setItem(KEY, look);
   } catch {

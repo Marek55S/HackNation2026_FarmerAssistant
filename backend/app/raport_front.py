@@ -256,7 +256,10 @@ def _sources(out: dict, today: str) -> list[dict]:
     for i, c in enumerate(out.get("zrodla_chips", [])):
         ok = c.get("ok", False)
         state = "missing" if not ok else "current" if any(k in c["t"] for k in AKTUALNE) else "ok"
-        res.append({"id": f"S{i + 1}", "label": c["t"], "state": state, "fetchedAt": today if ok else None})
+        what, _, src = c["t"].partition(" — ")
+        res.append({"id": f"S{i + 1}", "what": what[:1].upper() + what[1:], "source": (src or None) if ok else None,
+                    "state": state, "note": "stan obecny, nie z dnia analizy" if state == "current" else None,
+                    "fetchedAt": today if ok else None})
     return res
 
 
