@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Pipeline Asystenta Wodnego</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,6 +148,10 @@ dd.val b { font-family: var(--f-display); font-size: 16px; color: var(--c); }
   font-weight: 700; font-size: 11px; letter-spacing: .12em; padding: 2px 10px; border-radius: 4px;
 }
 .tag.out { background: var(--primary); color: var(--on-band); }
+.tag.on { background: var(--c); color: var(--on-band); }
+.tag.off { background: var(--chip); color: var(--muted); box-shadow: inset 0 0 0 1px var(--rule-strong); }
+.card.idle { border-left-style: dashed; }
+.card.idle .title h3 { color: var(--ink-2); }
 .note { font-size: 13px; color: var(--amber); background: var(--amber-tint); border-radius: 8px; padding: 8px 10px; }
 
 /* report summary card */
@@ -186,7 +191,7 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
 <header>
   <span class="eyebrow">Asystent Wodny · jak działa analiza</span>
   <h1>Od numeru działki do zalecenia „podlej 20 mm”</h1>
-  <p class="lead">Dwa schematy tej samej analizy. Pierwszy pokazuje, co pobieramy z publicznych usług i po co. Drugi pokazuje, co z tych danych liczymy, jakim wzorem i co wynika dla rolnika. Wszystkie wykresy i liczby pochodzą z jednej prawdziwej działki, policzonej tymi samymi funkcjami backendu, których używa API (notebook <code>notebooks/pipeline_dzialka.ipynb</code>).</p>
+  <p class="lead">Trzy schematy tej samej analizy. Pierwszy pokazuje, co pobieramy z publicznych usług i po co. Drugi pokazuje, co z tych danych liczymy, jakim wzorem i co wynika dla rolnika. Trzeci pokazuje, kiedy i dlaczego uruchamia się każde zalecenie i skąd bierze się jego miejsce na mapie. Wszystkie wykresy i liczby pochodzą z jednej prawdziwej działki, policzonej tymi samymi funkcjami backendu, których używa API (notebook <code>notebooks/pipeline_dzialka.ipynb</code>).</p>
   <div class="flow" aria-label="Przebieg analizy">
     <span>DANE (API)</span><i>→</i><span>FAKTY F0–F21</span><i>→</i><span>DIAGNOZA + przyczyny C1–C6</span><i>→</i><span>REGUŁY R1–R9</span><i>→</i><span>RAPORT</span>
   </div>
@@ -198,8 +203,9 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
     <div><small>Data analizy D</small><b>15.07.2025</b></div>
   </div>
   <nav class="tabs" aria-label="Schematy">
-    <a href="#pobieranie">1. Pobieranie danych <span>· 12 źródeł</span></a>
+    <a href="#pobieranie">1. Pobieranie danych <span>· 13 kroków</span></a>
     <a href="#obliczenia">2. Obliczenia <span>· 12 kroków</span></a>
+    <a href="#zalecenia">3. Zalecenia <span>· kiedy, dlaczego, gdzie</span></a>
   </nav>
 </header>
 
@@ -208,7 +214,7 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
   <div class="pipe-head">
     <span class="eyebrow">Schemat 1</span>
     <h2>Pobieranie: co ściągamy i po co</h2>
-    <p>Jedno wejście: identyfikator działki i data. Z geometrii działki liczymy centroid, prostokąt i bufor, a potem pytamy usługi równolegle. Każde źródło zwraca dane albo jawny powód braku. Gdy czegoś brakuje, reguła, która tego potrzebuje, się nie uruchamia, a raport mówi, czego nie sprawdziliśmy.</p>
+    <p>Jedno wejście: identyfikator działki i data. Z geometrii działki liczymy centroid, prostokąt i bufor, a potem pytamy usługi równolegle; wolniejsze źródła kontekstowe mają limit czasu, więc nie trzymają raportu. Każde źródło zwraca dane albo jawny powód braku. Gdy czegoś brakuje, reguła, która tego potrzebuje, się nie uruchamia, a raport mówi, czego nie sprawdziliśmy.</p>
   </div>
 
   <div class="phase" style="--c: var(--ink)">
@@ -321,7 +327,7 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
             <div class="title"><h3>Co rośnie w tym roku</h3><span class="id">ARiMR GSA · WFS 2025–2026</span></div>
             <div class="endpoint">geoportal-w2.arimr.gov.pl/geoserver/gsa_public/uprawy_2025/wfs?REQUEST=GetFeature&amp;TYPENAMES=gsa_public:uprawy_rolne_2025&amp;BBOX=…</div>
             <dl>
-              <dt>Co dostajemy</dt><dd>Pola z wniosków o dopłaty przecinające działkę: roślina, grupa, powierzchnia. Udział liczymy na siatce 14 × 14 punktów w działce.</dd>
+              <dt>Co dostajemy</dt><dd>Pola z wniosków o dopłaty przecinające działkę: roślina, grupa, powierzchnia. Udział liczymy na siatce 14 × 14 punktów w działce. Pytamy o rok D i rok D−1, bo mapa Copernicus kończy się na 2024 (WFS ARiMR obejmuje tylko 2025–2026).</dd>
               <dt>Po co</dt><dd>Uprawa ustawia cały model: wiersz progów, współczynniki Kc w fazach, próg stresu p, głębokość korzeni i okno wrażliwości. W aplikacji to podpowiedź, rolnik może ją zmienić.</dd>
               <dt>Tu</dt><dd class="val"><b>kukurydza na ziarno</b> na 97% punktów działki (reszta: pszenica jara, pszenżyto jare)</dd>
             </dl>
@@ -336,7 +342,7 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
             <div class="endpoint">thumbnails.dataspace.copernicus.eu/wms?LAYERS=…crop-types…&amp;CRS=EPSG:3035&amp;BBOX=(2,5 × 2,5 km)&amp;sld=oficjalna paleta</div>
             <dl>
               <dt>Co dostajemy</dt><dd>Obrazek mapy typów upraw 10 m dla każdego roku 2017–2024. Kolor piksela zamieniamy na klasę uprawy, liczymy dominantę w działce.</dd>
-              <dt>Po co</dt><dd>Historię suszy oceniamy dla uprawy, która wtedy rosła, bo próg dla zbóż i kukurydzy jest inny. Rok bierzemy tylko przy co najmniej 50% pikseli, inaczej przyjmujemy bieżącą uprawę.</dd>
+              <dt>Po co</dt><dd>Historię suszy i bilans wody w glebie liczymy dla uprawy, która wtedy rosła, bo próg, Kc i korzenie zbóż i kukurydzy są inne. Satelitę porównujemy tylko z latami tej samej grupy upraw. Rok bierzemy przy co najmniej 50% pikseli; inaczej rok jest „nieznany”.</dd>
               <dt>Tu</dt><dd class="val">pewne: 2017 zboża, 2021–2023 kukurydza, 2024 jęczmień; 2018–2020 poniżej 50% pikseli</dd>
             </dl>
             <div class="chips"><span class="chip">~6 s, potem cache</span><span class="chip warn">2015–2016: brak mapy</span></div>
@@ -376,13 +382,27 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
             <div class="chips"><span class="chip">1–2 s, potem cache powiatu</span></div>
           </div>
         </article></div>
+      <div class="step"><div class="rail"><span class="num">11</span></div>
+        <article class="card noimg">
+          <div class="body">
+            <div class="title"><h3>Zlewnia i rzeki</h3><span class="id">MPHP10k · Wody Polskie · IMGW‑PIB</span></div>
+            <div class="endpoint">wody.isok.gov.pl/wss/INSPIRE/INSPIRE_HY_10k_2019_WMS?REQUEST=GetFeatureInfo&amp;LAYERS=HY.PhysicalWaters.Catchments  ·  danepubliczne.imgw.pl/api/data/hydro/  ·  …/warningshydro</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Zlewnię, w której leży działka (nazwa i poligon → powierzchnia). Dla analizy na dziś także najbliższy wodowskaz w promieniu 30 km i aktywne ostrzeżenia IMGW o suszy hydrologicznej dla województwa.</dd>
+              <dt>Po co</dt><dd>R1 mówi, skąd spływa woda do rowu, a przy zlewni większej niż 10 km² kieruje do zarządcy cieku zamiast do budowy zastawki. Ostrzeżenie o suszy hydrologicznej zmienia R7/R8 („nie licz na pobór z cieku”) i przenosi retencję do „pilne”.</dd>
+              <dt>Tu</dt><dd class="val">MPHP: <b>„Odra”, 118 394 km²</b>; IMGW: nie pytamy, bo stany rzek i ostrzeżenia są tylko bieżące, a D = 15.07.2025</dd>
+            </dl>
+            <p class="note">Usługa zwraca zlewnie zagnieżdżone: najpierw dorzecze Odry, potem „Noteć od Gąsawki do dopł. spod Niedźwiad”, 32 km². Backend bierze pierwszą z nich, czyli całe dorzecze. Poprawka: prosić o kilka obiektów (<code>FEATURE_COUNT</code>) i brać najmniejszy.</p>
+            <div class="chips"><span class="chip">3–12 s, zlewnia w cache na stałe</span><span class="chip">IMGW: cache 30 min dla całego kraju</span></div>
+          </div>
+        </article></div>
     </div>
   </div>
 
   <div class="phase" style="--c: var(--primary)">
     <div class="band">Z satelity</div>
     <div class="steps">
-      <div class="step"><div class="rail"><span class="num">11</span></div>
+      <div class="step"><div class="rail"><span class="num">12</span></div>
         <article class="card">
           <div class="thumbs"><button class="thumb" type="button" data-full="fig/a11_ndmi.png"><img src="fig/a11_ndmi.png" alt="Mapa NDMI Sentinel-2 działki, 15 lipca 2025"></button></div>
           <div class="body">
@@ -390,13 +410,13 @@ dialog button { margin-top: 8px; font: inherit; background: var(--paper); color:
             <div class="endpoint">sh.dataspace.copernicus.eu/api/v1/process  bands B8A, B11, SCL · mosaickingOrder leastCC · ostatnie 20 dni ≤ D</div>
             <dl>
               <dt>Co dostajemy</dt><dd>Kompozyt najczystszych przelotów z ostatnich 20 dni, piksel 20 m, z maską chmur. Te same 20 dni ściągamy z każdego roku od 2016, żeby mieć tło. Zapas: Planetary Computer (bez konta) i Landsat dla lat sprzed 2016.</dd>
-              <dt>Po co</dt><dd>NDMI = (B8A − B11)/(B8A + B11) mówi, ile wody jest w liściach. Sama wartość nic nie znaczy; liczy się porównanie z tymi samymi tygodniami w innych latach (krok 6 obliczeń).</dd>
+              <dt>Po co</dt><dd>NDMI = (B8A − B11)/(B8A + B11) mówi, ile wody jest w liściach. Sama wartość nic nie znaczy; liczy się porównanie z tymi samymi tygodniami w latach, gdy rosła ta sama grupa upraw (krok 6 obliczeń).</dd>
               <dt>Tu</dt><dd class="val">26.06–15.07.2025, <b>250 z 250</b> pikseli działki bez chmur, NDMI mediana 0,15</dd>
             </dl>
             <div class="chips"><span class="chip">3–15 s, potem cache</span><span class="chip">konto CDSE w backend/.env</span></div>
           </div>
         </article></div>
-      <div class="step"><div class="rail"><span class="num">12</span></div>
+      <div class="step"><div class="rail"><span class="num">13</span></div>
         <article class="card noimg"><span class="tag out">DO OBLICZEŃ</span>
           <div class="body">
             <div class="title"><h3>Tło suszy w Europie</h3><span class="id">EDO · Combined Drought Indicator</span></div>
@@ -458,9 +478,10 @@ susza rolnicza  ⇔  KBW &lt; próg(uprawa, kategoria gleby, okres)</div>
             <div class="formula">Q   = odpływ z ulewy (SCS‑CN, λ = 0,05)
 ETc = Ks · Kc(faza) · ET0          Ks = 1 gdy Dr ≤ RAW, potem maleje do 0
 Dr  = Dr − (opad − Q) + ETc        ograniczone do [0, TAW], dzień po dniu od 1994
-zapas F4 = 1 − Dr/TAW              próg stresu F4p = 1 − p</div>
+zapas F4 = 1 − Dr/TAW              próg stresu F4p = 1 − p
+Kc, p, korzenie = uprawy, która rosła w danym roku   (rok nieznany → bieżąca uprawa)</div>
             <dl>
-              <dt>Dlaczego</dt><dd>Odpowiada na pytanie rolnika „ile wody ma teraz moje pole”, z uwzględnieniem gleby i fazy uprawy (Kc). To ten sam silnik, który potem liczy scenariusze i efekt każdego działania.</dd>
+              <dt>Dlaczego</dt><dd>Odpowiada na pytanie rolnika „ile wody ma teraz moje pole”, z uwzględnieniem gleby i fazy uprawy (Kc). Dni stresu w historii liczymy dla tej samej uprawy co próg KBW w danym roku. To ten sam silnik, który potem liczy scenariusze i efekt każdego działania.</dd>
               <dt>Tu</dt><dd class="val">Dr = 65 mm z 110 → zapas <b>41%</b> przy progu <b>45%</b>; Kc 1,20 (pełnia) → kukurydza jest w stresie</dd>
               <dt>Co daje</dt><dd>2. sygnał pewności, warunek R7 „podlej teraz” i dawkę (Dr minus deszcz w 7 dni).</dd>
             </dl>
@@ -496,12 +517,13 @@ F11 = średnia z 10 lat dla tych samych 7 dni   gdy D jest archiwalna</div>
           <div class="thumbs"><button class="thumb" type="button" data-full="fig/b8_ndmi_z.png"><img src="fig/b8_ndmi_z.png" alt="Mapa z-score NDMI działki, większość pikseli bliska zeru lub dodatnia"></button></div>
           <div class="body">
             <div class="title"><h3>Gdzie rośliny są suchsze niż zwykle</h3><span class="id">F10 · F10b · anomalia NDMI</span></div>
-            <div class="formula">z = (NDMI_teraz − średnia NDMI z lat poprzednich) / odchylenie    dla każdego piksela 20 m
-najsuchsza strefa = piksele z z &lt; −1                         (min. 3 lata, ten sam sensor)</div>
+            <div class="formula">lata odniesienia = ta sama grupa łanu co teraz  i  rośliny na polu w tym dniu roku
+z = (NDMI_teraz − średnia NDMI z lat odniesienia) / odchylenie    dla każdego piksela 20 m
+najsuchsza strefa = piksele z z &lt; −1                           (min. 3 lata, ten sam sensor)</div>
             <dl>
-              <dt>Dlaczego</dt><dd>Satelita mówi, gdzie w działce kierować wodę. Zamiast „podlej całe 10 ha” można powiedzieć „podlej tę strefę”.</dd>
-              <dt>Tu</dt><dd class="val">8 lat odniesienia (2016–2024 bez 2020), mediana <b>z = +0,3</b>, 0% działki z z &lt; −1 → liście jeszcze nie pokazują stresu, nawadniamy całą działkę</dd>
-              <dt>Co daje</dt><dd>3. sygnał pewności i miejsce dla R7 i R8.</dd>
+              <dt>Dlaczego</dt><dd>Satelita mówi, gdzie w działce kierować wodę. Porównanie z rokiem, w którym rósł rzepak albo pole było po zbiorze, mierzyłoby różnicę roślin, a nie suszę, dlatego takie lata odpadają. Przy mniej niż 3 latach satelity nie oceniamy i raport mówi dlaczego.</dd>
+              <dt>Tu</dt><dd class="val">czyste zdjęcia z 8 lat, ale kukurydza rosła tylko w <b>2021–2023</b> → 3 lata odniesienia; mediana <b>z = −0,4</b>; z &lt; −1 na <b>23%</b> działki (<b>2,3 ha</b> w zachodniej części)</dd>
+              <dt>Co daje</dt><dd>3. sygnał pewności (tu: „nie ma suszy”, bo mediana &gt; −1) i miejsce dla R7: podlewanie 2,3 ha zamiast 10 ha.</dd>
             </dl>
           </div>
         </article></div>
@@ -564,7 +586,7 @@ F18 = w ilu z 10 przebiegów zapas &lt; próg stresu w danym tygodniu
 F19 = Σ (ETc − ETa) w oknie wrażliwym → mediana i 80. percentyl</div>
             <dl>
               <dt>Dlaczego</dt><dd>Nie znamy pogody na 6 tygodni, ale znamy 10 poprzednich sezonów w tym miejscu. W pierwszym miesiącu o wyniku decyduje głównie zapas startowy, więc to rozsądna prognoza „jak bywało”.</dd>
-              <dt>Tu</dt><dd class="val">stres w najbliższych 14 dniach w <b>10 z 10</b> przebiegów; w oknie wrażliwym brakuje ok. <b>82 mm</b> (w suchym roku 113 mm)</dd>
+              <dt>Tu</dt><dd class="val">stres w najbliższych 14 dniach w <b>10 z 10</b> przebiegów; w oknie wrażliwym brakuje ok. <b>80 mm</b> (w suchym roku 115 mm)</dd>
               <dt>Co daje</dt><dd>Status w nagłówku raportu: od 70% przebiegów „Susza”, 30–69% „Zagrożenie”, poniżej 30% „Spokojnie”.</dd>
             </dl>
           </div>
@@ -580,7 +602,7 @@ F19 = Σ (ETc − ETa) w oknie wrażliwym → mediana i 80. percentyl</div>
   pas buforowy       → CN − 5 (mniej odpływu z ulew)</div>
             <dl>
               <dt>Dlaczego</dt><dd>Każda karta zalecenia pokazuje „co zyskasz” w liczbach z tej działki, a nie ogólnik.</dd>
-              <dt>Tu</dt><dd class="val">podlanie 20 mm: stres w 14 dni <b>10/10 → 6/10</b>; tydzień do 22.07: 9/10 → 4/10</dd>
+              <dt>Tu</dt><dd class="val">podlanie 20 mm: stres w 14 dni <b>10/10 → 6/10</b>; tydzień do 22.07: 9/10 → 4/10. Cały plan (podlanie + międzyplon + pas buforowy): w najgorszym tygodniu (do 12.08) 10/10 → 8/10, ok. 10 mm mniej brakującej wody i średnio 6,7 dnia stresu mniej.</dd>
             </dl>
             <div class="scroll"><table class="mini">
               <thead><tr><th>tydzień</th><th>do 22.07</th><th>29.07</th><th>05.08</th><th>12.08</th><th>19.08</th><th>26.08</th></tr></thead>
@@ -607,6 +629,7 @@ przyczyny C1–C6 = ocena 0–3 z progów w backend/app/config.py</div>
               <dt>Sygnały</dt><dd>bilans glebowy: tak; KBW, satelita, EDO: nie → pewność średnia</dd>
               <dt>Przyczyny</dt><dd>C3 lekka gleba <b>3/3</b> · C6 niedobór w krytycznej fazie 2/3 · C5 rów 2/3 · C4 spływ 1/3</dd>
             </dl>
+            <p class="note">Backend liczy zgodność jako <code>max(tak, nie)</code>, czyli w obie strony. Cztery sygnały „brak suszy” dałyby pewność wysoką przy statusie „Susza”, jeśli ten status wynika z samego bilansu. Tu 1 sygnał mówi „susza”, a 3 „brak suszy”; backend liczy 3 zgodne i podaje pewność średnią. Gdyby liczyć tylko sygnały zgodne ze statusem, wyszedłby 1 z 4, czyli pewność niska.</p>
           </div>
         </article></div>
       <div class="step"><div class="rail"><span class="num">12</span></div>
@@ -618,9 +641,9 @@ przyczyny C1–C6 = ocena 0–3 z progów w backend/app/config.py</div>
               <li><span class="n">2</span><span class="rid">R3</span><span>Pas trawy lub drzew 6–10 m w miejscu wypływu, którym odpływa woda z 53% działki</span></li>
               <li><span class="n">3</span><span class="rid">R5</span><span>Międzyplon i resztki po zbiorze (ok. 2.10), bo gleba kat. I</span></li>
               <li><span class="n">4</span><span class="rid">R9</span><span>Rozważ inną uprawę, bo kukurydza przekraczała próg suszy w 6 z 10 sezonów</span></li>
-              <li><span class="n">5</span><span class="rid">R7</span><span class="urgent">PILNE: podlej 20 mm w ciągu 3 dni (zapas 41% przy progu 45%, kukurydza w oknie wrażliwym; stres 10/10 → 6/10)</span></li>
+              <li><span class="n">5</span><span class="rid">R7</span><span class="urgent">PILNE: podlej 20 mm (ok. 464 m³) najsuchszą część działki, 2,3 ha, w ciągu 3 dni (zapas 41% przy progu 45%, kukurydza w oknie wrażliwym; stres 10/10 → 6/10)</span></li>
             </ol>
-            <p class="note">R9 podpowiada burak cukrowy z wynikiem „0/10 sezonów z suszą”. Dla buraka na glebie kat. I tabela IUNG nie ma progu, więc 0/10 oznacza brak danych, a nie brak suszy. Ta reguła wymaga poprawki w backendzie.</p>
+            <p class="note">Dwie rzeczy do poprawki w backendzie (szczegóły w schemacie 3): R9 podpowiada buraka cukrowego z wynikiem „0/10 sezonów z suszą”, choć dla buraka na glebie kat. I tabela IUNG nie ma progu, więc 0/10 to brak danych. R1 opisuje zlewnię rowu jako całe dorzecze Odry (118 394 km²) i z tego powodu każe zgłosić zastawkę zarządcy cieku.</p>
             <dl>
               <dt>Czego nie sprawdziliśmy</dt><dd>prognozy z dnia analizy (data archiwalna, użyto średnich z 10 lat); NMT 1 m (teren z DEM 30 m); wód gruntowych, drenowania, odmiany i terminu siewu</dd>
             </dl>
@@ -630,8 +653,221 @@ przyczyny C1–C6 = ocena 0–3 z progów w backend/app/config.py</div>
   </div>
 </section>
 
+<!-- ======================================================= PIPELINE 3 -->
+<section id="zalecenia" class="pipe">
+  <div class="pipe-head">
+    <span class="eyebrow">Schemat 3</span>
+    <h2>Zalecenia: kiedy, dlaczego i gdzie</h2>
+    <p>Każde zalecenie to jedna reguła z jawnym warunkiem. Reguła uruchamia się tylko wtedy, gdy jej dane są dostępne i warunek jest spełniony; inaczej zalecenia nie ma, a brak danych trafia do sekcji „czego nie sprawdziliśmy”. Miejsce na mapie bierze się z tych samych danych, które uruchomiły regułę. Progi oznaczone ⚙️ to wartości startowe z <code>backend/app/config.py</code> do kalibracji.</p>
+  </div>
+
+  <div class="phase" style="--c: var(--ink)">
+    <div class="band">Bramka</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">1</span></div>
+        <article class="card noimg"><span class="tag">WEJŚCIE</span>
+          <div class="body">
+            <div class="title"><h3>Czy w ogóle jest potrzeba?</h3><span class="id">potrzeba · fakty F1–F18 · C1–C6</span></div>
+            <div class="formula">potrzeba = susza KBW teraz  lub  F5 ≥ 3 z 10 sezonów  lub  ryzyko w scenariuszach ≥ 70% ⚙️</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Zastawka czy oczko kosztują i wymagają zgód. Proponujemy je tylko tam, gdzie susza jest teraz albo wraca regularnie. Reguły glebowe i nawadniania mają własne warunki, bo dotyczą innych pytań.</dd>
+              <dt>Dotyczy</dt><dd>R1 i R2. Pozostałe reguły sprawdzają swoje warunki bez bramki.</dd>
+              <dt>Tu</dt><dd class="val">KBW teraz: nie; F5 = <b>6/10</b>; ryzyko w najgorszym tygodniu <b>100%</b> → potrzeba: tak</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--blue)">
+    <div class="band">Gdzie?</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">2</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/c1_miejsca.png"><img src="fig/c1_miejsca.png" alt="Mapa działki z pinezkami zaleceń: 1 R1 przy rowie, 2 R3 w miejscu wypływu, 3 R5 i 4 R9 dla całej działki, 5 R7 w czerwonej, najsuchszej strefie z satelity"></button></div>
+          <div class="body">
+            <div class="title"><h3>Skąd bierze się punkt na mapie</h3><span class="id">4 algorytmy · reszta = cała działka</span></div>
+            <dl>
+              <dt>Przy rowie</dt><dd><b>R1.</b> Granicę działki zagęszczamy co 10 m i liczymy odległość do każdego odcinka rowu i kanału z BDOT10k. Pinezka stoi w najbliższym punkcie rowu.</dd>
+              <dt>Zagłębienie</dt><dd><b>R2.</b> Na DEM wypełniamy zagłębienia (priority‑flood); komórki podniesione o ponad 0,1 m tworzą zagłębienie. Bierzemy tylko te leżące w co najmniej 30% ⚙️ na działce i z nich największe objętościowo. Pinezka stoi w środku jego komórek.</dd>
+              <dt>Wypływ</dt><dd><b>R3.</b> Kierunek spływu D8 na wypełnionym DEM, akumulacja tylko z komórek wewnątrz działki. Wypływ to komórka przy granicy, przez którą odpływa najwięcej. Pinezka stoi w tej komórce.</dd>
+              <dt>Sucha strefa</dt><dd><b>R7, R8.</b> Piksele 20 m z z NDMI &lt; −1 ⚙️ wobec lat tej samej uprawy. Gdy mają co najmniej 0,2 ha ⚙️, dawka i objętość dotyczą tylko ich, a pinezka stoi w ich średnim położeniu. Mniej niż 0,2 ha albo brak satelity oznacza całą działkę.</dd>
+              <dt>Cała działka</dt><dd><b>R4, R5, R6, R9, R7‑.</b> Pinezka bez wypełnienia, rozstawiona na siatce punktów wewnątrz działki tak, żeby się nie nakładały. To znacznik numeru, a nie miejsce działania.</dd>
+              <dt>Tu</dt><dd class="val">R1 przy rowie 3 m od granicy; R3 w miejscu wypływu na południu działki (53% powierzchni); R7 w zachodniej strefie <b>2,3 ha</b>; R5 i R9 dla całej działki</dd>
+            </dl>
+            <p class="note">Środek suchej strefy to średnia pikseli. Gdy strefa ma dwie oddzielne plamy, punkt może wypaść między nimi; sama strefa na mapie jest wtedy pewniejsza niż pinezka. R4 i R6 dotyczą części działki (gleba organiczna, spadek &gt; 3%), ale dziś dostają pinezkę „cała działka”.</p>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--blue-dark)">
+    <div class="band">Retencja</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">3</span></div>
+        <article class="card noimg"><span class="tag on">URUCHOMIONA</span>
+          <div class="body">
+            <div class="title"><h3>R1 · Zastawka na rowie</h3><span class="id">BDOT10k · MPHP10k · IMGW</span></div>
+            <div class="formula">rów lub kanał ≤ 100 m ⚙️ od granicy  i  potrzeba</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Rów odprowadza wodę z pola przez całą zimę. Spowolnienie odpływu zatrzymuje roztopy w rowie i w glebie obok, na wiosnę.</dd>
+              <dt>Kiedy</dt><dd>W sezonie „jesienią, po zbiorze”, poza sezonem „teraz, przed zimą”. Zlewnia &gt; 10 km² ⚙️: „zgłoś zarządcy cieku” zamiast budowy. Ostrzeżenie IMGW o suszy hydrologicznej: zalecenie zostaje pilne, jeśli nie ma R7.</dd>
+              <dt>Tu</dt><dd class="val">rów melioracyjny <b>3 m</b> od granicy, potrzeba: tak → uruchomiona</dd>
+            </dl>
+            <p class="note">„Zgłoś zarządcy” wynika tu z błędnej zlewni: MPHP zwraca najpierw dorzecze Odry (118 394 km²), a właściwa zlewnia ma 32 km². Wynik byłby ten sam, ale z prawdziwego powodu.</p>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">4</span></div>
+        <article class="card noimg idle"><span class="tag off">NIE TERAZ</span>
+          <div class="body">
+            <div class="title"><h3>R2 · Woda w zagłębieniu</h3><span class="id">DEM · priority‑flood</span></div>
+            <div class="formula">zagłębienie w ≥ 30% ⚙️ na działce  i  (objętość ≥ 100 m³ ⚙️  lub  pow. ≥ 0,05 ha ⚙️)  i  potrzeba</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Tam, gdzie teren nie ma odpływu, deszcz i tak się zbiera. Oczko lub niecka zatrzymuje go zamiast gubić drenem. Zagłębienia leżące głównie u sąsiada pomijamy, bo rolnik nie zrobi oczka na cudzym gruncie.</dd>
+              <dt>Kiedy i ile</dt><dd>Poza sezonem „teraz lub wczesną wiosną”, w sezonie „po zbiorze”. Objętość zamieniamy na liczbę dawek 20 mm dla działki.</dd>
+              <dt>Tu</dt><dd class="val">3 zagłębienia w okolicy (128 194, 35 658 i 15 701 m³), ale na działce leży z nich tylko <b>5%, 2% i 17%</b> → nie uruchomiona</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">5</span></div>
+        <article class="card noimg"><span class="tag on">URUCHOMIONA</span>
+          <div class="body">
+            <div class="title"><h3>R3 · Pas trawy lub drzew przy wypływie</h3><span class="id">DEM · D8 · C4</span></div>
+            <div class="formula">C4 ≥ 1 (średni spadek &gt; 3% ⚙️ lub &gt; 10% ⚙️ deszczu z ulew spływa)  i  istnieje punkt wypływu
+efekt w scenariuszach: CN − 5</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Gdy większość pola odpływa jednym miejscem, pas 6–10 m właśnie tam spowalnia spływ z ulew i zatrzymuje glebę. Taniej niż pas wzdłuż całej granicy.</dd>
+              <dt>Kiedy</dt><dd>Sadzenie w listopadzie lub marcu; w sezonie „od jesieni”.</dd>
+              <dt>Tu</dt><dd class="val">spadek <b>3,01%</b> → C4 = 1; jednym miejscem odpływa <b>53%</b> działki; z ulew spływa ok. 2% deszczu → uruchomiona</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">6</span></div>
+        <article class="card noimg idle"><span class="tag off">NIE TERAZ</span>
+          <div class="body">
+            <div class="title"><h3>R4 · Nie odwadniaj gleby organicznej</h3><span class="id">IUNG‑PIB kat. 5</span></div>
+            <div class="formula">gleba organiczna na ≥ 30% ⚙️ punktów działki</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Obniżenie wody na torfach i murszach niszczy glebę i uwalnia węgiel. Tu zalecenie jest stałe i nie zależy od suszy.</dd>
+              <dt>Tu</dt><dd class="val"><b>0%</b> punktów z glebą organiczną → nie uruchomiona</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--brown)">
+    <div class="band">Pole</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">7</span></div>
+        <article class="card noimg"><span class="tag on">URUCHOMIONA</span>
+          <div class="body">
+            <div class="title"><h3>R5 · Międzyplon i resztki po zbiorze</h3><span class="id">C3 · SoilGrids · scenariusze</span></div>
+            <div class="formula">C3 lekka gleba ≥ 2  lub  ryzyko ≥ 30% ⚙️  lub  węgiel organiczny &lt; 1,5% ⚙️
+efekt w scenariuszach: mulcz (−25% parowania z gleby, FAO‑56)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Okrywa i resztki ograniczają parowanie i poprawiają wsiąkanie. Na glebie kat. I–II raport dodaje, że międzyplon trzeba zniszczyć wcześnie wiosną, bo sam zużywa wodę.</dd>
+              <dt>Kiedy</dt><dd>Po zbiorze z kalendarza uprawy; gdy pole jest już po zbiorze, zalecenie zmienia się na „zostaw resztki, nie orz na zimę”.</dd>
+              <dt>Tu</dt><dd class="val">C3 = <b>3/3</b> (kat. I, piaski), ryzyko 100%; węgiel 1,7% → uruchomiona, „po zbiorze (02.10)”</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">8</span></div>
+        <article class="card noimg idle"><span class="tag off">NIE TERAZ</span>
+          <div class="body">
+            <div class="title"><h3>R6 · Uprawa w poprzek stoku</h3><span class="id">C4</span></div>
+            <div class="formula">C4 ≥ 2 (średni spadek &gt; 5% ⚙️)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Bruzdy wzdłuż poziomic zatrzymują wodę; wzdłuż stoku ją przyspieszają.</dd>
+              <dt>Tu</dt><dd class="val">C4 = <b>1</b> (spadek 3%) → nie uruchomiona; łagodny stok obsługuje R3</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">9</span></div>
+        <article class="card noimg"><span class="tag on">URUCHOMIONA</span>
+          <div class="body">
+            <div class="title"><h3>R9 · Rozważ inną uprawę</h3><span class="id">KBW · progi IUNG · F5</span></div>
+            <div class="formula">F5 ≥ 6 ⚙️ z 10 sezonów  i  uprawa ma wiersz w tabeli IUNG
+alternatywa = uprawa z najmniejszą liczbą sezonów z suszą na tej glebie, jeśli ≤ 3 ⚙️</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Gdy susza wraca w większości lat, zatrzymywanie wody może nie wystarczyć. Pogodę i glebę bierzemy z tych samych 10 sezonów, zmieniamy tylko próg uprawy.</dd>
+              <dt>Kiedy</dt><dd>Przy planowaniu płodozmianu; najpierw na części działki.</dd>
+              <dt>Tu</dt><dd class="val">kukurydza <b>6/10</b>; podpowiedź: burak cukrowy 0/10; dalej ziemniak 3/10, rzepak 7/10, zboża ozime 7/10, zboża jare 8/10</dd>
+            </dl>
+            <p class="note">Burak na glebie kat. I nie ma progu w tabeli IUNG, więc nie ma żadnego sezonu do oceny, a pętla liczy go jako 0 susz. Druga w kolejności jest „inna uprawa” (3/10), która nie jest konkretną rośliną. Poprawka: pomijać uprawy bez progu i „inną uprawę”; wtedy wynikiem byłby ziemniak, 3/10.</p>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--red)">
+    <div class="band">Woda teraz</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">10</span></div>
+        <article class="card noimg"><span class="tag on">URUCHOMIONA</span>
+          <div class="body">
+            <div class="title"><h3>R7 · Podlej teraz</h3><span class="id">FAO‑56 · prognoza 7 dni · satelita</span></div>
+            <div class="formula">sezon (21.03–30.09)  i  (zapas F4 &lt; próg F4p  lub  stres za ≤ 7 dni)
+i  brak = Dr − deszcz 7 dni &gt; 10 mm ⚙️  i  uprawa w oknie wrażliwym
+dawka = min(brak, maks. dawka dla gleby ⚙️ {I: 20, II: 25, III: 30, IV: 35, org.: 30 mm})
+objętość = dawka × powierzchnia (sucha strefa albo cała działka) × 10 m³</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Roślina już jest w stresie albo będzie za tydzień, a deszcz z prognozy nie pokryje brakującej wody. Poza oknem wrażliwym podlewanie mało daje dla plonu. Maks. dawka chroni lekką glebę przed przelaniem wody poza korzenie.</dd>
+              <dt>Kiedy</dt><dd>W ciągu 3 dni, rano lub wieczorem. Zawsze pilne.</dd>
+              <dt>Tu</dt><dd class="val">zapas <b>41%</b> &lt; 45%; brak 65 − 23 = <b>42 mm</b>; okno lipiec–sierpień → dawka min(42, 20) = <b>20 mm</b> na 2,3 ha = <b>464 m³</b>; stres w 2 tyg. 10/10 → 6/10</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">11</span></div>
+        <article class="card noimg idle"><span class="tag off">NIE TERAZ</span>
+          <div class="body">
+            <div class="title"><h3>R7‑ · Nie podlewaj teraz</h3><span class="id">FAO‑56</span></div>
+            <div class="formula">sezon  i  R7 nie przeszło  i  (zapas ≥ próg  lub  deszcz 7 dni ≥ Dr − RAW)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Mówi wprost, że podlewanie byłoby stratą wody i pieniędzy. Nie liczy się do „pilnych” ani do planu.</dd>
+              <dt>Tu</dt><dd class="val">R7 przeszło → nie uruchomiona</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">12</span></div>
+        <article class="card noimg idle"><span class="tag off">NIE TERAZ</span>
+          <div class="body">
+            <div class="title"><h3>R8 · Przygotuj nawadnianie na sezon</h3><span class="id">scenariusze · historia 10 lat</span></div>
+            <div class="formula">brak R7  i  ryzyko w scenariuszach ≥ 30% ⚙️
+ile = mediana i 80. percentyl braku wody w oknie wrażliwym z 10 sezonów</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Gdy dziś nie trzeba podlewać, ale stres w najbliższych tygodniach jest prawdopodobny, rolnik ma czas sprawdzić źródło wody, pozwolenie i sprzęt. Raport przypomina, że najpierw retencja, potem nawadnianie.</dd>
+              <dt>Tu</dt><dd class="val">R7 przeszło → nie uruchomiona</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--primary)">
+    <div class="band">Raport</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">13</span></div>
+        <article class="card noimg"><span class="tag out">WYJŚCIE</span>
+          <div class="body">
+            <div class="title"><h3>Kolejność, „pilne” i plan</h3><span class="id">sortowanie · pilne · plan_all</span></div>
+            <div class="formula">kolejność = retencja (R1–R4) → pole (R5, R6, R9) → nawadnianie (R7, R7‑, R8)
+pilne = R7  albo  R1/R2 przy ostrzeżeniu IMGW  albo  pierwsze z „teraz” w terminie  albo  pierwsze z listy
+plan = suma efektów R3 (CN − 5) + R5 (mulcz) + R7 (dawka) lub R8 (nawadnianie) w scenariuszach</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Kolejność KOWR: najpierw zatrzymać wodę, potem ograniczyć jej straty, na końcu dolewać. „Pilne” pokazuje jedną rzecz do zrobienia w tym tygodniu. Plan pokazuje, ile dają wszystkie działania razem w tych samych scenariuszach pogody.</dd>
+              <dt>Susza hydrol.</dt><dd>Przy ostrzeżeniu IMGW R7 i R8 dostają krok „nie licz na pobór z rzeki ani rowu”, a R1/R2 mogą zostać pilne. Działa tylko dla analizy na dziś.</dd>
+              <dt>Tu</dt><dd class="val">1 R1 · 2 R3 · 3 R5 · 4 R9 · 5 R7 (<b>pilne</b>); plan: najgorszy tydzień 10/10 → 8/10</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <p>Liczby z uruchomienia notebooka <code>notebooks/pipeline_dzialka.ipynb</code> na kodzie backendu z 21.11.2026; każdy krok obliczeń jest w nim porównany z wynikiem <code>analizuj()</code>. Progi oznaczone w <code>pipeline_plan.md</code> jako ⚙️ to wartości startowe do kalibracji.</p>
+  <p>Schemat 3 (warunki, miejsca i wartości „Tu”) odpowiada części C notebooka, która liczy te same warunki z faktów i porównuje listę zaleceń z <code>analizuj()</code>.</p>
   <p>Kliknij wykres, żeby go powiększyć.</p>
 </footer>
 </div>
