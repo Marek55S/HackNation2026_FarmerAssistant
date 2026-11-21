@@ -1,71 +1,52 @@
-// Simulated analysis progress. Stateless: the job id encodes its parameters and start time,
-// so it works across Cloud Run instances without a database.
+// Simulated analysis progress for POST /api/analyze (NDJSON stream). Timings are illustrative,
+// based on TEST_API.md; the real backend reports its own steps in the same shape.
 
 import { historyWindow } from "../dates";
-import type { AnalysisStatus, AnalysisStep } from "../types";
+import type { AnalysisStep } from "../types";
 
-export interface AnalysisParams {
-  parcelId: string;
-  date: string;
-  crop?: string;
+interface StepDef {
+  label: string;
+  src: string;
+  seconds: number;
+  error?: string;
 }
 
-interface Job extends AnalysisParams {
-  t: number;
-}
-
-export function createJobId(p: AnalysisParams): string {
-  const job: Job = { ...p, t: Date.now() };
-  return Buffer.from(JSON.stringify(job)).toString("base64url");
-}
-
-export function decodeJobId(id: string): Job | null {
-  try {
-    const job = JSON.parse(Buffer.from(id, "base64url").toString("utf8")) as Job;
-    if (typeof job.t !== "number" || typeof job.date !== "string" || typeof job.parcelId !== "string") return null;
-    return job;
-  } catch {
-    return null;
-  }
-}
-
-export function reportUrl(p: AnalysisParams): string {
-  const q = new URLSearchParams({ dzialka: p.parcelId, data: p.date });
-  if (p.crop) q.set("uprawa", p.crop);
-  return `/raport?${q.toString()}`;
-}
-
-export function jobStatus(id: string, job: Job, now = Date.now()): AnalysisStatus {
-  const y = Number(job.date.slice(0, 4));
-  const win = historyWindow(job.date);
-  const defs: [string, string, number][] = [
-    ["Granice działki i uprawy z lat ubiegłych", "ULDK GUGiK · deklaracje ARiMR (GSA) · mapa upraw Copernicus", 0.5],
-    [`Pogoda ${y - 10}–${y}`, "Open-Meteo ERA5-Land · opad, parowanie, wilgotność gleby", 0.7],
-    ["Gleba", "kategoria podatności IUNG-PIB + SoilGrids", 0.5],
-    ["Rzeźba terenu", "NMT GUGiK 1 m · spadki, zagłębienia, spływ", 0.8],
-    ["Rowy, cieki i zbiorniki", "BDOT10k · IMGW (stany rzek)", 0.4],
-    ["Zdjęcia satelitarne – 10 sezonów", win.satSrc, 1.4],
-    ["Tło suszy w Europie", "EDO Copernicus · CDI, SPI", 0.4],
-    ["Bilans wodny vs progi suszy IUNG", "dla upraw z każdego roku", 0.4],
-    ["Przyczyny i działania", "retencja → pole → nawadnianie", 0.3],
+export function stepDefs(date: string, isToday: boolean): StepDef[] {
+  const y = Number(date.slice(0, 4));
+  const win = historyWindow(date);
+  return [
+    { label: "Granice działki i uprawy", src: "ULDK GUGiK · deklaracje ARiMR (GSA) · mapa upraw JRC", seconds: 0.4 },
+    { label: `Pogoda ${y - 30}–${y}`, src: "Open-Meteo ERA5-Land · opad, parowanie, wilgotność gleby", seconds: 0.6 },
+    { label: "Gleba i pokrycie terenu", src: "kategoria podatności IUNG-PIB + SoilGrids", seconds: 0.5 },
+    { label: "Rzeźba terenu", src: "Copernicus DEM 30 m · spadki, zagłębienia, spływ", seconds: 0.4 },
+    {
+      label: "Dokładny model terenu 1 m",
+      src: "NMT GUGiK",
+      seconds: 0.6,
+      error: "odpowiada 1–2 min — liczy się w tle, raport używa Copernicus DEM 30 m",
+    },
+    { label: "Rowy, cieki i zbiorniki", src: "BDOT10k (paczka powiatu)", seconds: 0.4 },
+    { label: "Zdjęcia satelitarne – 10 sezonów", src: `${win.satSrc} · Planetary Computer`, seconds: 1.3 },
+    isToday
+      ? { label: "Prognoza 7 dni", src: "Open-Meteo", seconds: 0.3 }
+      : { label: "Prognoza z tamtego dnia", src: "Open-Meteo", seconds: 0.2, error: "niedostępna dla dat archiwalnych — średnia z 10 lat" },
+    { label: "Bilans wodny vs progi suszy IUNG", src: "FAO-56 · KBW 60 dni · scenariusze z poprzednich sezonów", seconds: 0.5 },
+    { label: "Przyczyny i zalecenia", src: "retencja → pole → nawadnianie", seconds: 0.3 },
   ];
-  const total = defs.reduce((a, d) => a + d[2], 0);
-  const elapsed = Math.max(0, (now - job.t) / 1000);
+}
+
+export function stepsAt(defs: StepDef[], elapsed: number): { steps: AnalysisStep[]; progress: number; done: boolean } {
+  const total = defs.reduce((a, d) => a + d.seconds, 0);
   let acc = 0;
-  const steps: AnalysisStep[] = defs.map(([label, src, dur]) => {
+  const steps: AnalysisStep[] = defs.map((d) => {
     const start = acc;
-    acc += dur;
-    if (elapsed >= acc) return { label, src, state: "done", seconds: dur };
-    if (elapsed >= start) return { label, src, state: "running", seconds: null };
-    return { label, src, state: "wait", seconds: null };
+    acc += d.seconds;
+    if (elapsed >= acc)
+      return d.error
+        ? { label: d.label, src: d.src, state: "failed", seconds: d.seconds, error: d.error }
+        : { label: d.label, src: d.src, state: "done", seconds: d.seconds };
+    if (elapsed >= start) return { label: d.label, src: d.src, state: "running", seconds: null };
+    return { label: d.label, src: d.src, state: "wait", seconds: null };
   });
-  const done = elapsed >= total;
-  return {
-    id,
-    elapsed: Math.min(elapsed, total),
-    progress: Math.min(100, Math.round((elapsed / total) * 100)),
-    done,
-    steps,
-    reportUrl: reportUrl(job),
-  };
+  return { steps, progress: Math.min(100, Math.round((elapsed / total) * 100)), done: elapsed >= total };
 }

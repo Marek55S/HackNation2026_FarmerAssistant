@@ -1,8 +1,8 @@
 // Asystent Wodny service worker.
 // - pages: network first, cached copy when offline (the last opened report works in the field)
 // - static assets (/_next/static, icons, fonts): cache first
-// - API: network only, except /api/report (network first)
-const VERSION = "v1";
+// - API: network only
+const VERSION = "v2";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 
@@ -33,9 +33,12 @@ async function networkFirst(request, fallbackPath) {
   } catch {
     const exact = await cache.match(request);
     if (exact) return exact;
-    // Different query string (another date / parcel): show the latest cached copy of the same page.
-    const samePath = await cache.match(request, { ignoreSearch: true });
-    if (samePath) return samePath;
+    // Never show another parcel's report: other query strings fall back to the start page,
+    // where "Twoje gospodarstwo" links to the reports that are cached.
+    if (!new URL(request.url).pathname.startsWith("/raport")) {
+      const samePath = await cache.match(request, { ignoreSearch: true });
+      if (samePath) return samePath;
+    }
     if (fallbackPath) {
       const fb = await cache.match(fallbackPath);
       if (fb) return fb;
@@ -67,10 +70,6 @@ self.addEventListener("fetch", (event) => {
   }
   // React Server Component payloads for client-side navigation between pages.
   if (request.headers.get("RSC") === "1") {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-  if (url.pathname.startsWith("/api/report")) {
     event.respondWith(networkFirst(request));
     return;
   }

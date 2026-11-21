@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { StatusTone } from "@/lib/types";
 
 /** Stroke icon paths (24×24) used across the app. */
 export const ICON = {
@@ -26,6 +27,8 @@ export const ICON = {
   slope: "M3 20 21 6M15 6h6v6",
   ditch: "M3 8c3 2 6 2 9 0s6-2 9 0M3 14c3 2 6 2 9 0s6-2 9 0",
   plus: "M12 5v14M5 12h14",
+  calendar: "M4 6h16v15H4zM4 10h16M9 3v4M15 3v4",
+  info: "M12 8v.5M12 11v6M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
 } as const;
 
 export function Icon({
@@ -94,19 +97,38 @@ export function Tank({ pct, threshold, width = 56, height = 92, label }: { pct: 
   );
 }
 
-export const TONE_PILL: Record<"danger" | "plan" | "ok", string> = {
-  danger: "bg-[#c2362f] text-white",
-  plan: "bg-[#a35412] text-white",
-  ok: "bg-primary text-white",
+export const STATUS_BG: Record<StatusTone, string> = {
+  susza: "bg-status-susza",
+  zagrozenie: "bg-status-zagrozenie",
+  spokojnie: "bg-status-spokojnie",
+  plan: "bg-status-plan",
+  "poza-zakresem": "bg-status-poza",
 };
 
-export function StatusPill({ tone, label, small = false }: { tone: "danger" | "plan" | "ok"; label: string; small?: boolean }) {
+export const STATUS_ICON: Record<StatusTone, string> = {
+  susza: ICON.warn,
+  zagrozenie: ICON.warn,
+  spokojnie: ICON.check,
+  plan: ICON.calendar,
+  "poza-zakresem": ICON.x,
+};
+
+export function StatusPill({ tone, label, small = false }: { tone: StatusTone; label: string; small?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-bold ${small ? "px-3 py-1.5 text-[13px]" : "px-3 py-1.5 text-sm"} ${TONE_PILL[tone]}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-bold text-white ${small ? "text-[13px]" : "text-sm"} ${STATUS_BG[tone]}`}
     >
-      <Icon d={ICON.warn} size={small ? 14 : 16} stroke={2.4} />
+      <Icon d={STATUS_ICON[tone]} size={small ? 14 : 16} stroke={2.4} />
       {label}
     </span>
   );
 }
+
+/** Severity scale 0–4 (risk cells, drought tags, cause weight). */
+export const SCALE = [
+  "bg-scale-0 text-scale-0-ink",
+  "bg-scale-1 text-scale-1-ink",
+  "bg-scale-2 text-scale-2-ink",
+  "bg-scale-3 text-scale-3-ink",
+  "bg-scale-4 text-scale-4-ink",
+] as const;

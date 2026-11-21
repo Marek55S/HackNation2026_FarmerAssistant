@@ -37,53 +37,61 @@ export function longDate(iso: string): string {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
-/** April–September = growing season with IUNG drought thresholds. */
+const md = (iso: string) => iso.slice(5); // "mm-dd"
+
+/** F13: growing season with IUNG drought thresholds is 21.III–30.IX (pipeline_plan.md §7). */
 export function seasonOf(iso: string): Season {
-  const { m } = parseIso(iso);
-  return m >= 4 && m <= 9 ? "sezon" : "poza-sezonem";
+  const m = md(iso);
+  return m >= "03-21" && m <= "09-30" ? "sezon" : "poza-sezonem";
+}
+
+/** 21.III–20.V: no full 60-day KBW period yet → incomplete period, lower confidence. */
+export function isEarlySeason(iso: string): boolean {
+  const m = md(iso);
+  return m >= "03-21" && m <= "05-20";
 }
 
 /** Last season that has (at least partly) happened by the analysis date. */
 export function lastSeason(iso: string): number {
-  const { y, m } = parseIso(iso);
-  return m >= 4 ? y : y - 1;
+  const { y } = parseIso(iso);
+  return md(iso) >= "03-21" ? y : y - 1;
 }
 
 export interface YearSource {
   year: number;
-  sensor: "s2" | "mixed" | "landsat";
+  sensor: "s2" | "landsat";
   tip: string;
 }
 
-/** The 10 seasons we compare against and which satellite covers each (Sentinel-2 over Poland from 2017). */
+/**
+ * The 10 seasons we compare against and which satellite covers each:
+ * Sentinel-2 L2A from Planetary Computer over Poland from 2016, Landsat C2 L2 (30 m) for 2006–2015 (ZRODLA_DANYCH.md).
+ */
 export function historyWindow(iso: string) {
   const { y, m, d } = parseIso(iso);
   const last = lastSeason(iso);
   const years: YearSource[] = [];
   for (let yr = last - 9; yr <= last; yr++) {
-    if (yr >= 2017) years.push({ year: yr, sensor: "s2", tip: "Sentinel-2" });
-    else if (yr === 2016) years.push({ year: yr, sensor: "mixed", tip: "Sentinel-2 (CDSE) + Landsat 8" });
+    if (yr >= 2016) years.push({ year: yr, sensor: "s2", tip: "Sentinel-2 · 10 m" });
     else
       years.push({
         year: yr,
         sensor: "landsat",
-        tip: yr >= 2013 ? "Landsat 8" : yr === 2012 ? "Landsat 7 (pasy bez danych)" : "Landsat 5 / 7",
+        tip: yr >= 2013 ? "Landsat 8 · 30 m" : yr === 2012 ? "Landsat 7 · 30 m (pasy bez danych)" : "Landsat 5 / 7 · 30 m",
       });
   }
-  const s2From = Math.max(2017, last - 9);
+  const s2From = Math.max(2016, last - 9);
   const satSrc =
-    last - 9 >= 2017
+    last - 9 >= 2016
       ? `Sentinel-2 ${s2From}–${last}`
-      : last >= 2017
-        ? `Sentinel-2 ${s2From}–${last} + Landsat ${last - 9}–${Math.min(2016, last)}`
-        : `Landsat ${last - 9}–${last}`;
+      : `Sentinel-2 ${s2From}–${last} + Landsat ${last - 9}–2015`;
   return {
     from: `${pad(d)}.${pad(m)}.${y - 10}`,
     to: `${pad(d)}.${pad(m)}.${y}`,
     firstYear: last - 9,
     lastYear: last,
     years,
-    hasOldImagery: last - 9 < 2017,
+    hasOldImagery: last - 9 < 2016,
     satSrc,
   };
 }

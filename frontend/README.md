@@ -16,19 +16,25 @@ pnpm build && pnpm start   # production build (the service worker only runs here
 | `/` | Start: choose the parcel (id / gmina+obręb+numer / map), date, "Twoje gospodarstwo", analysis progress |
 | `/raport?dzialka=…&data=yyyy-mm-dd&uprawa=…` | Report: status, map with layers (plan / gdzie sucho / teren / gleba), what to do and where, causes, risk, sources |
 
-The report has two variants chosen by date: in season (April–September, "water now") and off season ("retain water for next year").
-On phones (< 768 px) the layout is a single column with a bottom navigation bar. "Drukuj" / "PDF" use the browser's print dialog with an A4 print stylesheet.
+The report mode follows the date (pipeline_plan.md F13): **in season 21.III–30.IX** ("water now", label *Susza trwa / nadchodzi*, *Zagrożenie* or *Spokojnie*)
+and **off season** ("Plan na sezon {rok}" — retain water for next year). Non-agricultural parcels get **Poza zakresem**.
+The crop is a hint from ARiMR declarations (2020–2026) or the JRC crop map (2018, 2022); for years without data (e.g. 2016, 2017, 2019) the farmer picks it from tiles.
+On phones (< 768 px) the layout is a single column with a bottom navigation bar. "Drukuj / zapisz PDF" uses the browser's print dialog with an A4 print stylesheet (collapsed sections are expanded for print).
 
-## Mock API (to be replaced by the real pipeline)
+Demo parcels (mock data): `040410_2.0012.245/3`, `040410_2.0012.118`, `040410_2.0012.119/2` (grassland, no official IUNG threshold), `040410_2.0012.301` (forest → out of scope). Other ids return "not found" — the mock does not invent parcels.
+
+## API (mock — to be replaced by the real pipeline)
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/parcel?id=…` / `?gmina=…&obreb=…&nr=…` / `?x=0..1` | parcel lookup (ULDK mock) |
-| `POST /api/analysis` `{parcelId, date, crop?}` → `{id}` | start the analysis |
-| `GET /api/analysis/{id}` | progress (steps, %, `reportUrl` when done) |
-| `GET /api/report?dzialka=…&data=…&uprawa=…` | full report JSON (`src/lib/types.ts` → `Report`) |
+| `POST /api/analyze` `{dzialka, data, uprawa?}` | report JSON (TODO T1.1). With `Accept: application/x-ndjson`: stream of `progress` events, then `report` |
+| `GET /api/health` | health check |
+| `GET /api/parcel?id=…&data=…` / `?gmina=…&obreb=…&nr=…&data=…` / `?mapa=<numer>&data=…` | parcel lookup (ULDK mock) + crop hint for the year of `data` |
 
-The mock lives in `src/lib/mock/`. To plug in the real pipeline, replace `buildReport()` and `jobStatus()` with calls to the backend and keep the JSON shape from `src/lib/types.ts`.
+Errors: `400` invalid input, `404` parcel not in the register, `422` no crop data for that year and no `uprawa` given.
+
+The JSON shape is in `src/lib/types.ts` (`Report`, `Zalecenie {regula, co, gdzie, kiedy, ile, bo[], co_zyskasz, fakty[]}` as in TODO T1.2, `AnalyzeEvent` for the stream).
+The mock lives in `src/lib/mock/`; to plug in the backend, replace `buildReport()` and the stream in `src/app/api/analyze/route.ts` with calls to it and keep the JSON shape.
 
 ## PWA
 

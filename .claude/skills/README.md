@@ -3,10 +3,8 @@
 This is a project-local starter pack of original Agent Skills for Claude Code. It is designed to reduce generic "vibe-coded" UI and cover SaaS screens, dashboards, maps, data tables, design-system consistency, and visual QA.
 
 ## Install
-1. Unzip this archive into the root of your project.
-2. Keep the `.claude/` directory and `CLAUDE.md` at the project root.
-3. Start/restart Claude Code in that project.
-4. Ask Claude to inspect the project and follow `CLAUDE.md`.
+Installed: the skills live in `.claude/skills/` and the rules in `CLAUDE.md` at the repository root.
+Restart Claude Code in the repository root to pick them up.
 
 Claude Code discovers project skills in `.claude/skills/<skill-name>/SKILL.md`.
 

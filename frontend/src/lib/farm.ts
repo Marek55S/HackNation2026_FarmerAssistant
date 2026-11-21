@@ -3,28 +3,23 @@
 // "Twoje gospodarstwo": parcels the farmer checked, kept only in this browser (no account, no personal data).
 
 import { useCallback, useSyncExternalStore } from "react";
-
-export type FarmTone = "danger" | "warn" | "ok";
+import type { StatusTone } from "./types";
 
 export interface FarmParcel {
   parcelId: string;
   name: string;
   meta: string;
   status: string;
-  tone: FarmTone;
+  /** Status of the last report; null = added but not checked yet */
+  tone: StatusTone | null;
   /** Last report URL for this parcel */
   url: string;
   checkedAt: string;
 }
 
-const KEY = "asystent-wodny:farm";
+const KEY = "asystent-wodny:farm:v2";
 
-// Shown until the user checks their own parcels, as in the mockup.
-const DEMO: FarmParcel[] = [
-  { parcelId: "040410_2.0012.245/3", name: "245/3 · kukurydza", meta: "4,8 ha · susza w sezonie · 2 działania na jesień", status: "Zrób przed zimą", tone: "danger", url: "/raport?dzialka=040410_2.0012.245%2F3", checkedAt: "" },
-  { parcelId: "040410_2.0012.118", name: "118 · pszenica ozima", meta: "6,1 ha · susza wiosną w 3 z 10 lat", status: "Do zaplanowania", tone: "warn", url: "/raport?dzialka=040410_2.0012.118&uprawa=pszenica", checkedAt: "" },
-  { parcelId: "040410_2.0012.119/2", name: "119/2 · łąka", meta: "2,3 ha · gleba organiczna, nie odwadniać", status: "W porządku", tone: "ok", url: "/raport?dzialka=040410_2.0012.119%2F2&uprawa=laka", checkedAt: "" },
-];
+const EMPTY: FarmParcel[] = [];
 
 const listeners = new Set<() => void>();
 let cache: { raw: string | null; value: FarmParcel[] } | null = null;
@@ -34,15 +29,15 @@ function read(): FarmParcel[] {
   try {
     raw = localStorage.getItem(KEY);
   } catch {
-    // storage blocked (private mode) — fall back to demo list
+    // storage blocked (private mode) — empty list
   }
   if (cache && cache.raw === raw) return cache.value;
-  let value = DEMO;
+  let value = EMPTY;
   if (raw) {
     try {
       value = JSON.parse(raw) as FarmParcel[];
     } catch {
-      value = DEMO;
+      value = EMPTY;
     }
   }
   cache = { raw, value };
@@ -69,7 +64,7 @@ function subscribe(cb: () => void) {
 }
 
 export function useFarm() {
-  const farm = useSyncExternalStore(subscribe, read, () => DEMO);
+  const farm = useSyncExternalStore(subscribe, read, () => EMPTY);
   const upsert = useCallback((p: FarmParcel) => {
     const list = read().filter((x) => x.parcelId !== p.parcelId);
     write([p, ...list].slice(0, 20));

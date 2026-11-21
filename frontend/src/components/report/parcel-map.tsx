@@ -4,7 +4,7 @@
 // The real version will draw the ULDK geometry and rasters from the pipeline.
 
 import { useMemo, type CSSProperties } from "react";
-import type { Action, ActionCategory, ActionId, MapLayer } from "@/lib/types";
+import type { ActionCategory, MapLayer, Zalecenie } from "@/lib/types";
 
 export const LAYERS: Record<MapLayer, string> = {
   plan: "Plan działań",
@@ -89,13 +89,14 @@ export function ParcelMap({
   pin,
   onPin,
 }: {
-  actions: Action[];
+  actions: Zalecenie[];
   layer: MapLayer;
-  pin: ActionId;
-  onPin: (a: Action) => void;
+  pin: number;
+  onPin: (a: Zalecenie) => void;
 }) {
   const grids = useMemo(() => ({ sucho: dryGrid(), teren: terrainGrid(), gleba: soilGrid() }), []);
-  const sel = actions.find((a) => a.id === pin);
+  const sel = actions.find((a) => a.n === pin);
+  const rule = sel?.regula;
   const trees = Array.from({ length: 8 }, (_, k) => ({ x: 256.5 - k * 0.8, y: 44 + k * 16 }));
 
   return (
@@ -121,7 +122,7 @@ export function ParcelMap({
         viewBox="0 0 300 200"
         className="absolute inset-0 h-full w-full"
         role="img"
-        aria-label={`Mapa działki, widok: ${LAYERS[layer]}. Zaznaczone działanie: ${sel?.n}. ${sel?.title}`}
+        aria-label={`Mapa działki, widok: ${LAYERS[layer]}. Zaznaczone działanie: ${sel?.n}. ${sel?.co}`}
       >
         {layer === "plan" && (
           <>
@@ -167,31 +168,31 @@ export function ParcelMap({
           </>
         )}
 
-        {pin === "zastawka" && <path d={DITCH} fill="none" stroke="#F2B53A" strokeWidth="11" strokeLinecap="round" strokeOpacity="0.9" />}
+        {rule === "R1" && <path d={DITCH} fill="none" stroke="#F2B53A" strokeWidth="11" strokeLinecap="round" strokeOpacity="0.9" />}
         <path d={DITCH} fill="none" stroke="#1f6fc9" strokeWidth="4" strokeLinecap="round" />
         <text x="294" y="150" fontSize="8" fontWeight="700" fill="#123f78" textAnchor="end">
           rów R-3
         </text>
-        {pin === "niecka" && <ellipse cx="236" cy="45" rx="25" ry="15" fill="none" stroke="#F2B53A" strokeWidth="4" />}
-        {pin === "drzewa" && <path d="M257 40 L250 168" fill="none" stroke="#F2B53A" strokeWidth="12" strokeLinecap="round" strokeOpacity="0.85" />}
-        {pin === "woda" && <polygon points={IRR_ZONE} fill="none" stroke="#F2B53A" strokeWidth="4" strokeLinejoin="round" />}
+        {rule === "R2" && <ellipse cx="236" cy="45" rx="25" ry="15" fill="none" stroke="#F2B53A" strokeWidth="4" />}
+        {rule === "R3" && <path d="M257 40 L250 168" fill="none" stroke="#F2B53A" strokeWidth="12" strokeLinecap="round" strokeOpacity="0.85" />}
+        {(rule === "R7" || rule === "R8") && <polygon points={IRR_ZONE} fill="none" stroke="#F2B53A" strokeWidth="4" strokeLinejoin="round" />}
         <polygon
           points={FIELD}
           fill="none"
-          stroke={pin === "miedzyplon" ? "#F2B53A" : "#1A1C19"}
-          strokeWidth={pin === "miedzyplon" ? 5 : 2.2}
+          stroke={rule === "R5" ? "#F2B53A" : "#1A1C19"}
+          strokeWidth={rule === "R5" ? 5 : 2.2}
           strokeLinejoin="round"
         />
       </svg>
 
       {actions.map((a) => {
-        const s = pin === a.id;
+        const s = pin === a.n;
         const size = s ? 44 : 36;
         return (
           <button
-            key={a.id}
+            key={a.n}
             onClick={() => onPin(a)}
-            aria-label={`${a.n}. ${a.title}`}
+            aria-label={`${a.n}. ${a.co}`}
             aria-pressed={s}
             className="absolute inline-flex items-center justify-center rounded-full border-[3px] border-white p-0 font-extrabold text-white max-sm:scale-90"
             style={{
@@ -199,7 +200,7 @@ export function ParcelMap({
               top: `calc(${a.y}% - ${size / 2}px)`,
               width: size,
               height: size,
-              background: CAT[a.cat].color,
+              background: CAT[a.kategoria].color,
               fontSize: s ? 17 : 15,
               boxShadow: s ? "0 0 0 3px #1A1C19, 0 4px 10px rgba(0,0,0,0.3)" : "0 2px 6px rgba(0,0,0,0.3)",
               zIndex: s ? 2 : 1,

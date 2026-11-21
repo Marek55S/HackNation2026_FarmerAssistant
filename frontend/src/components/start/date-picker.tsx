@@ -52,7 +52,7 @@ export function DatePicker({ value, today, onChange }: { value: string; today: s
       </span>
       {win.hasOldImagery && (
         <span className="rounded-lg bg-warn-bg px-3 py-2.5 text-[13px] leading-snug text-warn-ink">
-          Dla lat przed 2017 zdjęcia satelitarne są mniej szczegółowe (Landsat 30 m), a prognozy z tamtego dnia nie da się
+          Dla lat przed 2016 zdjęcia satelitarne są mniej szczegółowe (Landsat 30 m), a prognozy z tamtego dnia nie da się
           odtworzyć — raport powie, jak to wpływa na pewność.
         </span>
       )}
@@ -64,8 +64,7 @@ export function DatePicker({ value, today, onChange }: { value: string; today: s
               <div key={yr.year} className="flex flex-col gap-1">
                 <span
                   title={yr.tip}
-                  className="block h-2.5 rounded-[3px]"
-                  style={{ background: yr.sensor === "s2" ? "#1E5B3A" : yr.sensor === "mixed" ? "#6da7ec" : "#3987e5" }}
+                  className={`block h-2.5 rounded-[3px] ${yr.sensor === "s2" ? "bg-primary" : "bg-blue"}`}
                 />
                 <span className="tabular text-center text-[11px] max-sm:text-[9px]">{yr.year}</span>
               </div>
@@ -77,10 +76,10 @@ export function DatePicker({ value, today, onChange }: { value: string; today: s
               zdjęcia Sentinel-2 · 10 m
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-3.5 rounded-sm bg-[#3987e5]" />
+              <span className="h-2 w-3.5 rounded-sm bg-blue" />
               zdjęcia Landsat · 30 m
             </span>
-            <span>pogoda i bilans wody: wszystkie lata (ERA5-Land) · uprawy: deklaracje ARiMR, mapa upraw Copernicus</span>
+            <span>pogoda i bilans wody: wszystkie lata (ERA5-Land) · uprawy: deklaracje ARiMR 2020–2026, mapa upraw JRC 2018 i 2022</span>
           </div>
         </div>
       </details>
