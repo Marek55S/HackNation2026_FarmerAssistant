@@ -18,7 +18,7 @@ export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin
         if (items.length === 0) return null;
         return (
           <div key={g} className="flex flex-col gap-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-[0.06em]" style={{ color: CAT[g].color }}>
+            <h3 className="text-xs font-extrabold uppercase tracking-[0.06em]" style={{ color: CAT[g].ink }}>
               {CAT[g].name}
             </h3>
             {items.map((a) => {
@@ -26,7 +26,7 @@ export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin
               return (
                 <div
                   key={a.n}
-                  className={`print-break-avoid overflow-hidden rounded-[14px] ${sel ? "border-2 border-ink" : "border border-rule bg-paper"}`}
+                  className={`print-break-avoid overflow-hidden rounded-[var(--r-card)] ${sel ? "border-2 border-ink" : "border border-rule bg-paper"}`}
                   style={sel ? { background: CAT[a.kategoria].bg } : undefined}
                 >
                   <button
@@ -124,7 +124,7 @@ export function Causes({ report, onShow }: { report: Report; onShow: (l: MapLaye
             {c.layer && (
               <button
                 onClick={() => onShow(c.layer!)}
-                className="no-print min-h-10 rounded-[10px] border border-rule-strong bg-paper px-3 text-[13px] font-semibold text-primary hover:border-primary"
+                className="no-print min-h-10 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3 text-[13px] font-semibold text-primary hover:border-primary"
               >
                 Pokaż na mapie
               </button>

@@ -19,7 +19,7 @@ export function MobileNav({ active, reportHref }: { active: Tab; reportHref: str
   return (
     <nav
       aria-label="Nawigacja"
-      className="no-print safe-bottom fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-rule bg-paper px-1 pt-1.5 md:hidden"
+      className="mobile-nav no-print safe-bottom fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-rule bg-paper px-1 pt-1.5 md:hidden"
     >
       {items.map(([tab, label, icon, href]) => (
         <Link

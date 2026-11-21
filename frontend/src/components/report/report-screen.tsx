@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { MapLayer, Report, Zalecenie } from "@/lib/types";
 import { MobileNav } from "../mobile-nav";
+import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, Logo, StatusPill, Tank } from "../ui";
 import { CAT, LAYERS, LEGEND } from "./map-style";
@@ -32,11 +33,11 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
 
   return (
     <div className="min-h-screen bg-bg pb-24 text-ink md:pb-0 print:pb-0">
-      <header className="border-b border-rule bg-paper">
+      <header className="app-header border-b border-rule bg-paper">
         <div className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-3.5 px-8 py-3 max-sm:gap-2 max-sm:px-4">
           <Link href="/" className="no-print flex items-center gap-2.5 text-ink no-underline max-sm:hidden">
             <Logo size={32} />
-            <span className="text-base font-extrabold">Asystent Wodny</span>
+            <span className="brand-name text-base font-extrabold">Asystent Wodny</span>
           </Link>
           <Link href={startHref} aria-label="Wróć do wyboru działki" className="no-print -ml-1 p-1 text-ink sm:hidden">
             <Icon d={ICON.chevronLeft} size={22} stroke={2.4} />
@@ -63,16 +64,17 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
             <StatusPill tone={report.status.tone} label={report.status.label} small />
           </div>
           <nav className="no-print ml-auto flex flex-wrap gap-2 max-sm:hidden">
+            <ThemeToggle />
             <Link
               href={startHref}
-              className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-ink no-underline hover:border-ink-3"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-ink no-underline hover:border-ink-3"
             >
               Zmień działkę lub dzień
             </Link>
             <button
-              onClick={() => window.print()}
+              onClick={printLight}
               title="W oknie drukowania wybierz „Zapisz jako PDF”"
-              className="inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-primary px-3.5 text-sm font-semibold text-white hover:bg-primary-dark"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] bg-btn px-3.5 text-sm font-semibold text-btn-ink hover:bg-btn-hover"
             >
               <Icon d={ICON.print} />
               Drukuj / zapisz PDF
@@ -86,10 +88,11 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
 
         <Sources report={report} />
 
-        <div className="no-print flex justify-center sm:hidden">
+        <div className="no-print flex flex-wrap justify-center gap-2 sm:hidden">
+          <ThemeToggle />
           <button
-            onClick={() => window.print()}
-            className="inline-flex min-h-11 items-center gap-2 rounded-[10px] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink"
+            onClick={printLight}
+            className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink"
           >
             <Icon d={ICON.print} />
             Drukuj / zapisz PDF
@@ -112,7 +115,7 @@ const noop = () => {};
 
 function OutOfScope({ report, startHref }: { report: Report; startHref: string }) {
   return (
-    <Card className="flex flex-col gap-3 rounded-[20px] p-6 max-sm:p-4">
+    <Card className="flex flex-col gap-3 p-6 max-sm:p-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <span className="max-sm:hidden">
           <StatusPill tone={report.status.tone} label={report.status.label} />
@@ -125,7 +128,7 @@ function OutOfScope({ report, startHref }: { report: Report; startHref: string }
       </div>
       <Link
         href={startHref}
-        className="inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] bg-primary px-4 text-sm font-semibold text-white no-underline"
+        className="inline-flex min-h-11 items-center gap-2 self-start rounded-[var(--r-btn)] bg-btn px-4 text-sm font-semibold text-btn-ink no-underline hover:bg-btn-hover"
       >
         Wskaż inną działkę
         <Icon d={ICON.arrowRight} />
@@ -153,7 +156,7 @@ function AgriReport({ report }: { report: Report }) {
   return (
     <>
       {/* Co Cię czeka: one sentence + soil water tank + the single most important action */}
-      <Card className="print-break-avoid flex flex-wrap items-center gap-5 rounded-[20px] px-6 py-5 max-sm:gap-4 max-sm:p-4">
+      <Card className="print-break-avoid flex flex-wrap items-center gap-5 px-6 py-5 max-sm:gap-4 max-sm:p-4">
         <div className="flex min-w-0 flex-[999_1_520px] items-center gap-4">
           {report.soilWaterPct !== null && report.stressThresholdPct !== null && (
             <Tank
@@ -185,7 +188,7 @@ function AgriReport({ report }: { report: Report }) {
         {report.urgent && urgentAction && (
           <button
             onClick={() => select(urgentAction, true)}
-            className="flex min-h-[72px] flex-[1_1_320px] items-center gap-3.5 rounded-[14px] border-2 px-4 py-3 text-left text-ink"
+            className="flex min-h-[72px] flex-[1_1_320px] items-center gap-3.5 rounded-[var(--r-card)] border-2 px-4 py-3 text-left text-ink"
             style={{ borderColor: CAT[urgentAction.kategoria].color, background: CAT[urgentAction.kategoria].bg }}
           >
             <span
@@ -195,7 +198,7 @@ function AgriReport({ report }: { report: Report }) {
               {urgentAction.n}
             </span>
             <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-xs font-bold tracking-[0.05em]" style={{ color: CAT[urgentAction.kategoria].color }}>
+              <span className="text-xs font-bold tracking-[0.05em]" style={{ color: CAT[urgentAction.kategoria].ink }}>
                 {report.urgent.label}
               </span>
               <span className="text-base font-extrabold">{report.urgent.title}</span>
@@ -212,7 +215,7 @@ function AgriReport({ report }: { report: Report }) {
         <div
           ref={mapRef}
           id="mapa"
-          className="print-break-avoid flex min-w-0 flex-[999_1_640px] scroll-mt-4 flex-col gap-3.5 rounded-[20px] border border-rule bg-paper p-[18px] max-sm:p-3"
+          className="print-break-avoid flex min-w-0 flex-[999_1_640px] scroll-mt-4 flex-col gap-3.5 rounded-[var(--r-card)] border border-rule bg-paper p-[18px] max-sm:p-3"
         >
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-extrabold">Plan na Twojej działce</h2>
@@ -223,7 +226,7 @@ function AgriReport({ report }: { report: Report }) {
                   role="tab"
                   aria-selected={layer === k}
                   onClick={() => setLayer(k)}
-                  className={`min-h-10 rounded-[9px] px-3 text-[13px] max-sm:flex-1 max-sm:px-1.5 max-sm:text-xs ${layer === k ? "bg-paper font-bold text-ink shadow-sm" : "font-medium text-ink-2 hover:text-ink"}`}
+                  className={`min-h-10 rounded-[9px] px-3 text-[13px] max-sm:flex-1 max-sm:px-1.5 max-sm:text-xs ${layer === k ? "bg-tab-active font-bold text-ink shadow-sm" : "font-medium text-ink-2 hover:text-ink"}`}
                 >
                   {LAYERS[k]}
                 </button>

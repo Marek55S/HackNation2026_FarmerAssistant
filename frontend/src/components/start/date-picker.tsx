@@ -60,7 +60,7 @@ export function DatePicker({
             role="radio"
             aria-checked={mode === m.id}
             onClick={() => pickMode(m.id)}
-            className={`min-h-11 rounded-[9px] px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-paper font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
+            className={`min-h-11 rounded-[9px] px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-tab-active font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
           >
             {m.id === "dzis" ? `Dziś · ${shortDate(today)}` : m.label}
           </button>

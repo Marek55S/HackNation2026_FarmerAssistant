@@ -31,7 +31,7 @@ export function BaseSwitch({
             role="radio"
             aria-checked={base === b}
             onClick={() => onChange(b)}
-            className={`min-h-8 rounded-md px-2.5 text-xs font-semibold ${base === b ? "bg-ink text-white" : "text-ink-2 hover:text-ink"}`}
+            className={`min-h-8 rounded-md px-2.5 text-xs font-semibold ${base === b ? "bg-[#1A1C19] text-white" : "text-[#3F423C] hover:text-[#1A1C19]"}`}
           >
             {label}
           </button>
@@ -39,7 +39,7 @@ export function BaseSwitch({
       </div>
       {extra}
       </div>
-      {notice && <span className="max-w-[220px] rounded-md bg-white/95 px-2 py-1 text-[11px] text-ink-2 shadow-sm">{notice}</span>}
+      {notice && <span className="max-w-[220px] rounded-md bg-white/95 px-2 py-1 text-[11px] text-[#3F423C] shadow-sm">{notice}</span>}
     </div>
   );
 }

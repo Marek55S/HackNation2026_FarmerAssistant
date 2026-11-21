@@ -70,7 +70,8 @@ function styleSelected(el: HTMLElement, selected: boolean) {
   el.style.zIndex = selected ? "2" : "1";
 }
 
-const LABEL_TONE = { ink: "text-ink", red: "text-danger-ink", blue: "text-blue-dark", muted: "text-muted" };
+// Labels sit on the photo, so they keep the same light chip in both looks.
+const LABEL_TONE = { ink: "text-[#1A1C19]", red: "text-[#8E1F1F]", blue: "text-[#123f78]", muted: "text-[#5F625B]" };
 
 export default function ParcelMap({
   parcel,
@@ -259,7 +260,7 @@ export default function ParcelMap({
         extra={
           <button
             onClick={() => box.current && mapRef.current?.fitBounds(bounds(parcel), { padding: fitPadding(box.current), maxZoom: 18 })}
-            className="pointer-events-auto min-h-9 rounded-lg bg-white/95 px-2.5 text-xs font-semibold text-ink shadow-sm hover:bg-white"
+            className="pointer-events-auto min-h-9 rounded-lg bg-white/95 px-2.5 text-xs font-semibold text-[#1A1C19] shadow-sm hover:bg-white"
           >
             Cała działka
           </button>

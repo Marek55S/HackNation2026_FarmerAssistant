@@ -69,7 +69,7 @@ export default function PickMap({ selected, onPick }: { selected: string | null;
         el.dataset.nr = p.number;
         el.textContent = p.number;
         el.setAttribute("aria-label", `Wybierz działkę ${p.number}, obręb ${p.obreb}`);
-        el.className = "rounded-md bg-white/95 px-2 py-1 text-xs font-bold text-ink shadow-sm";
+        el.className = "rounded-md bg-white/95 px-2 py-1 text-xs font-bold text-[#1A1C19] shadow-sm";
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
           onPickRef.current(p.number);
@@ -93,7 +93,7 @@ export default function PickMap({ selected, onPick }: { selected: string | null;
     map.getContainer().querySelectorAll<HTMLButtonElement>("button[data-nr]").forEach((b) => {
       const sel = b.dataset.nr === selected;
       b.setAttribute("aria-pressed", String(sel));
-      b.className = `rounded-md px-2 py-1 text-xs font-bold shadow-sm ${sel ? "bg-primary text-white" : "bg-white/95 text-ink"}`;
+      b.className = `rounded-md px-2 py-1 text-xs font-bold shadow-sm ${sel ? "bg-[#1E5B3A] text-white" : "bg-white/95 text-[#1A1C19]"}`;
     });
   }, [selected, ready]);
 

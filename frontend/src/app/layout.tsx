@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { ServiceWorker } from "@/components/service-worker";
 import "./globals.css";
 
@@ -8,6 +8,16 @@ const inter = Inter({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700", "800"],
 });
+
+// Display font for the dark ("trace") look — tight grotesque headlines.
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+});
+
+// Applies the saved look before the first paint (no flash of the other theme).
+const THEME_SCRIPT = `try{var t=localStorage.getItem("asystent-wodny:wyglad");if(t==="trace")document.documentElement.dataset.theme="trace"}catch(e){}`;
 
 export const metadata: Metadata = {
   title: { default: "Asystent Wodny", template: "%s · Asystent Wodny" },
@@ -24,7 +34,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pl" className={`${inter.variable} h-full antialiased`}>
+    <html lang="pl" className={`${inter.variable} ${interTight.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorker />

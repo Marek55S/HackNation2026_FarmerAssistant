@@ -117,7 +117,7 @@ export function ParcelPicker({
             role="tab"
             aria-selected={mode === m.id}
             onClick={() => setMode(m.id)}
-            className={`min-h-11 rounded-[9px] px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-paper font-semibold text-ink shadow-sm" : "font-medium text-ink-3"}`}
+            className={`min-h-11 rounded-[9px] px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-tab-active font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
           >
             {m.label}
           </button>
@@ -188,7 +188,7 @@ export function ParcelPicker({
 
       {parcel && lookup && (
         <div
-          className={`flex flex-col overflow-hidden rounded-[14px] border ${lookup.outOfScope ? "border-rule-strong bg-chip" : "border-primary-border bg-primary-tint"}`}
+          className={`flex flex-col overflow-hidden rounded-[var(--r-card)] border ${lookup.outOfScope ? "border-rule-strong bg-chip" : "border-primary-border bg-primary-tint"}`}
         >
           <div className="flex flex-wrap items-center gap-3.5 p-3.5">
             <ParcelShape ring={parcel.geometry} />
@@ -236,7 +236,7 @@ export function ParcelPicker({
                 <button
                   onClick={() => setCropEdit(!cropEdit)}
                   aria-expanded={cropEdit}
-                  className="min-h-11 rounded-[10px] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-primary"
+                  className="min-h-11 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-primary"
                 >
                   {cropEdit ? "Zamknij" : "Zmień"}
                 </button>

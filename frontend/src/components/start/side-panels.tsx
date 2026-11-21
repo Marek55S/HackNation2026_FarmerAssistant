@@ -67,7 +67,7 @@ export function FarmPanel({
       <button
         onClick={onAdd}
         disabled={!canAdd}
-        className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-[10px] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Icon d={ICON.plus} /> Dodaj wskazaną działkę
       </button>
@@ -136,7 +136,7 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
         </>
       )}
       {failed > 0 && (
-        <p className="rounded-[10px] bg-bg p-3 text-[13px] text-ink-3">
+        <p className="rounded-[var(--r-btn)] bg-bg p-3 text-[13px] text-ink-3">
           {failed === 1 ? "Jedno źródło nie dało" : `${failed} źródła nie dały`} wyniku — analiza i tak się kończy, a raport powie wprost,
           czego zabrakło.
         </p>

@@ -28,6 +28,7 @@ export const ICON = {
   ditch: "M3 8c3 2 6 2 9 0s6-2 9 0M3 14c3 2 6 2 9 0s6-2 9 0",
   plus: "M12 5v14M5 12h14",
   calendar: "M4 6h16v15H4zM4 10h16M9 3v4M15 3v4",
+  moon: "M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z",
   info: "M12 8v.5M12 11v6M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
 } as const;
 
@@ -72,12 +73,12 @@ export function Logo({ size = 34 }: { size?: number }) {
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[18px] border border-rule bg-paper ${className}`}>{children}</section>;
+  return <section className={`rounded-[var(--r-card)] border border-rule bg-paper ${className}`}>{children}</section>;
 }
 
 export function StepNumber({ n }: { n: number }) {
   return (
-    <span className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+    <span className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary text-sm font-bold text-on-primary">
       {n}
     </span>
   );

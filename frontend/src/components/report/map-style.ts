@@ -10,10 +10,11 @@ export const LAYERS: Record<MapLayer, string> = {
   gleba: "Gleba",
 };
 
-export const CAT: Record<ActionCategory, { name: string; color: string; bg: string }> = {
-  ret: { name: "1 · Zatrzymaj wodę", color: "#1E5B3A", bg: "#EEF5EF" },
-  agro: { name: "2 · Na polu", color: "#7A4E14", bg: "#F7EFE3" },
-  irr: { name: "3 · Nawadnianie", color: "#1f6fc9", bg: "#E9F1FC" },
+/** color = pin fill (on the map), ink = text colour on the page (theme-aware), bg = selected card background. */
+export const CAT: Record<ActionCategory, { name: string; color: string; ink: string; bg: string }> = {
+  ret: { name: "1 · Zatrzymaj wodę", color: "#1E5B3A", ink: "var(--cat-ret-ink)", bg: "var(--cat-ret-bg)" },
+  agro: { name: "2 · Na polu", color: "#7A4E14", ink: "var(--cat-agro-ink)", bg: "var(--cat-agro-bg)" },
+  irr: { name: "3 · Nawadnianie", color: "#1f6fc9", ink: "var(--cat-irr-ink)", bg: "var(--cat-irr-bg)" },
 };
 
 /** Colour per raster class index (RasterGrid.values). */
