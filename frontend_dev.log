@@ -1,0 +1,2179 @@
+
+> asystent-wodny@0.1.0 dev C:\Users\Alber\Desktop\HackNation\frontend
+> next dev
+
+▲ Next.js 16.3.8 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.17.128.1:3000
+✓ Ready in 317ms
+✓ Running next.config.ts took 1360ms
+
+✓ Generated AGENTS.md and CLAUDE.md for AI agents. Set `agentRules: false` in next.config to disable.
+ GET / 200 in 26ms (next.js: 2ms, application-code: 24ms)
+ GET / 200 in 34ms (next.js: 6ms, application-code: 28ms)
+ GET /manifest.webmanifest 200 in 208ms (next.js: 190ms, application-code: 17ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 77ms (next.js: 72ms, application-code: 5ms)
+ GET / 200 in 33ms (next.js: 3ms, application-code: 29ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.6ms, application-code: 2ms)
+ GET / 200 in 52ms (next.js: 4ms, application-code: 48ms)
+ GET /manifest.webmanifest 200 in 8ms (next.js: 3ms, application-code: 5ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+-                           __processed_6a87d506-6ed7-40c5-ba8b-186cd0749970__="true"
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 9ms (next.js: 3ms, application-code: 6ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-08-21 200 in 8ms (next.js: 3ms, application-code: 6ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2024-02-21 200 in 8ms (next.js: 3ms, application-code: 5ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.7ms, application-code: 2ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2024-06-21 200 in 5ms (next.js: 1.4ms, application-code: 4ms)
+ GET /api/parcel?gmina=Szubin&obreb=Ko%C5%82aczkowo&nr=22%2F15&data=2024-06-21 200 in 4ms (next.js: 1.4ms, application-code: 2ms)
+ GET /api/parcel?mapa=662%2F11&data=2024-06-21 200 in 6ms (next.js: 3ms, application-code: 4ms)
+ GET /api/parcel?mapa=3225%2F6&data=2024-06-21 200 in 6ms (next.js: 2ms, application-code: 3ms)
+ GET /api/parcel?mapa=22%2F15&data=2024-06-21 200 in 8ms (next.js: 3ms, application-code: 5ms)
+ GET /api/parcel?mapa=3225%2F6&data=2024-06-21 200 in 10ms (next.js: 3ms, application-code: 7ms)
+ GET /api/parcel?mapa=662%2F11&data=2024-06-21 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ GET /api/parcel?mapa=22%2F15&data=2024-06-21 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ GET /api/parcel?mapa=3225%2F6&data=2024-06-21 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ GET /api/parcel?mapa=662%2F11&data=2024-06-21 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET /api/parcel?mapa=3225%2F6&data=2024-06-21 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /api/parcel?mapa=22%2F15&data=2024-06-21 200 in 11ms (next.js: 4ms, application-code: 7ms)
+ POST /api/analyze 200 in 5.6s (next.js: 130ms, application-code: 5.4s)
+ GET /raport?dzialka=041005_5.0011.22%2F15&data=2024-06-21 200 in 458ms (next.js: 387ms, application-code: 71ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 2ms, application-code: 3ms)
+ GET /?dzialka=041005_5.0011.22%2F15&data=2024-06-21 200 in 32ms (next.js: 7ms, application-code: 25ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 2.0ms, application-code: 4ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2024-06-21 200 in 7ms (next.js: 2ms, application-code: 5ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 6ms (next.js: 3ms, application-code: 3ms)
+ GET /api/parcel?gmina=Szubin&obreb=Ko%C5%82aczkowo&nr=22%2F15&data=2026-11-21 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /api/parcel?gmina=Szubin&obreb=Ko%C5%82aczkowo&nr=22%2F15&data=2024-06-21 200 in 3ms (next.js: 1.5ms, application-code: 2.0ms)
+ GET /api/parcel?gmina=Szubin&obreb=Ko%C5%82aczkowo&nr=22%2F15&data=2026-11-21 200 in 11ms (next.js: 5ms, application-code: 7ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.7ms, application-code: 1.8ms)
+ GET /api/parcel?mapa=662%2F11&data=2026-11-21 200 in 11ms (next.js: 4ms, application-code: 7ms)
+ POST /api/analyze 200 in 5.4s (next.js: 4ms, application-code: 5.4s)
+ GET /raport?dzialka=041005_5.0021.662%2F11&data=2026-11-21 200 in 47ms (next.js: 2ms, application-code: 45ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.7ms, application-code: 4ms)
+ GET / 200 in 40ms (next.js: 7ms, application-code: 33ms)
+ GET /manifest.webmanifest 200 in 7ms (next.js: 3ms, application-code: 4ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.7ms, application-code: 2ms)
+ GET /raport?dzialka=041005_5.0021.662%2F11&data=2026-11-21 200 in 68ms (next.js: 8ms, application-code: 60ms)
+ GET /manifest.webmanifest 200 in 8ms (next.js: 3ms, application-code: 4ms)
+ GET / 200 in 35ms (next.js: 6ms, application-code: 28ms)
+ GET /manifest.webmanifest 200 in 3ms (next.js: 1.6ms, application-code: 1.7ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.2ms, application-code: 1.7ms)
+✓ Compiled in 34ms
+✓ Compiled in 74ms
+ GET / 200 in 21ms (next.js: 2ms, application-code: 19ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.3ms, application-code: 1.9ms)
+ GET / 200 in 22ms (next.js: 2ms, application-code: 20ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.8ms, application-code: 2ms)
+ GET / 200 in 48ms (next.js: 4ms, application-code: 44ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 3ms, application-code: 3ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 2ms, application-code: 2ms)
+ GET / 200 in 51ms (next.js: 9ms, application-code: 43ms)
+ GET / 200 in 38ms (next.js: 2ms, application-code: 36ms)
+ GET / 200 in 50ms (next.js: 4ms, application-code: 46ms)
+ GET /manifest.webmanifest 200 in 7ms (next.js: 3ms, application-code: 4ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 2ms, application-code: 2ms)
+ GET / 200 in 290ms (next.js: 142ms, application-code: 148ms)
+ GET / 200 in 294ms (next.js: 221ms, application-code: 73ms)
+ GET / 200 in 86ms (next.js: 5ms, application-code: 81ms)
+ GET / 200 in 108ms (next.js: 22ms, application-code: 86ms)
+ GET / 200 in 82ms (next.js: 5ms, application-code: 77ms)
+ GET / 200 in 102ms (next.js: 19ms, application-code: 83ms)
+ GET / 200 in 80ms (next.js: 3ms, application-code: 77ms)
+ GET / 200 in 97ms (next.js: 24ms, application-code: 73ms)
+ GET / 200 in 79ms (next.js: 4ms, application-code: 75ms)
+ GET / 200 in 80ms (next.js: 24ms, application-code: 56ms)
+ GET / 200 in 89ms (next.js: 5ms, application-code: 85ms)
+ GET / 200 in 108ms (next.js: 19ms, application-code: 89ms)
+ GET / 200 in 110ms (next.js: 4ms, application-code: 107ms)
+ GET / 200 in 120ms (next.js: 23ms, application-code: 97ms)
+ GET / 200 in 78ms (next.js: 5ms, application-code: 73ms)
+ GET / 200 in 78ms (next.js: 24ms, application-code: 54ms)
+ GET / 200 in 64ms (next.js: 14ms, application-code: 50ms)
+ GET / 200 in 66ms (next.js: 5ms, application-code: 61ms)
+ GET / 200 in 83ms (next.js: 4ms, application-code: 79ms)
+ GET / 200 in 83ms (next.js: 16ms, application-code: 67ms)
+ GET / 200 in 89ms (next.js: 20ms, application-code: 69ms)
+ GET / 200 in 90ms (next.js: 5ms, application-code: 85ms)
+ GET / 200 in 117ms (next.js: 5ms, application-code: 112ms)
+ GET / 200 in 120ms (next.js: 20ms, application-code: 100ms)
+ GET / 200 in 107ms (next.js: 5ms, application-code: 102ms)
+ GET / 200 in 130ms (next.js: 24ms, application-code: 107ms)
+ GET / 200 in 104ms (next.js: 4ms, application-code: 101ms)
+ GET / 200 in 134ms (next.js: 24ms, application-code: 110ms)
+ GET / 200 in 91ms (next.js: 4ms, application-code: 87ms)
+ GET / 200 in 92ms (next.js: 27ms, application-code: 65ms)
+ GET / 200 in 79ms (next.js: 3ms, application-code: 76ms)
+ GET / 200 in 96ms (next.js: 15ms, application-code: 81ms)
+ GET / 200 in 84ms (next.js: 4ms, application-code: 80ms)
+ GET / 200 in 86ms (next.js: 20ms, application-code: 66ms)
+ GET / 200 in 102ms (next.js: 4ms, application-code: 98ms)
+ GET / 200 in 127ms (next.js: 20ms, application-code: 106ms)
+ GET / 200 in 131ms (next.js: 5ms, application-code: 126ms)
+ GET / 200 in 155ms (next.js: 24ms, application-code: 131ms)
+ GET / 200 in 116ms (next.js: 7ms, application-code: 108ms)
+ GET / 200 in 138ms (next.js: 30ms, application-code: 108ms)
+ GET / 200 in 111ms (next.js: 5ms, application-code: 106ms)
+ GET / 200 in 110ms (next.js: 22ms, application-code: 87ms)
+ GET / 200 in 115ms (next.js: 6ms, application-code: 109ms)
+ GET / 200 in 115ms (next.js: 29ms, application-code: 86ms)
+ GET / 200 in 80ms (next.js: 4ms, application-code: 75ms)
+ GET / 200 in 98ms (next.js: 25ms, application-code: 73ms)
+ GET / 200 in 83ms (next.js: 3ms, application-code: 79ms)
+ GET / 200 in 82ms (next.js: 14ms, application-code: 68ms)
+ GET / 200 in 92ms (next.js: 4ms, application-code: 88ms)
+ GET / 200 in 92ms (next.js: 22ms, application-code: 71ms)
+ GET / 200 in 99ms (next.js: 2ms, application-code: 97ms)
+ GET / 200 in 99ms (next.js: 16ms, application-code: 83ms)
+ GET / 200 in 98ms (next.js: 2ms, application-code: 96ms)
+ GET / 200 in 99ms (next.js: 22ms, application-code: 77ms)
+ GET / 200 in 75ms (next.js: 4ms, application-code: 72ms)
+ GET / 200 in 72ms (next.js: 4ms, application-code: 68ms)
+ GET / 200 in 83ms (next.js: 19ms, application-code: 64ms)
+ GET / 200 in 71ms (next.js: 3ms, application-code: 67ms)
+ GET / 200 in 88ms (next.js: 16ms, application-code: 72ms)
+ GET /manifest.webmanifest 200 in 53ms (next.js: 43ms, application-code: 10ms)
+ GET / 200 in 133ms (next.js: 3ms, application-code: 130ms)
+ GET / 200 in 151ms (next.js: 16ms, application-code: 135ms)
+ GET / 200 in 145ms (next.js: 7ms, application-code: 137ms)
+ GET / 200 in 167ms (next.js: 23ms, application-code: 144ms)
+ GET / 200 in 148ms (next.js: 54ms, application-code: 94ms)
+ GET / 200 in 150ms (next.js: 72ms, application-code: 78ms)
+ GET / 200 in 102ms (next.js: 7ms, application-code: 96ms)
+ GET / 200 in 116ms (next.js: 28ms, application-code: 89ms)
+ GET / 200 in 84ms (next.js: 6ms, application-code: 77ms)
+ GET / 200 in 95ms (next.js: 23ms, application-code: 72ms)
+ GET / 200 in 75ms (next.js: 4ms, application-code: 71ms)
+ GET / 200 in 92ms (next.js: 18ms, application-code: 74ms)
+ GET / 200 in 110ms (next.js: 3ms, application-code: 107ms)
+ GET / 200 in 113ms (next.js: 15ms, application-code: 98ms)
+ GET / 200 in 117ms (next.js: 3ms, application-code: 114ms)
+ GET / 200 in 138ms (next.js: 20ms, application-code: 118ms)
+ GET / 200 in 126ms (next.js: 5ms, application-code: 121ms)
+ GET / 200 in 150ms (next.js: 30ms, application-code: 120ms)
+ GET / 200 in 118ms (next.js: 3ms, application-code: 115ms)
+ GET / 200 in 130ms (next.js: 22ms, application-code: 108ms)
+ GET / 200 in 91ms (next.js: 4ms, application-code: 86ms)
+ GET / 200 in 102ms (next.js: 29ms, application-code: 73ms)
+ GET / 200 in 70ms (next.js: 4ms, application-code: 66ms)
+ GET / 200 in 96ms (next.js: 15ms, application-code: 82ms)
+ GET / 200 in 83ms (next.js: 3ms, application-code: 80ms)
+ GET / 200 in 83ms (next.js: 16ms, application-code: 67ms)
+ GET / 200 in 73ms (next.js: 4ms, application-code: 69ms)
+ GET / 200 in 73ms (next.js: 30ms, application-code: 43ms)
+ GET / 200 in 29ms (next.js: 3ms, application-code: 26ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 11ms (next.js: 8ms, application-code: 3ms)
+ GET / 200 in 126ms (next.js: 6ms, application-code: 120ms)
+ GET /manifest.webmanifest 200 in 7ms (next.js: 3ms, application-code: 4ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 50ms (next.js: 42ms, application-code: 8ms)
+ GET /api/pola?bbox=17.74,53.045,17.76,53.055&rok=2026 200 in 544ms (next.js: 170ms, application-code: 374ms)
+ GET /api/pola?bbox=17.74,53.045,17.76,53.055&rok=2026 200 in 87ms (next.js: 1.2ms, application-code: 85ms)
+ GET /api/pola?bbox=17.74,53.045,17.76,53.055&rok=2026 200 in 81ms (next.js: 1.2ms, application-code: 80ms)
+ GET /api/pola?bbox=17.0,53.0,17.9,53.2 413 in 3ms (next.js: 1.2ms, application-code: 1.9ms)
+ GET /api/parcel?mapa=3225%2F6&data=2026-11-21 200 in 9ms (next.js: 3ms, application-code: 6ms)
+ GET / 200 in 54ms (next.js: 5ms, application-code: 49ms)
+ GET / 200 in 54ms (next.js: 18ms, application-code: 36ms)
+ GET / 200 in 24ms (next.js: 12ms, application-code: 13ms)
+ GET / 200 in 25ms (next.js: 3ms, application-code: 22ms)
+✓ Compiled in 27ms
+[browser] Uncaught Error: Style is not done loading.
+    at PickMap.useEffect (src/components/start/pick-map.tsx:136:9)
+    at ParcelPicker (src/components/start/parcel-picker.tsx:182:26)
+    at StartScreen (src/components/start/start-screen.tsx:191:53)
+    at Home (src\app\page.tsx:16:10)
+  134 |     const map = mapRef.current;
+  135 |     if (!map || !ready) return;
+> 136 |     map.setPaintProperty("dzialki-linia", "line-color", ["case", ["==", ["get", "nr"], selected ?? ""], "#F2B53A", "#1E5B3A"]);
+      |         ^
+  137 |     map.setPaintProperty("dzialki-linia", "line-width", ["case", ["==", ["get", "nr"], selected ?? ""], 4, 2]);
+  138 |     map.getContainer().querySelectorAll<HTMLButtonElement>("button[data-nr]").forEach((b) => {
+  139 |       const sel = b.dataset.nr === selected;
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 24ms
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at Set.forEach (<anonymous>) (<anonymous>)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 34ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /manifest.webmanifest 200 in 15ms (next.js: 12ms, application-code: 3ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /manifest.webmanifest 200 in 10ms (next.js: 7ms, application-code: 2ms)
+✓ Compiled in 29ms
+ GET /manifest.webmanifest 200 in 12ms (next.js: 9ms, application-code: 3ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 203ms (next.js: 34ms, application-code: 170ms)
+ GET / 200 in 177ms (next.js: 12ms, application-code: 165ms)
+✓ Compiled in 46ms
+ GET / 200 in 55ms (next.js: 4ms, application-code: 51ms)
+ GET / 200 in 54ms (next.js: 7ms, application-code: 48ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ GET /manifest.webmanifest 200 in 4ms (next.js: 1.6ms, application-code: 2ms)
+ GET /manifest.webmanifest 200 in 3ms (next.js: 1.6ms, application-code: 1.8ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.4ms, application-code: 2ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 4ms (next.js: 1.3ms, application-code: 2ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.2ms, application-code: 2ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.2ms, application-code: 1.8ms)
+✓ Compiled in 22ms
+ GET / 200 in 21ms (next.js: 2ms, application-code: 19ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 3ms, application-code: 2ms)
+ GET / 200 in 24ms (next.js: 1.5ms, application-code: 23ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.4ms, application-code: 2ms)
+ GET /api/pola?bbox=17.788,53.040,17.804,53.048&rok=2026 200 in 253ms (next.js: 1.2ms, application-code: 252ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+-                           __processed_1fdffa87-f4bd-48ae-a2e5-d1518bfe3c7e__="true"
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET / 200 in 44ms (next.js: 2.0ms, application-code: 42ms)
+ GET /manifest.webmanifest 200 in 4ms (next.js: 2ms, application-code: 1.9ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.3ms, application-code: 2.0ms)
+ GET /api/pola?bbox=17.792,53.040,17.808,53.048&rok=2026 200 in 285ms (next.js: 1.3ms, application-code: 283ms)
+ GET /api/pola?bbox=17.796,53.040,17.812,53.048&rok=2026 200 in 216ms (next.js: 1.2ms, application-code: 215ms)
+ GET /api/pola?bbox=17.796,53.036,17.816,53.044&rok=2026 200 in 163ms (next.js: 1.3ms, application-code: 162ms)
+ GET /api/pola?bbox=17.784,53.040,17.800,53.048&rok=2026 200 in 197ms (next.js: 1.8ms, application-code: 196ms)
+ GET /api/pola?bbox=17.780,53.040,17.796,53.048&rok=2026 200 in 78ms (next.js: 1.7ms, application-code: 76ms)
+ GET /api/parcel?mapa=22%2F15&data=2026-11-21 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /api/pola?bbox=17.776,53.040,17.796,53.048&rok=2026 200 in 164ms (next.js: 1.6ms, application-code: 162ms)
+ GET /api/pola?bbox=17.776,53.036,17.792,53.044&rok=2026 200 in 99ms (next.js: 2.0ms, application-code: 97ms)
+ GET /api/pola?bbox=17.776,53.040,17.792,53.048&rok=2026 200 in 105ms (next.js: 1.3ms, application-code: 104ms)
+ GET /api/pola?bbox=17.772,53.040,17.792,53.048&rok=2026 200 in 339ms (next.js: 1.2ms, application-code: 338ms)
+ GET /api/pola?bbox=17.772,53.040,17.788,53.048&rok=2026 200 in 137ms (next.js: 2ms, application-code: 135ms)
+ GET /api/pola?bbox=17.772,53.044,17.788,53.052&rok=2026 200 in 179ms (next.js: 6ms, application-code: 173ms)
+ GET /api/pola?bbox=17.796,53.036,17.812,53.044&rok=2026 200 in 269ms (next.js: 2ms, application-code: 267ms)
+ GET /api/pola?bbox=17.800,53.036,17.812,53.044&rok=2026 200 in 76ms (next.js: 1.4ms, application-code: 75ms)
+ GET /api/pola?bbox=17.804,53.036,17.816,53.044&rok=2026 200 in 75ms (next.js: 1.2ms, application-code: 74ms)
+ GET /api/pola?bbox=17.808,53.036,17.820,53.040&rok=2026 200 in 93ms (next.js: 5ms, application-code: 88ms)
+ GET /api/pola?bbox=17.808,53.032,17.820,53.040&rok=2026 200 in 133ms (next.js: 4ms, application-code: 129ms)
+ GET /api/pola?bbox=17.808,53.032,17.824,53.040&rok=2026 200 in 184ms (next.js: 4ms, application-code: 180ms)
+ GET /api/pola?bbox=17.812,53.036,17.824,53.040&rok=2026 200 in 85ms (next.js: 2ms, application-code: 82ms)
+ GET /api/pola?bbox=17.812,53.036,17.820,53.040&rok=2026 200 in 96ms (next.js: 1.3ms, application-code: 95ms)
+ GET / 200 in 19ms (next.js: 3ms, application-code: 17ms)
+ GET / 200 in 15ms (next.js: 2ms, application-code: 13ms)
+ GET /manifest.webmanifest 200 in 4ms (next.js: 1.8ms, application-code: 2ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 3ms, application-code: 3ms)
+ GET / 200 in 51ms (next.js: 4ms, application-code: 47ms)
+ GET / 200 in 27ms (next.js: 3ms, application-code: 23ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 1.8ms, application-code: 4ms)
+ GET / 200 in 45ms (next.js: 3ms, application-code: 42ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.7ms, application-code: 3ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 7ms (next.js: 5ms, application-code: 3ms)
+✓ Compiled in 45ms
+ GET / 200 in 69ms (next.js: 8ms, application-code: 60ms)
+ GET / 200 in 40ms (next.js: 4ms, application-code: 36ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.5ms, application-code: 3ms)
+[browser] Uncaught Error: Style is not done loading.
+    at PickMap.useEffect (src/components/start/pick-map.tsx:237:9)
+    at ParcelPicker (src/components/start/parcel-picker.tsx:180:25)
+    at StartScreen (src/components/start/start-screen.tsx:191:53)
+    at Home (src\app\page.tsx:16:10)
+  235 |     const map = mapRef.current;
+  236 |     if (!map || !ready) return;
+> 237 |     map.setPaintProperty("dzialki-linia", "line-color", ["case", ["==", ["get", "nr"], selected ?? ""], "#F2B53A", "#1E5B3A"]);
+      |         ^
+  238 |     map.setPaintProperty("dzialki-linia", "line-width", ["case", ["==", ["get", "nr"], selected ?? ""], 4, 2]);
+  239 |     map.getContainer().querySelectorAll<HTMLButtonElement>("button[data-nr]").forEach((b) => {
+  240 |       const sel = b.dataset.nr === selected;
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'getSource')
+    at PickMap.useEffect.src (src/components/start/pick-map.tsx:122:29)
+    at PickMap.useEffect.loadPola (src/components/start/pick-map.tsx:137:11)
+  120 |       let ctrl: AbortController | null = null;
+  121 |       let deb: ReturnType<typeof setTimeout> | undefined;
+> 122 |       const src = () => map.getSource("pola") as maplibregl.GeoJSONSource;
+      |                             ^
+  123 |       const loadPola = () => {
+  124 |         if (map.getZoom() < POLA_MIN_ZOOM) {
+  125 |           ctrl?.abort();
+ GET /? 200 in 47ms (next.js: 3ms, application-code: 45ms)
+ GET /manifest.webmanifest 200 in 4ms (next.js: 2ms, application-code: 2.0ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.2ms, application-code: 1.8ms)
+ GET /api/pola?bbox=17.792,53.040,17.812,53.048&rok=2026 200 in 237ms (next.js: 3ms, application-code: 234ms)
+ GET /api/pola?bbox=17.796,53.036,17.812,53.048&rok=2026 200 in 107ms (next.js: 1.3ms, application-code: 106ms)
+ GET /api/pola?bbox=17.800,53.036,17.816,53.044&rok=2026 200 in 205ms (next.js: 2ms, application-code: 203ms)
+ GET /api/pola?bbox=17.804,53.036,17.812,53.044&rok=2026 200 in 72ms (next.js: 4ms, application-code: 68ms)
+✓ Compiled in 33ms
+ GET /api/pola?bbox=17.772,53.036,17.824,53.056&rok=2026 200 in 365ms (next.js: 3ms, application-code: 362ms)
+ GET / 200 in 23ms (next.js: 1.9ms, application-code: 21ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.5ms, application-code: 1.8ms)
+ GET /api/pola?bbox=17.784,53.040,17.812,53.052&rok=2026 200 in 191ms (next.js: 1.6ms, application-code: 190ms)
+ GET /api/pola?bbox=17.772,53.036,17.824,53.056&rok=2026 200 in 10ms (next.js: 3ms, application-code: 7ms)
+ GET /api/parcel?mapa=xy%3A17.798445%2C53.047494&roslina=kukurydza+na+kiszonk%C4%99&rok=2026&data=2026-11-21 200 in 570ms (next.js: 4ms, application-code: 566ms)
+ GET /api/parcel?mapa=xy%3A17.799250%2C53.048916&roslina=TUZ&rok=2026&data=2026-11-21 200 in 220ms (next.js: 4ms, application-code: 216ms)
+ GET /api/pola?bbox=17.772,53.036,17.816,53.056&rok=2026 200 in 501ms (next.js: 2ms, application-code: 499ms)
+ GET /api/pola?bbox=17.784,53.036,17.828,53.052&rok=2026 200 in 132ms (next.js: 3ms, application-code: 130ms)
+ GET /api/pola?bbox=17.792,53.040,17.824,53.052&rok=2026 200 in 98ms (next.js: 1.4ms, application-code: 97ms)
+ GET /api/pola?bbox=17.796,53.040,17.820,53.052&rok=2026 200 in 106ms (next.js: 1.1ms, application-code: 105ms)
+ GET /api/pola?bbox=17.804,53.040,17.820,53.048&rok=2026 200 in 367ms (next.js: 3ms, application-code: 365ms)
+ GET /api/pola?bbox=17.804,53.044,17.816,53.048&rok=2026 200 in 370ms (next.js: 1.5ms, application-code: 369ms)
+ GET /api/pola?bbox=17.788,53.032,17.832,53.052&rok=2026 200 in 505ms (next.js: 2ms, application-code: 503ms)
+ GET /api/pola?bbox=17.784,53.036,17.828,53.056&rok=2026 200 in 493ms (next.js: 4ms, application-code: 489ms)
+ GET /api/pola?bbox=17.788,53.036,17.832,53.052&rok=2026 200 in 502ms (next.js: 1.2ms, application-code: 501ms)
+ GET /api/pola?bbox=17.808,53.028,17.852,53.044&rok=2026 200 in 194ms (next.js: 1.7ms, application-code: 192ms)
+ GET /api/pola?bbox=17.808,53.028,17.856,53.044&rok=2026 200 in 144ms (next.js: 1.3ms, application-code: 143ms)
+ GET /api/pola?bbox=17.824,53.020,17.868,53.040&rok=2026 200 in 95ms (next.js: 1.3ms, application-code: 93ms)
+ GET /api/pola?bbox=17.836,53.012,17.880,53.032&rok=2026 200 in 124ms (next.js: 1.2ms, application-code: 123ms)
+ GET /api/pola?bbox=17.852,53.016,17.868,53.024&rok=2026 200 in 75ms (next.js: 1.2ms, application-code: 73ms)
+ GET /api/parcel?mapa=xy%3A17.862085%2C53.020932&roslina=kukurydza+na+ziarno&rok=2026&data=2026-11-21 200 in 615ms (next.js: 4ms, application-code: 611ms)
+ GET /api/parcel?mapa=xy%3A17.861632%2C53.021418&roslina=kukurydza+na+ziarno&rok=2026&data=2026-11-21 200 in 579ms (next.js: 2ms, application-code: 576ms)
+ GET /api/parcel?mapa=xy%3A17.863955%2C53.020234&roslina=Mieszanka+zbo%C5%BCowa+gatunk%C3%B3w+jarych&rok=2026&data=2026-11-21 200 in 525ms (next.js: 2ms, application-code: 523ms)
+ GET /api/pola?bbox=17.856,53.016,17.872,53.024&rok=2026 200 in 212ms (next.js: 1.2ms, application-code: 211ms)
+ GET / 200 in 60ms (next.js: 4ms, application-code: 56ms)
+ GET /manifest.webmanifest 200 in 7ms (next.js: 3ms, application-code: 4ms)
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 7ms (next.js: 3ms, application-code: 5ms)
+ GET /api/pola?bbox=17.856,53.016,17.876,53.024&rok=2026 200 in 149ms (next.js: 3ms, application-code: 147ms)
+ GET /api/parcel?mapa=xy%3A17.864727%2C53.019695&roslina=Mieszanka+zbo%C5%BCowa+gatunk%C3%B3w+jarych&rok=2026&data=2026-11-21 200 in 432ms (next.js: 2ms, application-code: 430ms)
+ GET /api/pola?bbox=17.860,53.016,17.868,53.024&rok=2026 200 in 72ms (next.js: 1.2ms, application-code: 71ms)
+ GET /api/parcel?mapa=xy%3A17.865860%2C53.020130&roslina=mieszanka+str%C4%85czkowa&rok=2026&data=2026-11-21 200 in 539ms (next.js: 3ms, application-code: 536ms)
+ GET /api/parcel?mapa=xy%3A17.866825%2C53.020313&roslina=mieszanka+str%C4%85czkowa&rok=2026&data=2026-11-21 200 in 542ms (next.js: 4ms, application-code: 538ms)
+ GET /api/pola?bbox=17.860,53.016,17.872,53.024&rok=2026 200 in 233ms (next.js: 1.3ms, application-code: 232ms)
+ GET /api/pola?bbox=17.772,53.036,17.824,53.056&rok=2026 200 in 12ms (next.js: 2ms, application-code: 9ms)
+ GET /api/parcel?mapa=xy%3A17.867784%2C53.020875&roslina=owies+zwyczajny&rok=2026&data=2026-11-21 200 in 368ms (next.js: 2ms, application-code: 366ms)
+ GET /api/pola?bbox=17.860,53.016,17.876,53.024&rok=2026 200 in 79ms (next.js: 1.2ms, application-code: 78ms)
+ GET /api/pola?bbox=17.860,53.020,17.876,53.028&rok=2026 200 in 123ms (next.js: 1.2ms, application-code: 122ms)
+ GET /api/parcel?mapa=xy%3A17.869440%2C53.023107&roslina=mieszanka+str%C4%85czkowo-zbo%C5%BCowa&rok=2026&data=2026-11-21 200 in 1046ms (next.js: 4ms, application-code: 1042ms)
+ GET /api/pola?bbox=17.864,53.020,17.876,53.028&rok=2026 200 in 322ms (next.js: 1.2ms, application-code: 321ms)
+ GET /api/parcel?mapa=xy%3A17.871295%2C53.024733&roslina=%C5%BCyto+ozime&rok=2026&data=2026-11-21 200 in 775ms (next.js: 4ms, application-code: 771ms)
+ GET /api/parcel?mapa=xy%3A17.819117%2C53.043672&roslina=TUZ&rok=2026&data=2026-11-21 200 in 391ms (next.js: 1.4ms, application-code: 390ms)
+ GET /api/pola?bbox=17.852,53.020,17.880,53.032&rok=2026 200 in 278ms (next.js: 1.5ms, application-code: 277ms)
+ GET /api/parcel?mapa=xy%3A17.870102%2C53.025604&roslina=TUZ&rok=2026&data=2026-11-21 200 in 581ms (next.js: 4ms, application-code: 577ms)
+ GET /api/pola?bbox=17.864,53.020,17.880,53.028&rok=2026 200 in 369ms (next.js: 1.8ms, application-code: 367ms)
+ GET /api/parcel?mapa=xy%3A17.874829%2C53.025864&roslina=kukurydza+na+ziarno&rok=2026&data=2026-11-21 200 in 372ms (next.js: 4ms, application-code: 368ms)
+ GET / 200 in 47ms (next.js: 2ms, application-code: 45ms)
+ GET / 200 in 28ms (next.js: 3ms, application-code: 24ms)
+ GET /manifest.webmanifest 200 in 6ms (next.js: 3ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.8ms, application-code: 3ms)
+ POST /api/analyze 404 in 58ms (next.js: 50ms, application-code: 8ms)
+ GET / 200 in 36ms (next.js: 2ms, application-code: 34ms)
+ GET / 200 in 16ms (next.js: 3ms, application-code: 13ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.9ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 7ms (next.js: 4ms, application-code: 4ms)
+ GET /api/parcel?mapa=xy%3A17.874913%2C53.026211&roslina=Mieszanka+zbo%C5%BCowa+gatunk%C3%B3w+ozimych&rok=2026&data=2026-11-21 200 in 938ms (next.js: 5ms, application-code: 934ms)
+ GET /api/parcel?mapa=xy:17.7569,53.0636&roslina=TUZ&rok=2026&data=2026-11-21 200 in 293ms (next.js: 1.4ms, application-code: 292ms)
+ GET /api/parcel?mapa=xy%3A17.874648%2C53.026362&roslina=Mieszanka+zbo%C5%BCowa+gatunk%C3%B3w+ozimych&rok=2026&data=2026-11-21 200 in 257ms (next.js: 3ms, application-code: 254ms)
+ GET / 200 in 42ms (next.js: 3ms, application-code: 39ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.8ms, application-code: 3ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{rsc:{...}, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataWrapper>
+                      <div
+                        hidden={true}
+-                       bis_skin_checked="1"
+                      >
+                    ...
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="pl" className="inter_2dd5..." suppressHydrationWarning={true}>
+                          <head>
+                          <body
+                            className="min-h-full flex flex-col"
+-                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6Im5pbWxtZWpibW5lY25hZ2hnbWJhaG1iYWRk..."
+                          >
+                            ...
+                              <SegmentViewNode type="page" pagePath="page.tsx">
+                                <SegmentTrieNode>
+                                <Home>
+                                  <StartScreen today="2026-11-21" initialParcelId="041005_5.0..." ...>
+                                    <div
+                                      className="min-h-screen bg-bg pb-24 text-ink md:pb-0"
+-                                     bis_skin_checked="1"
+                                    >
+                                      <header className="app-header...">
+                                        <div
+                                          className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-..."
+-                                         bis_skin_checked="1"
+                                        >
+                                          <div
+                                            className="flex items-center gap-2.5"
+-                                           bis_skin_checked="1"
+                                          >
+                                            <Logo>
+                                            <div
+                                              className="flex flex-col"
+-                                             bis_skin_checked="1"
+                                            >
+                                          ...
+                                      <main className="mx-auto fl...">
+                                        <Card className="flex min-w...">
+                                          <section className="rounded-[v...">
+                                            <div
+                                              className="flex flex-col gap-1.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <DatePicker date="2026-11-21" from={null} today="2026-11-21" ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="radiogroup"
+                                                    aria-label="Okres analizy"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <details className="text-[13px...">
+                                                    <summary>
+                                                    <div
+                                                      className="flex flex-col gap-2 pt-2"
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                      <div
+                                                        className="grid grid-cols-10 gap-1"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                        <div
+                                                          className="flex flex-col gap-1"
+-                                                         bis_skin_checked="1"
+                                                        >
+                                                      <div
+                                                        className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs"
+-                                                       bis_skin_checked="1"
+                                                      >
+                                            <div
+                                              className="flex flex-col gap-3.5"
+-                                             bis_skin_checked="1"
+                                            >
+                                              <div
+                                                className="flex items-center gap-2.5"
+-                                               bis_skin_checked="1"
+                                              >
+                                              <ParcelPicker initialId="041005_5.0..." date="2026-11-21" lookup={null} ...>
+                                                <div
+                                                  className="flex flex-col gap-3.5"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                  <div
+                                                    role="tablist"
+                                                    aria-label="Sposób wskazania działki"
+                                                    className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 ..."
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                  <div
+                                                    className="flex flex-col gap-2"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                                    <label>
+                                                    <input>
+                                                    <span>
+                                                    <div
+                                                      className="flex flex-wrap items-center gap-1.5 rounded-lg bg-war..."
+-                                                     bis_skin_checked="1"
+                                                    >
+                                                  <div
+                                                    aria-live="polite"
+-                                                   bis_skin_checked="1"
+                                                  >
+                                            <div
+                                              className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4"
+-                                             bis_skin_checked="1"
+                                            >
+                                        <aside className="flex min-w...">
+                                          <FarmPanel farm={[...]} onAdd={function addToFarm} ...>
+                                            <Card className="flex flex-...">
+                                              <section className="rounded-[v...">
+                                                <div
+                                                  className="flex flex-wrap items-baseline gap-2"
+-                                                 bis_skin_checked="1"
+                                                >
+                                                ...
+                                      ...
+                              ...
+                            ...
+                  ...
+ 
+ GET /api/parcel?id=041005_5.0011.22%2F15&data=2026-11-21 200 in 3ms (next.js: 1.3ms, application-code: 1.8ms)
+ GET / 200 in 49ms (next.js: 4ms, application-code: 45ms)
+ GET / 200 in 25ms (next.js: 3ms, application-code: 22ms)
+ GET /manifest.webmanifest 200 in 5ms (next.js: 1.9ms, application-code: 3ms)
+ GET /manifest.webmanifest 200 in 3ms (next.js: 1.2ms, application-code: 2ms)
+ GET /api/pola?bbox=17.780,53.036,17.820,53.052&rok=2026 200 in 437ms (next.js: 1.1ms, application-code: 436ms)
+ GET /api/parcel?mapa=xy%3A17.812778%2C53.046024&roslina=TUZ&rok=2026&data=2026-11-21 200 in 403ms (next.js: 2ms, application-code: 400ms)
+ POST /api/analyze 501 in 9ms (next.js: 5ms, application-code: 4ms)

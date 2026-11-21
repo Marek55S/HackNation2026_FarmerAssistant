@@ -61,7 +61,13 @@ export function ParcelPicker({
         ? new URLSearchParams({ id: id.trim() })
         : mode === "name"
           ? new URLSearchParams({ gmina: name.gmina, obreb: name.obreb, nr: name.nr })
-          : new URLSearchParams({ mapa: mapPick ?? "" });
+          : mapPick?.startsWith("xy:")
+            ? (() => {
+                // real crop field clicked: "xy:<lon>,<lat>;<ARiMR crop>;<year>"
+                const [xy, roslina = "", rok = ""] = mapPick.split(";");
+                return new URLSearchParams({ mapa: xy, roslina, rok });
+              })()
+            : new URLSearchParams({ mapa: mapPick ?? "" });
     q.set("data", date);
     const empty = mode === "id" ? !id.trim() : mode === "name" ? !name.gmina || !name.obreb || !name.nr : !mapPick;
     const ctrl = new AbortController();
@@ -179,7 +185,14 @@ export function ParcelPicker({
         </div>
       )}
 
-      {mode === "map" && <PickMap selected={mapPick} onPick={setMapPick} />}
+      {mode === "map" && (
+        <PickMap
+          selected={mapPick}
+          onPick={setMapPick}
+          rok={Number(date.slice(0, 4))}
+          selectedGeometry={mapPick?.startsWith("xy:") ? lookup?.parcel.geometry : undefined}
+        />
+      )}
 
       <div aria-live="polite">
         {error && <p className="rounded-lg bg-warn-bg px-3 py-2.5 text-sm text-warn-ink">{error}</p>}

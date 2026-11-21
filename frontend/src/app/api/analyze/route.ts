@@ -24,7 +24,14 @@ export async function POST(req: NextRequest) {
   const result = buildReport({ parcelId: dzialka, date: data, from: od, crop: uprawa, today });
   if ("error" in result) {
     return result.error === "not-found"
-      ? NextResponse.json({ error: "Nie ma takiej działki w ewidencji." }, { status: 404 })
+      ? NextResponse.json(
+          {
+            error:
+              "Raport na danych przykładowych działa tylko dla działek demonstracyjnych. Dla tej działki raport policzy backend " +
+              "(podpięcie w toku – TODO T10.10).",
+          },
+          { status: 501 },
+        )
       : NextResponse.json({ error: "Brak danych o uprawie dla tego roku — wybierz uprawę." }, { status: 422 });
   }
   const url = reportUrl({ dzialka: result.report.parcel.id, data, od, uprawa });
