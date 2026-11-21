@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Asystent Wodny – plan dla działki</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F5F0}
+a{color:#1E5B3A}a:hover{color:#123D26}
+button,input{font-family:inherit}
+summary{cursor:pointer}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F6F5F0; font-family: Inter, system-ui, sans-serif; color: #1A1C19">
+
+<header style="background: #FFFFFF; border-bottom: 1px solid #E3E1D8">
+  <div style="max-width: 1376px; margin: 0 auto; padding: 12px 32px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1A1C19">
+      <svg width="32" height="32" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1E5B3A"></rect><path d="M17 7c4 5 7 8.6 7 12.2A7 7 0 0 1 10 19.2C10 15.6 13 12 17 7z" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"></path></svg>
+      <span style="font-weight: 800; font-size: 16px">Asystent Wodny</span>
+    </a>
+    <div style="display: flex; flex-direction: column; padding-left: 14px; border-left: 1px solid #E3E1D8">
+      <span style="font-size: 17px; font-weight: 800">Działka 245/3 · kukurydza <span style="font-size: 12px; font-weight: 600; color: #5F625B">(wykryta: ARiMR + satelita)</span></span>
+      <span style="font-size: 13px; color: #5F625B">stan na {{v.dateLong}} · porównanie z 10 sezonami {{v.yrs}} · 4,8 ha</span>
+    </div>
+    <nav style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap">
+      <button style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #D5D3C9; background: #FFFFFF; font-size: 14px; font-weight: 600; color: #1A1C19"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>Zapytaj</button>
+      <button style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #D5D3C9; background: #FFFFFF; font-size: 14px; font-weight: 600; color: #1A1C19"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"></path></svg>Drukuj</button>
+      <a href="Pdf.dc.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; background: #1E5B3A; text-decoration: none; font-size: 14px; font-weight: 600; color: #FFFFFF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>PDF</a>
+    </nav>
+  </div>
+</header>
+
+<main style="max-width: 1376px; margin: 0 auto; padding: 24px 32px 56px; display: flex; flex-direction: column; gap: 20px">
+
+  <section style="background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 20px; padding: 20px 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
+    <div style="display: flex; gap: 16px; align-items: center; flex: 999 1 520px; min-width: 0">
+      <svg width="56" height="92" viewBox="0 0 56 92" role="img" aria-label="{{v.tankLabel}}" style="flex: none">
+        <rect x="3" y="3" width="50" height="86" rx="10" fill="#EFE6D6" stroke="#C9B48E" stroke-width="2"></rect>
+        <rect x="5" y="{{v.tankY}}" width="46" height="{{v.tankH}}" fill="#2a78d6"></rect>
+        <line x1="0" y1="50" x2="56" y2="50" stroke="#1A1C19" stroke-width="2" stroke-dasharray="4 3"></line>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+          <span style="{{v.statusStyle}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17v.5"></path></svg>{{v.status}}</span>
+          <span style="font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -0.01em">{{v.head}}</span>
+        </div>
+        <span style="font-size: 14px; color: #3F423C; line-height: 1.45">{{v.sub}}</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #3F423C" title="4 z 4 niezależnych wskaźników: opady, gleba, rośliny, próg IUNG">pewność
+          <span style="display: inline-flex; gap: 3px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1E5B3A"></span><span style="width: 8px; height: 8px; border-radius: 4px; background: #1E5B3A"></span><span style="width: 8px; height: 8px; border-radius: 4px; background: #1E5B3A"></span><span style="width: 8px; height: 8px; border-radius: 4px; background: #1E5B3A"></span></span>
+          <b>wysoka</b> · 4 z 4 wskaźników zgodne</span>
+      </div>
+    </div>
+    <button onClick="{{pickUrgent}}" style="{{v.urgStyle}}">
+      <span style="{{v.urgNumStyle}}">{{v.urgN}}</span>
+      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <span style="{{v.urgLabelStyle}}">{{v.urgLabel}}</span>
+        <span style="font-size: 16px; font-weight: 800">{{v.urgTitle}}</span>
+        <span style="font-size: 13px; color: #3F423C">{{v.urgSub}}</span>
+      </span>
+    </button>
+  </section>
+
+  <section style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+
+    <div style="flex: 999 1 640px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+        <h1 style="margin: 0; font-size: 20px; font-weight: 800">Plan na Twojej działce</h1>
+        <div role="tablist" aria-label="Widok mapy" style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: #F1F0EA; border-radius: 12px">
+          <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+            <button role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 14px; overflow: hidden; background: #DDE7D5">
+        <svg viewBox="0 0 300 200" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true">
+          <defs>
+            <pattern id="rzedy" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)"><rect width="6" height="6" fill="#CFE3B9"></rect><rect width="3" height="6" fill="#C3DAAB"></rect></pattern>
+          </defs>
+          <path d="M0 60 L300 40 M0 150 L300 190 M90 0 L70 200 M210 0 L230 200" stroke="#C7D5BD" stroke-width="2" fill="none"></path>
+          <path d="M0 196 L300 186" stroke="#D8D2C2" stroke-width="7"></path>
+          <text x="40" y="196" font-size="8" fill="#5F625B">droga dojazdowa</text>
+          <polygon points="19.9,33.1 175.7,15.5 268.1,26.1 260.2,173.9 117.6,184.5 27.8,163.4" fill="url(#rzedy)"></polygon>
+        </svg>
+
+        <sc-if value="{{isSucho}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr))">
+            <sc-for list="{{dry}}" as="c" hint-placeholder-count="384"><span style="{{c}}"></span></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{isTeren}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr))">
+            <sc-for list="{{terrain}}" as="c" hint-placeholder-count="384"><span style="{{c}}"></span></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{isGleba}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr))">
+            <sc-for list="{{soil}}" as="c" hint-placeholder-count="384"><span style="{{c}}"></span></sc-for>
+          </div>
+        </sc-if>
+
+        <svg viewBox="0 0 300 200" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="{{mapLabel}}">
+          <sc-if value="{{isPlan}}" hint-placeholder-val="{{ true }}">
+            <polygon points="186,70 265.6,64 260.2,173.9 184,180" fill="#2a78d6" fill-opacity="0.2" stroke="#1f6fc9" stroke-width="1.5" stroke-dasharray="5 4"></polygon>
+            <ellipse cx="236" cy="45" rx="20" ry="11" fill="#9ec5f4" stroke="#1f6fc9" stroke-width="1.5"></ellipse>
+            <sc-for list="{{trees}}" as="tr" hint-placeholder-count="8"><circle cx="{{tr.x}}" cy="{{tr.y}}" r="4.5" fill="#3F7D3A" stroke="#FFFFFF" stroke-width="1"></circle></sc-for>
+          </sc-if>
+          <sc-if value="{{isTeren}}" hint-placeholder-val="{{ false }}">
+            <g fill="none" stroke="#7A5E34" stroke-width="1" stroke-opacity="0.55">
+              <path d="M30 80 C 60 110, 90 160, 105 182"></path>
+              <path d="M70 22 C 110 70, 150 130, 165 182"></path>
+              <path d="M125 17 C 165 60, 200 120, 215 178"></path>
+              <path d="M185 18 C 210 50, 240 110, 255 174"></path>
+            </g>
+            <path d="M60 150 L105 120 M98 117 L106 120 L102 127 M130 120 L175 88 M168 85 L176 88 L172 95 M190 80 L225 56 M218 53 L226 56 L222 63" fill="none" stroke="#123f78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+            <ellipse cx="236" cy="45" rx="20" ry="11" fill="none" stroke="#123f78" stroke-width="1.8" stroke-dasharray="4 3"></ellipse>
+            <rect x="30" y="150" width="34" height="14" rx="3" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="47" y="160" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1C19">112 m</text>
+            <rect x="188" y="30" width="34" height="14" rx="3" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="205" y="40" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1C19">105 m</text>
+          </sc-if>
+          <sc-if value="{{isGleba}}" hint-placeholder-val="{{ false }}">
+            <rect x="34" y="92" width="58" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="63" y="103" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1C19">glina · kat. III</text>
+            <rect x="104" y="112" width="74" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="141" y="123" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1C19">piasek glin. · kat. II</text>
+            <rect x="194" y="132" width="62" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="225" y="143" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1C19">piasek · kat. I</text>
+          </sc-if>
+          <sc-if value="{{isSucho}}" hint-placeholder-val="{{ false }}">
+            <rect x="190" y="150" width="62" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="221" y="161" text-anchor="middle" font-size="9" font-weight="700" fill="#7a1a17">najsuchej</text>
+            <rect x="196" y="58" width="74" height="16" rx="4" fill="#FFFFFF" fill-opacity="0.92"></rect><text x="233" y="69" text-anchor="middle" font-size="9" font-weight="700" fill="#123f78">wilgotne zagłębienie</text>
+          </sc-if>
+
+          <sc-if value="{{hl.zastawka}}" hint-placeholder-val="{{ false }}"><path d="M150 3 C 220 6, 276 8, 288 46 L 296 200" fill="none" stroke="#F2B53A" stroke-width="11" stroke-linecap="round" stroke-opacity="0.9"></path></sc-if>
+          <path d="M150 3 C 220 6, 276 8, 288 46 L 296 200" fill="none" stroke="#1f6fc9" stroke-width="4" stroke-linecap="round"></path>
+          <text x="294" y="150" font-size="8" font-weight="700" fill="#123f78" text-anchor="end">rów R-3</text>
+          <sc-if value="{{hl.niecka}}" hint-placeholder-val="{{ false }}"><ellipse cx="236" cy="45" rx="25" ry="15" fill="none" stroke="#F2B53A" stroke-width="4"></ellipse></sc-if>
+          <sc-if value="{{hl.drzewa}}" hint-placeholder-val="{{ false }}"><path d="M257 40 L250 168" fill="none" stroke="#F2B53A" stroke-width="12" stroke-linecap="round" stroke-opacity="0.85"></path></sc-if>
+          <sc-if value="{{hl.woda}}" hint-placeholder-val="{{ false }}"><polygon points="186,70 265.6,64 260.2,173.9 184,180" fill="none" stroke="#F2B53A" stroke-width="4" stroke-linejoin="round"></polygon></sc-if>
+          <polygon points="19.9,33.1 175.7,15.5 268.1,26.1 260.2,173.9 117.6,184.5 27.8,163.4" fill="none" stroke="{{fieldStroke}}" stroke-width="{{fieldStrokeW}}" stroke-linejoin="round"></polygon>
+        </svg>
+
+        <sc-for list="{{pins}}" as="p" hint-placeholder-count="5">
+          <button onClick="{{p.pick}}" aria-label="{{p.label}}" style="{{p.style}}">{{p.n}}</button>
+        </sc-for>
+        <span style="position: absolute; left: 8px; bottom: 8px; background: rgba(255,255,255,0.94); border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #3F423C">N ↑ · 100 m</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center">
+        <sc-for list="{{info.legend}}" as="l" hint-placeholder-count="4">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #3F423C"><span style="{{l.sw}}"></span>{{l.t}}</span>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; background: #F6F5F0">
+        <span style="font-size: 15px; font-weight: 700">{{info.say}}</span>
+        <span style="font-size: 12px; color: #5F625B">{{info.src}}</span>
+      </div>
+    </div>
+
+    <aside style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: baseline; gap: 10px">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800">Co zrobić i gdzie</h2>
+        <span style="font-size: 13px; color: #5F625B">numery jak na mapie</span>
+      </div>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="{{g.headStyle}}">{{g.name}}</span>
+          <sc-for list="{{g.items}}" as="a" hint-placeholder-count="2">
+            <div style="{{a.cardStyle}}">
+              <button onClick="{{a.pick}}" aria-expanded="{{a.expanded}}" style="display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; border: 0; background: transparent; cursor: pointer; text-align: left; color: #1A1C19">
+                <span style="{{a.numStyle}}">{{a.n}}</span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1">
+                  <span style="font-size: 16px; font-weight: 800">{{a.title}}</span>
+                  <span style="font-size: 13px; color: #26281F"><b style="font-weight: 600">Gdzie:</b> {{a.where}}</span>
+                  <span style="font-size: 13px; color: #26281F"><b style="font-weight: 600">Kiedy:</b> {{a.when}}</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 2px; padding: 3px 9px; border-radius: 999px; background: #FBEDE4; color: #6B2A0E; font-size: 12px; font-weight: 600">bo {{a.cause}}</span>
+                  <span style="display: inline-flex; align-items: flex-start; gap: 6px; font-size: 13px; color: #145C14; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M4 16l6-6 4 4 6-7"></path><path d="M15 7h5v5"></path></svg>Co zyskasz: {{a.gain}}</span>
+                </span>
+              </button>
+              <sc-if value="{{a.sel}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px 58px">
+                  <span style="font-size: 14px; line-height: 1.5; color: #26281F">{{a.why}}</span>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                    <sc-for list="{{a.chips}}" as="c" hint-placeholder-count="3"><span style="padding: 4px 10px; border-radius: 999px; background: #FFFFFF; border: 1px solid #D5D3C9; font-size: 12px; font-weight: 600">{{c}}</span></sc-for>
+                  </div>
+                  <span style="font-size: 12px; color: #5F625B">Na mapie: widok „{{a.layerName}}” — tam widać przyczynę.</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </aside>
+  </section>
+
+  <section style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch">
+    <div style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 800">{{v.causesHead}}</h2>
+      <sc-for list="{{causes}}" as="c" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #F1F0EA; flex-wrap: wrap">
+          <span style="{{c.dot}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.icon}}"></path></svg></span>
+          <span style="display: flex; flex-direction: column; gap: 2px; min-width: 200px; flex: 1">
+            <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap"><span style="font-size: 15px; font-weight: 700">{{c.name}}</span><span style="{{c.lvlStyle}}">{{c.lvl}}</span><span style="{{c.ctlStyle}}">{{c.ctl}}</span></span>
+            <span style="font-size: 13px; color: #4A4D47">{{c.ev}}</span>
+          </span>
+          <sc-if value="{{c.hasMap}}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{c.show}}" style="min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid #D5D3C9; background: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer; color: #1E5B3A">Pokaż na mapie</button>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex: 1 1 380px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 800">{{v.futHead}}</h2>
+      <span style="font-size: 15px; font-weight: 600; line-height: 1.45">{{v.futSay}}</span>
+      <div style="display: grid; grid-template-columns: auto repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center">
+        <sc-for list="{{risk}}" as="r" hint-placeholder-count="21"><span style="{{r.style}}">{{r.t}}</span></sc-for>
+      </div>
+      <span style="font-size: 12px; color: #5F625B">{{v.futNote}}</span>
+      <details style="font-size: 13px; color: #3F423C; border-top: 1px solid #ECEAE2; padding-top: 8px">
+        <summary style="font-weight: 600; color: #1E5B3A; min-height: 28px">Na czym to opieramy: 10 ostatnich sezonów</summary>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 8px">
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{years}}" as="y" hint-placeholder-count="10">
+              <span title="{{y.tip}}" style="{{y.style}}"><b style="font-size: 13px">{{y.y}}</b><span style="font-size: 11px">{{y.crop}}</span><span style="font-size: 11px; font-weight: 700">{{y.tag}}</span></span>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; color: #5F625B">Susza wg IUNG w 5 z 10 sezonów, każdy oceniony dla uprawy, która wtedy rosła (ARiMR, mapa upraw Copernicus). Pogoda z tych lat to scenariusze w tabeli wyżej.</span>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 18px; font-weight: 800">Skąd wiemy</h2>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <sc-for list="{{src}}" as="s" hint-placeholder-count="8"><span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #E6EFE8; color: #1E5B3A; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>{{s}}</span></sc-for>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #FDF1DC; color: #6A4300; font-size: 13px; font-weight: 600">granice, rowy, teren — stan na dziś</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #FBE3E3; color: #6E1717; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>wody gruntowe — brak danych</span>
+    </div>
+    <details style="border-top: 1px solid #ECEAE2; padding-top: 10px">
+      <summary style="font-size: 14px; font-weight: 600; color: #1E5B3A; min-height: 32px">Szczegóły dla doradcy: liczby, metody, ograniczenia</summary>
+      <ul style="margin: 10px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #26281F">
+        <li>Klimatyczny bilans wodny 11.05–10.07.2026: opad 74 mm − parowanie (ET0 FAO-56) 288 mm = <b>−214 mm</b>; próg suszy IUNG dla kukurydzy na ziarno, gleba kat. II: <b>−188 mm</b> (Rozp. MRiRW 2019)</li>
+        <li>Zapas wody w strefie korzeni 26 z 110 mm (24%), próg stresu (RAW) 45% · bilans dobowy FAO-56, Kc w kwitnieniu 1,20</li>
+        <li>SPEI-3: −1,7 (klimatologia 1996–2026, ERA5) · anomalia wilgotności gleby EDO: ujemna · CDI EDO: „ostrzeżenie”</li>
+        <li>NDMI −1,6 σ, VCI 18 względem połowy lipca 2017–2025 (Sentinel-2, 11.07, 3% chmur); 2016 z Landsat 8 liczony osobno</li>
+        <li>Uprawy w latach ubiegłych: deklaracje ARiMR (GSA) i mapa upraw Copernicus; gdzie brak — przyjęto kukurydzę</li>
+        <li>Prognoza: bilans FAO-56 od dzisiejszego zapasu przez pogodę 10 sezonów (metoda scenariuszy ESP); „z planem” = te same scenariusze z mniejszym parowaniem (resztki), mniejszym spływem (pas) i wodą z zagłębienia; 10 lat to mała próba — wyniki zaokrąglone do „x z 10”</li>
+        <li>Rozdzielczość: pogoda ok. 9 km, gleba 250 m / kontury IUNG, satelita 10 m · niepewność zapasu wody ±15 mm</li>
+        <li>Nie uwzględniono: wód gruntowych, drenowania, odmiany i terminu siewu, nawadniania już stosowanego</li>
+      </ul>
+    </details>
+  </section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"termin":{"editor":"enum","options":["listopad","lipiec"],"default":"listopad"},"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pin: null, layer: 'plan' }; }
+  renderVals() {
+    const T = this.props.termin ?? 'listopad';
+    const late = T === 'listopad';
+    const ICON = {
+      rain: 'M7 16a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1 7.9M9 19l-1 2M13 19l-1 2M17 19l-1 2',
+      sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',
+      sand: 'M3 20h18M5 16h2M10 16h2M15 16h2M7 12h2M12 12h2M9 8h2',
+      slope: 'M3 20 21 6M15 6h6v6',
+      ditch: 'M3 8c3 2 6 2 9 0s6-2 9 0M3 14c3 2 6 2 9 0s6-2 9 0'
+    };
+    const LAYERS = { plan: 'Plan działań', sucho: 'Gdzie sucho', teren: 'Teren i spływ', gleba: 'Gleba' };
+    const CAT = {
+      ret: { name: '1 · Zatrzymaj wodę', c: '#1E5B3A', bg: '#EEF5EF' },
+      agro: { name: '2 · Na polu', c: '#7A4E14', bg: '#F7EFE3' },
+      irr: { name: '3 · Nawadnianie', c: '#1f6fc9', bg: '#E9F1FC' }
+    };
+    const ACT = [
+      { id: 'zastawka', n: 1, cat: 'ret', x: 93.5, y: 11, layer: 'teren', title: 'Zastawka na rowie', where: 'rów R-3 przy północno-wschodnim rogu', when: 'jesienią, przed zimą', cause: 'rowem ucieka woda z wiosny', gain: 'na wiosnę gleba startuje pełniejsza; ryzyko w czerwcu 4/10 → 3/10', why: 'Rów (BDOT10k) biegnie 15 m od działki i odprowadza wodę z ok. 40 ha. Piętrzenie od jesieni zatrzyma wodę z roztopów, której w lipcu brakuje na lekkiej glebie.', chips: ['koszt niski', 'spowolnienie odpływu (NWRM)', 'zgłoszenie wodnoprawne'] },
+      { id: 'niecka', n: 2, cat: 'ret', x: 78.7, y: 22.5, layer: 'teren', title: 'Zatrzymaj wodę w zagłębieniu', where: 'najniższy róg pola (NE), ok. 0,15 ha', when: 'po zbiorze', cause: 'tu spływa deszcz z 70% pola', gain: 'ok. 300 m³ na lipiec — jedna dawka 20 mm dla 1,5 ha', why: 'Model terenu (1 m) pokazuje zagłębienie bez odpływu — zmieści ok. 300 m³. W 9 z 10 sezonów było tu wilgotniej niż na reszcie pola.', chips: ['ok. 300 m³', 'NWRM N01', 'możliwe dofinansowanie'] },
+      { id: 'drzewa', n: 3, cat: 'ret', x: 85.5, y: 80, layer: 'teren', title: 'Pas trawy lub drzew', where: 'wschodni skraj pola, pas 6–10 m', when: 'od jesieni', cause: 'stok do 7% — woda z ulew ucieka', gain: 'o ok. 30–50% mniej wody ucieka z ulew na wschodzie', why: 'Przy ulewach ok. 18% deszczu spływa tu z pola (NMT + metoda SCS-CN). Pas spowolni spływ, zatrzyma glebę i osłoni pole od wiatru.', chips: ['pas 6–10 m', 'NWRM A02', 'ekoschematy'] },
+      { id: 'miedzyplon', n: 4, cat: 'agro', x: 33, y: 52, layer: 'gleba', title: 'Międzyplon i resztki po zbiorze', where: 'całe pole', when: 'wrzesień, zaraz po zbiorze', cause: 'lekka gleba, mało próchnicy', gain: 'średnio 6 dni stresu mniej w sezonie (w 7 z 10 scenariuszy)', why: 'Gleba kat. I–II (IUNG), ok. 0,9% węgla (SoilGrids). Okrywa i resztki poprawią wsiąkanie wody i ograniczą parowanie.', chips: ['cała działka', 'NWRM A08', 'efekt w 2–3 lata'] },
+      { id: 'woda', n: 5, cat: 'irr', x: 74.5, y: 62, layer: 'sucho', title: 'Podlej 25 mm', where: 'wschodnia część, ok. 1,6 ha', when: 'do piątku 17.07, rano lub wieczorem', cause: 'najsuchsza część pola, kukurydza kwitnie', gain: 'stres do połowy sierpnia: 9/10 → 2/10 scenariuszy', why: 'Zapas wody w glebie (24%) jest poniżej progu stresu, a prognoza na 7 dni daje tylko 3 mm. W kwitnieniu brak wody najbardziej obniża plon.', chips: ['25 mm netto', 'ok. 450 m³', 'bilans FAO-56 + prognoza'] }
+    ];
+    if (late) {
+      const L = {
+        zastawka: { when: 'teraz, przed zimą (do połowy grudnia)', cause: 'rowem ucieka woda z roztopów', gain: 'ryzyko w czerwcu 2027: 4/10 → 3/10; szac. 2–4 tys. m³ wody zatrzymanej w rowie', why: 'Rów (BDOT10k) biegnie 15 m od działki i odprowadza wodę z ok. 40 ha. Zastawka postawiona teraz zatrzyma wodę z zimy i roztopów — tej wody zabrakło w czerwcu i lipcu.' },
+        niecka: { when: 'teraz lub wczesną wiosną', cause: 'tu spływa deszcz z 70% pola', why: 'Model terenu (1 m) pokazuje zagłębienie bez odpływu — zmieści ok. 300 m³. Woda z roztopów może tu stać do maja i zasilać glebę wokół.' },
+        drzewa: { when: 'sadzenie: listopad lub marzec', cause: 'stok do 7% — woda z ulew ucieka' },
+        miedzyplon: { title: 'Zostaw resztki, nie orz na zimę', when: 'teraz — pole po zbiorze kukurydzy', cause: 'lekka gleba, mało próchnicy', gain: 'mniej parowania wiosną: średnio 4 dni stresu mniej w 2027', why: 'Gleba kat. I–II (IUNG), ok. 0,9% węgla (SoilGrids). Rozdrobnione resztki kukurydzy na powierzchni zatrzymają śnieg i ograniczą parowanie wiosną. W przyszłym sezonie po zbiorze: międzyplon.', chips: ['cała działka', 'NWRM A13 / A08', 'koszt: brak'] },
+        woda: { title: 'Przygotuj nawadnianie na 2027', where: 'wschodnia część, ok. 1,6 ha', when: 'plan teraz, podlewanie czerwiec–lipiec', cause: 'w 5 z 10 scenariuszy zabraknie wody w lipcu', gain: 'ryzyko strat w lipcu 5/10 → 1/10; zagłębienie (2) pokryje ok. 1/3 potrzeb', why: 'Scenariusze z 10 sezonów: w typowym roku kukurydza na wschodzie będzie potrzebować ok. 60 mm dodatkowej wody, w suchym ok. 110 mm. Teraz nie podlewaj — gleba odbudowuje zapas.', chips: ['60–110 mm / sezon', 'ok. 1000–1800 m³', 'sprawdź źródło wody i pozwolenie'] }
+      };
+      ACT.forEach(a => Object.assign(a, L[a.id]));
+    }
+    const pin = this.state.pin || (late ? 'zastawka' : 'woda'), layer = this.state.layer;
+    const select = a => this.setState({ pin: a.id, layer: a.layer });
+    const groups = ['ret', 'agro', 'irr'].map(k => ({
+      name: CAT[k].name,
+      headStyle: 'font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: ' + CAT[k].c,
+      items: ACT.filter(a => a.cat === k).map(a => {
+        const s = pin === a.id;
+        return { ...a, sel: s, expanded: s ? 'true' : 'false', layerName: LAYERS[a.layer], pick: () => select(a),
+          numStyle: 'width: 32px; height: 32px; border-radius: 16px; flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #FFFFFF; background: ' + CAT[a.cat].c,
+          cardStyle: 'border-radius: 14px; overflow: hidden; ' + (s ? 'border: 2px solid #1A1C19; background: ' + CAT[a.cat].bg : 'border: 1px solid #E3E1D8; background: #FFFFFF') };
+      })
+    }));
+    const pins = ACT.map(a => {
+      const s = pin === a.id;
+      const size = s ? 44 : 36;
+      return { n: String(a.n), label: a.n + '. ' + a.title, pick: () => select(a),
+        style: 'position: absolute; left: calc(' + a.x + '% - ' + size / 2 + 'px); top: calc(' + a.y + '% - ' + size / 2 + 'px); width: ' + size + 'px; height: ' + size + 'px; border-radius: 50%; border: 3px solid #FFFFFF; background: ' + CAT[a.cat].c + '; color: #FFFFFF; font-size: ' + (s ? 17 : 15) + 'px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: ' + (s ? '0 0 0 3px #1A1C19, 0 4px 10px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.3)') };
+    });
+    const tabs = Object.keys(LAYERS).map(k => {
+      const s = layer === k;
+      return { label: LAYERS[k], sel: s ? 'true' : 'false', pick: () => this.setState({ layer: k }),
+        style: 'min-height: 40px; padding: 0 12px; border: 0; border-radius: 9px; font-size: 13px; cursor: pointer; ' + (s ? 'background: #FFFFFF; font-weight: 700; color: #1A1C19; box-shadow: 0 1px 2px rgba(0,0,0,0.1)' : 'background: transparent; font-weight: 500; color: #3F423C') };
+    });
+    const sw = c => 'width: 14px; height: 14px; border-radius: 3px; background: ' + c;
+    const INFO = {
+      plan: { say: late ? '5 działań: teraz zatrzymaj wodę z zimy (1–3) i zostaw resztki (4); nawadnianie zaplanuj na lato (5).' : '5 działań: najpierw zatrzymaj wodę (1–3), potem pole (4), teraz podlej (5).', src: 'Kliknij numer, aby zobaczyć, dlaczego właśnie tam.', legend: [{ sw: sw('#1E5B3A'), t: 'zatrzymaj wodę' }, { sw: sw('#7A4E14'), t: 'na polu' }, { sw: sw('#1f6fc9'), t: 'nawadnianie' }, { sw: sw('#F2B53A'), t: 'zaznaczone działanie' }] },
+      sucho: { say: late ? 'Latem 2026 wschodni pas wysechł pierwszy — tak samo w 2018, 2019 i 2022.' : 'Wschodni pas wysycha pierwszy; zagłębienie w rogu trzyma wodę najdłużej.', src: late ? 'Wilgotność roślin (NDMI) z ostatniego zdjęcia w szczycie sezonu: Sentinel-2, 14.07.2026, vs połowa lipca 2017–2025' : 'Wilgotność roślin (NDMI) z Sentinel-2, 11.07.2026, w porównaniu z połową lipca 2017–2025', legend: [{ sw: sw('#b8322f'), t: 'dużo suszej niż zwykle' }, { sw: sw('#eea69b'), t: 'trochę suszej' }, { sw: sw('#f0efec'), t: 'jak zwykle' }, { sw: sw('#9ec5f4'), t: 'wilgotniej' }] },
+      teren: { say: 'Deszcz spływa z zachodu do zagłębienia w rogu (NE) i dalej rowem R-3 poza pole.', src: 'Model terenu GUGiK 1 m (spadki, kierunki spływu, zagłębienia) · rów: BDOT10k', legend: [{ sw: sw('#A8864F'), t: 'wyżej' }, { sw: sw('#F3EBDD'), t: 'niżej' }, { sw: 'width: 18px; height: 0; border-top: 3px solid #123f78', t: 'kierunek spływu' }, { sw: 'width: 14px; height: 10px; border-radius: 50%; border: 2px dashed #123f78', t: 'zagłębienie' }] },
+      gleba: { say: 'Im dalej na wschód, tym lżejsza gleba — piasek trzyma najmniej wody.', src: 'Kategorie podatności gleb na suszę IUNG-PIB · skład gleby SoilGrids 250 m', legend: [{ sw: sw('#8C6D4F'), t: 'glina — trzyma wodę' }, { sw: sw('#C9A46B'), t: 'piasek gliniasty' }, { sw: 'width: 14px; height: 14px; border-radius: 3px; background: #EAD9A8; border: 1px solid #C9B07A; box-sizing: border-box', t: 'piasek — przepuszcza' }] }
+    };
+    const grid = (cols, rows, fn) => { const o = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) o.push('background: ' + fn(i / (cols - 1), j / (rows - 1))); return o; };
+    const dryVal = (u, v) => 1.15 * (-0.4 - 1.7 * u + 2.6 * Math.exp(-(((u - 0.88) / 0.12) ** 2 + ((v - 0.16) / 0.14) ** 2))) + 0.22 * Math.sin(u * 26 + v * 32);
+    const dryCol = a => a <= -2 ? '#b8322f' : a <= -1.25 ? '#d9625a' : a <= -0.5 ? '#eea69b' : a < 0.6 ? '#f0efec' : '#9ec5f4';
+    const dry = grid(24, 16, (u, v) => dryCol(dryVal(u, v)));
+    const terrain = grid(24, 16, (u, v) => {
+      const t = ((u - 0.05) * 0.85 + (v - 0.9) * (-0.8)) / (0.85 * 0.85 + 0.8 * 0.8);
+      const e = 112 - 6.5 * t + 0.6 * Math.sin(u * 9) * Math.cos(v * 7) - 1.5 * Math.exp(-(((u - 0.88) / 0.1) ** 2 + ((v - 0.15) / 0.12) ** 2));
+      return e > 111 ? '#A8864F' : e > 109.5 ? '#C2A36F' : e > 108 ? '#D6BE93' : e > 106.6 ? '#E6D5B8' : '#F3EBDD';
+    });
+    const soil = grid(24, 16, (u, v) => u < 0.35 + 0.06 * Math.sin(v * 7) ? '#8C6D4F' : u < 0.68 + 0.05 * Math.cos(v * 9) ? '#C9A46B' : '#EAD9A8');
+    const trees = []; for (let k = 0; k < 8; k++) trees.push({ x: (256.5 - k * 0.8).toFixed(1), y: (44 + k * 16).toFixed(1) });
+    const hl = { zastawka: pin === 'zastawka', niecka: pin === 'niecka', drzewa: pin === 'drzewa', woda: pin === 'woda', miedzyplon: pin === 'miedzyplon' };
+
+    const lvlS = { 'główna': ['#a8401a', '#FFFFFF'], 'duża': ['#f6b48c', '#4A200C'], 'mała': ['#F1EFE8', '#3F423C'] };
+    const cz = [
+      ['Mało deszczu', 'od maja 74 mm zamiast ok. 140 mm normy · SPEI −1,7', 'główna', '#2a78d6', ICON.rain, '#FFFFFF', null],
+      ['Lekka, piaszczysta gleba', 'kat. I–II IUNG — mały „zbiornik” na wodę, zwłaszcza na wschodzie', 'duża', '#C9A46B', ICON.sand, '#1A1C19', 'gleba'],
+      ['Upał', '9 dni ponad 30°C w ostatnich 30 dniach — parowanie o ok. 30% wyższe', 'duża', '#d65f2b', ICON.sun, '#FFFFFF', null],
+      ['Woda spływa z pola', 'stok do 7% na wschodzie; przy ulewach ok. 18% deszczu ucieka', 'mała', '#5F625B', ICON.slope, '#FFFFFF', 'teren'],
+      ['Rów odprowadza wodę', 'rów R-3 15 m od pola zbiera wodę z zagłębienia', 'mała', '#1f6fc9', ICON.ditch, '#FFFFFF', 'teren']
+    ];
+    const causes = cz.map(([name, ev, lvl, c, icon, fg, lay]) => ({ name, ev, lvl, icon, hasMap: !!lay,
+      ctl: lay ? 'da się zmienić' : 'pogoda',
+      ctlStyle: 'padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; ' + (lay ? 'background: #E6EFE8; color: #145C14' : 'background: #ECEFF3; color: #3A4250'),
+      show: () => this.setState({ layer: lay || 'plan' }),
+      lvlStyle: 'padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: ' + lvlS[lvl][0] + '; color: ' + lvlS[lvl][1],
+      dot: 'width: 40px; height: 40px; border-radius: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: ' + c + '; color: ' + fg }));
+
+    const yk = late
+      ? [['2017', 'kukurydza', 'brak'], ['2018', 'pszenica oz.', 'skrajna'], ['2019', 'kukurydza', 'silna'], ['2020', 'rzepak', 'brak'], ['2021', 'pszenica oz.', 'lekka'], ['2022', 'kukurydza', 'silna'], ['2023', 'jęczmień', 'umiark.'], ['2024', 'pszenica oz.', 'brak'], ['2025', 'kukurydza', 'umiark.'], ['2026', 'kukurydza', 'silna']]
+      : [['2016', 'pszenica oz.', 'lekka'], ['2017', 'kukurydza', 'brak'], ['2018', 'pszenica oz.', 'skrajna'], ['2019', 'kukurydza', 'silna'], ['2020', 'rzepak', 'brak'], ['2021', 'pszenica oz.', 'lekka'], ['2022', 'kukurydza', 'silna'], ['2023', 'jęczmień', 'umiark.'], ['2024', 'pszenica oz.', 'brak'], ['2025', 'kukurydza', 'umiark.']];
+    const tagS = { skrajna: ['#a8401a', '#FFFFFF'], silna: ['#e9784a', '#2A1206'], 'umiark.': ['#f6b48c', '#4A200C'], lekka: ['#fde4d6', '#5A2A12'], brak: ['#F1EFE8', '#3F423C'] };
+    const years = yk.map(([y, crop, tag]) => ({ y, crop, tag, tip: crop + ' — ' + (tag === 'brak' ? 'bez suszy' : 'susza: ' + tag),
+      style: 'display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border-radius: 8px; background: ' + tagS[tag][0] + '; color: ' + tagS[tag][1] }));
+
+    const src = ['granice — ULDK GUGiK', 'pogoda 2016–2026 — ERA5-Land', 'prognoza 7 dni — Open-Meteo', 'uprawa — deklaracje ARiMR', 'satelita — Sentinel-2', 'gleba — IUNG-PIB, SoilGrids', 'progi suszy — IUNG', 'teren — NMT GUGiK 1 m', 'rowy — BDOT10k', 'tło suszy — EDO'];
+    const sel = ACT.find(a => a.id === pin);
+    const urg = (c, bg, fg) => ({
+      urgStyle: 'flex: 1 1 320px; display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 12px 16px; border-radius: 14px; border: 2px solid ' + c + '; background: ' + bg + '; cursor: pointer; text-align: left; color: #1A1C19',
+      urgNumStyle: 'width: 40px; height: 40px; border-radius: 20px; flex: none; background: ' + c + '; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px',
+      urgLabelStyle: 'font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: ' + fg
+    });
+    const pillS = bg => 'display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; color: #FFFFFF; font-weight: 700; font-size: 14px; background: ' + bg;
+    const v = late ? {
+      dateLong: '21 listopada 2026', yrs: '2017–2026',
+      tankY: 36, tankH: 51, tankLabel: 'Woda w glebie: 61 procent — zapas się odbudowuje',
+      status: 'Plan na 2027', statusStyle: pillS('#a35412'),
+      head: 'Sezon 2027: ryzyko suszy w lipcu 5 na 10 — z planem 2 na 10',
+      sub: 'Liczymy od dzisiejszego zapasu wody (61%) przez pogodę 10 ostatnich sezonów. Bez działań kukurydza wejdzie w stres w czerwcu–lipcu w połowie scenariuszy. Teraz najtaniej zatrzymać wodę z zimy.',
+      ...urg('#1E5B3A', '#EEF5EF', '#1E5B3A'), urgN: '1', urgLabel: 'NAJLEPIEJ TERAZ', urgTitle: 'Postaw zastawkę na rowie przed zimą', urgSub: 'zatrzyma wodę z roztopów na wiosnę',
+      causesHead: 'Co zwiększa ryzyko na tej działce',
+      futHead: 'Ryzyko w sezonie 2027', futSay: 'Bez działań: stres w lipcu w 5 z 10 scenariuszy, brak ok. 60 mm wody (w suchym roku 110 mm). Z całym planem: 2 z 10.',
+      futNote: 'Start: dzisiejszy zapas 61%, dalej pogoda z sezonów 2017–2026. To „jak bywało”, nie prognoza pogody.',
+      cols: ['kwi', 'maj', 'cze', 'lip', 'sie', 'wrz'], no: [0, 2, 4, 5, 3, 1], plan: [0, 1, 2, 2, 1, 0]
+    } : {
+      dateLong: '15 lipca 2026', yrs: '2016–2025',
+      tankY: 66, tankH: 21, tankLabel: 'Woda w glebie: 24 procent, poniżej progu stresu kukurydzy (45 procent)',
+      status: 'Susza', statusStyle: pillS('#c2362f'),
+      head: 'Kukurydza już cierpi — i bez wody będzie gorzej',
+      sub: 'Dziś w glebie zostało 24% wody (stres poniżej 45%). W 9 z 10 scenariuszy na najbliższe 2 tygodnie zapas spadnie poniżej 15%, a kukurydza kwitnie. Spełnione kryterium suszy IUNG.',
+      ...urg('#1f6fc9', '#E9F1FC', '#134a8a'), urgN: '5', urgLabel: 'PILNE TERAZ', urgTitle: 'Podlej 25 mm wschodnią część do piątku', urgSub: 'prognoza na 7 dni: tylko 3 mm deszczu',
+      causesHead: 'Co zwiększa ryzyko na tej działce',
+      futHead: 'Co czeka działkę w najbliższych tygodniach', futSay: 'Bez podlewania kukurydza będzie w stresie do połowy sierpnia w 9 z 10 scenariuszy. Z dawką 25 mm teraz — w 1–3 z 10.',
+      futNote: 'Pierwsze 7 dni z prognozy Open-Meteo, dalej pogoda z sezonów 2016–2025 (te same dni roku).',
+      cols: ['do 22.07', 'do 29.07', 'do 5.08', 'do 12.08', 'do 19.08', 'do 26.08'], no: [9, 9, 8, 7, 5, 4], plan: [1, 2, 3, 3, 2, 2]
+    };
+    const rc = n => n >= 7 ? ['#a8401a', '#FFFFFF'] : n >= 4 ? ['#e9784a', '#2A1206'] : n >= 2 ? ['#f6b48c', '#4A200C'] : ['#F1EFE8', '#3F423C'];
+    const cell = n => ({ t: n + '/10', style: 'padding: 8px 2px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; background: ' + rc(n)[0] + '; color: ' + rc(n)[1] });
+    const lab = t => ({ t, style: 'font-size: 12px; font-weight: 600; color: #3F423C; padding-right: 6px; white-space: nowrap' });
+    const risk = [lab(''), ...v.cols.map(c => ({ t: c, style: 'font-size: 11px; color: #5F625B; text-align: center' })),
+      lab('bez działań'), ...v.no.map(cell),
+      lab('z planem'), ...v.plan.map(cell)];
+    return {
+      v, risk,
+      tabs, pins, groups, causes, years, src, dry, terrain, soil, trees, hl,
+      info: INFO[layer],
+      isPlan: layer === 'plan', isSucho: layer === 'sucho', isTeren: layer === 'teren', isGleba: layer === 'gleba',
+      fieldStroke: pin === 'miedzyplon' ? '#F2B53A' : '#1A1C19', fieldStrokeW: pin === 'miedzyplon' ? 5 : 2.2,
+      mapLabel: 'Mapa działki, widok: ' + LAYERS[layer] + '. Zaznaczone działanie: ' + sel.n + '. ' + sel.title,
+      pickUrgent: () => this.setState(late ? { pin: 'zastawka', layer: 'teren' } : { pin: 'woda', layer: 'sucho' })
+    };
+  }
+}
+</script>
+</body>
+</html>

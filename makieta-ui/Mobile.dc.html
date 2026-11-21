@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Asystent Wodny – telefon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1E5B3A}a:hover{color:#123D26}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F6F5F0; font-family: Inter, system-ui, sans-serif; color: #1A1C19; display: flex; flex-direction: column; overflow: hidden">
+  <div style="padding: 16px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E3E1D8; display: flex; align-items: center; gap: 10px">
+    <div style="display: flex; flex-direction: column; flex: 1">
+      <span style="font-size: 17px; font-weight: 800">Działka 245/3</span>
+      <span style="font-size: 12px; color: #5F625B">kukurydza · 15.07.2026</span>
+    </div>
+    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #d03b3b; color: #FFFFFF; font-weight: 700; font-size: 13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4"></path></svg>Susza</span>
+  </div>
+
+  <div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; background: #DDE7D5">
+      <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-template-rows: repeat(12, minmax(0, 1fr))">
+        <sc-for list="{{dry}}" as="c" hint-placeholder-count="216"><span style="{{c}}"></span></sc-for>
+      </div>
+      <svg viewBox="0 0 300 200" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true">
+        <polygon points="19.9,33.1 175.7,15.5 268.1,26.1 260.2,173.9 117.6,184.5 27.8,163.4" fill="none" stroke="#1A1C19" stroke-width="2.5" stroke-linejoin="round"></polygon>
+        <path d="M150 3 C 220 6, 276 8, 288 46 L 296 200" fill="none" stroke="#2a78d6" stroke-width="5" stroke-linecap="round"></path>
+        <circle cx="34" cy="150" r="7" fill="#1A1C19" stroke="#FFFFFF" stroke-width="3"></circle>
+      </svg>
+      <span style="position: absolute; left: 30px; top: 63%; background: #1A1C19; color: #FFFFFF; border-radius: 6px; padding: 3px 7px; font-size: 11px; font-weight: 700">jesteś tu</span>
+      <span style="position: absolute; left: calc(74% - 20px); top: calc(60% - 20px); width: 40px; height: 40px; border-radius: 20px; background: #2a78d6; border: 3px solid #FFFFFF; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3c4 5 6.5 8.4 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 11.4 8 8 12 3z"></path></svg></span>
+      <span style="position: absolute; right: 8px; top: 8px; background: rgba(255,255,255,0.94); border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 600; color: #6E1717">czerwone = najsucho</span>
+    </div>
+
+    <div style="display: flex; gap: 12px; align-items: center; background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 16px; padding: 14px">
+      <div style="position: relative; width: 44px; height: 72px; border-radius: 10px; background: #EFE6D6; border: 2px solid #C9B48E; box-sizing: border-box; overflow: hidden; flex: none">
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 24%; background: #2a78d6"></div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 45%; border-top: 2px dashed #1A1C19"></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 20px; font-weight: 800">Gleba prawie sucha</span>
+        <span style="font-size: 13px; color: #3F423C">W 10 sezonach tak sucho było tylko w 2018 i 2019. Próg suszy IUNG przekroczony.</span>
+      </div>
+    </div>
+
+    <span style="font-size: 12px; font-weight: 700; color: #4A4D47; letter-spacing: 0.05em">CO ZROBIĆ</span>
+    <sc-for list="{{todo}}" as="t" hint-placeholder-count="3">
+      <div style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E3E1D8; border-radius: 14px; padding: 10px 12px; min-height: 52px">
+        <span style="{{t.dot}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"></path></svg></span>
+        <span style="display: flex; flex-direction: column; flex: 1"><span style="font-size: 15px; font-weight: 700">{{t.what}}</span><span style="font-size: 12px; color: #4A4D47">{{t.when}}</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B6E66" stroke-width="2.4" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </sc-for>
+  </div>
+
+  <nav style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E3E1D8; padding: 6px 4px 18px">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="4">
+      <a href="{{n.href}}" style="{{n.style}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>{{n.label}}</a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const grid = (cols, rows, fn) => { const o = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) o.push('background: ' + fn(i / (cols - 1), j / (rows - 1))); return o; };
+    const dryVal = (u, v) => 1.15 * (-0.4 - 1.7 * u + 2.6 * Math.exp(-(((u - 0.88) / 0.12) ** 2 + ((v - 0.16) / 0.14) ** 2))) + 0.22 * Math.sin(u * 26 + v * 32);
+    const col = a => a <= -2 ? '#b8322f' : a <= -1.25 ? '#d9625a' : a <= -0.5 ? '#eea69b' : a < 0.6 ? '#f0efec' : '#9ec5f4';
+    const dot = c => 'width: 36px; height: 36px; border-radius: 18px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: #FFFFFF; background: ' + c;
+    const todo = [
+      { what: 'Podlej 25 mm — wschód', when: 'pilne, do piątku · najsuchej, kukurydza kwitnie', icon: 'M12 3c4 5 6.5 8.4 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 11.4 8 8 12 3z', dot: dot('#1f6fc9') },
+      { what: 'Zastawka na rowie R-3', when: 'jesienią · rowem ucieka woda z wiosny', icon: 'M4 20V8M20 20V8M4 8h16M8 8v12M12 8v12M16 8v12', dot: dot('#1E5B3A') },
+      { what: 'Międzyplon po zbiorze', when: 'wrzesień · lekka gleba, mało próchnicy', icon: 'M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 14c0-4 3-6 7-6 0 4-3 6-7 6z', dot: dot('#7A4E14') }
+    ];
+    const nd = [['Działki', 'Main.dc.html', 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14'], ['Raport', 'Raport.dc.html', 'M6 3h9l4 4v14H6zM9 12h7M9 16h7'], ['Mapa', 'Raport.dc.html', 'M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11zM12 8v4'], ['Zapytaj', 'Raport.dc.html', 'M4 5h16v11H9l-5 4z']];
+    const nav = nd.map(([label, href, icon], i) => ({ label, href, icon, style: 'display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 48px; justify-content: center; text-decoration: none; font-size: 11px; font-weight: 600; color: ' + (i === 1 ? '#1E5B3A' : '#5F625B') }));
+    return { dry: grid(18, 12, (u, v) => col(dryVal(u, v))), todo, nav };
+  }
+}
+</script>
+</body>
+</html>
