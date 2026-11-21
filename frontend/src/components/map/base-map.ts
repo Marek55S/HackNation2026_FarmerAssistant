@@ -56,7 +56,7 @@ export function createMap(container: HTMLElement, bounds: LngLatBoundsLike, padd
     canvasContextAttributes: { preserveDrawingBuffer: true },
   });
   map.touchZoomRotate.disableRotation();
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric", maxWidth: 90 }), "bottom-left");
   return map;
 }

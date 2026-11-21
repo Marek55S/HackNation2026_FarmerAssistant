@@ -1,22 +1,27 @@
 @import "tailwindcss";
 
-/* Palette from the UI mockup (makieta-ui/*.dc.html). */
+/* Light look: warm off-white, deep forest green, cream accents — after the FarmSense case study
+   and the Smartfarm/Planto dashboard. Semantic colours (status, scale, map categories) are unchanged. */
 :root {
-  --bg: #f6f5f0;
-  --paper: #ffffff;
-  --ink: #1a1c19;
-  --ink-2: #3f423c;
-  --ink-3: #4a4d47;
-  --muted: #5f625b;
-  --rule: #e3e1d8;
-  --rule-soft: #eceae2;
-  --rule-strong: #d5d3c9;
-  --chip: #f1f0ea;
-  --primary: #1e5b3a;
-  --primary-dark: #123d26;
-  --primary-tint: #eef5ef;
-  --primary-tint-2: #e6efe8;
-  --primary-border: #cfe2d4;
+  /* Self-hosted fonts (Fontsource, imported in layout.tsx) */
+  --font-inter: "Inter Variable";
+  --font-red-hat: "Red Hat Display Variable";
+  --font-inter-tight: "Inter Tight Variable";
+  --bg: #eeeee5;
+  --paper: #fbfbf7;
+  --ink: #1d2b22;
+  --ink-2: #3a473e;
+  --ink-3: #4b574e;
+  --muted: #687266;
+  --rule: #e2e2d6;
+  --rule-soft: #ebebe1;
+  --rule-strong: #d1d2c3;
+  --chip: #ecede1;
+  --primary: #2f4d3c;
+  --primary-dark: #223a2d;
+  --primary-tint: #eef0dc;
+  --primary-tint-2: #e6ead6;
+  --primary-border: #cfd6b9;
   --brown: #7a4e14;
   --brown-tint: #f7efe3;
   --blue: #1f6fc9;
@@ -59,13 +64,23 @@
   --scale-4-ink: #ffffff;
 
   /* Filled buttons, text on primary, active segmented tab, shapes */
-  --btn: #1e5b3a;
-  --btn-hover: #123d26;
-  --btn-ink: #ffffff;
-  --on-primary: #ffffff;
-  --tab-active: #ffffff;
-  --r-card: 18px;
-  --r-btn: 12px;
+  --btn: #2f4d3c;
+  --btn-hover: #223a2d;
+  --btn-ink: #f6f4e8;
+  --on-primary: #f6f4e8;
+  --tab-active: #fbfbf7;
+  --r-card: 24px;
+  --r-btn: 999px;
+  /* Headings in brand green; the dark "feature" card (status, like Planto's weather card) */
+  --heading: #2f4d3c;
+  --feature: #2f4d3c;
+  --feature-ink: #f3f1e4;
+  --feature-muted: rgba(243, 241, 228, 0.68);
+  --feature-cell: rgba(255, 255, 255, 0.08);
+  /* One warm accent for "urgent" and the selected map feature (FarmSense CTA orange) */
+  --accent: #e2693f;
+  --accent-tint: #fbe5da;
+  --accent-ink: #8a3414;
   /* Selected recommendation card background per category */
   --cat-ret-bg: #eef5ef;
   --cat-agro-bg: #f7efe3;
@@ -74,7 +89,8 @@
   --cat-ret-ink: #1e5b3a;
   --cat-agro-ink: #7a4e14;
   --cat-irr-ink: #1f6fc9;
-  --font-display: var(--font-inter);
+  --font-display: var(--font-red-hat);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ---- Second look, inspired by Climate TRACE: dark slate, glass panels, one orange accent ----
@@ -123,6 +139,14 @@
   --cat-ret-bg: rgba(95, 190, 130, 0.12);
   --cat-agro-bg: rgba(224, 176, 112, 0.12);
   --cat-irr-bg: rgba(111, 176, 255, 0.12);
+  --heading: var(--ink);
+  --feature: rgba(255, 255, 255, 0.06);
+  --feature-ink: #eef1ef;
+  --feature-muted: #9aa5a1;
+  --feature-cell: rgba(255, 255, 255, 0.06);
+  --accent: #ff7a45;
+  --accent-tint: rgba(255, 122, 69, 0.14);
+  --accent-ink: #ffb08e;
   --cat-ret-ink: #84d6a0;
   --cat-agro-ink: #e6b878;
   --cat-irr-ink: #8fc0ff;
@@ -183,26 +207,78 @@
   --color-btn-ink: var(--btn-ink);
   --color-on-primary: var(--on-primary);
   --color-tab-active: var(--tab-active);
+  --color-heading: var(--heading);
+  --color-feature: var(--feature);
+  --color-feature-ink: var(--feature-ink);
+  --color-feature-muted: var(--feature-muted);
+  --color-feature-cell: var(--feature-cell);
+  --color-accent: var(--accent);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-ink: var(--accent-ink);
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
+/* mobile-native baseline: no grey tap flash (we give our own :active feedback), no font inflation */
 html {
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
-h1,
-h2 {
-  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
-}
-
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-inter), system-ui, sans-serif;
-}
-
-/* In a layer, so utility classes (text-white, text-ink…) win over these defaults. */
+/* In a layer, so utility classes (text-white, text-feature-ink…) win over these defaults. */
 @layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+    color: var(--heading);
+  }
+
+  /* Instant taps (no double-tap-zoom wait); controls aren't text, so long-press doesn't select them */
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  [role="radio"] {
+    touch-action: manipulation;
+  }
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="radio"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* iOS zooms into inputs under 16px and doesn't zoom back */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Press feedback on press, not release (emil-design-eng). Map markers are excluded:
+     MapLibre positions them with transform. */
+  @media (prefers-reduced-motion: no-preference) {
+    button:not(.maplibregl-marker, .maplibregl-ctrl button),
+    .press {
+      transition-property: transform, background-color, border-color, color, box-shadow;
+      transition-duration: 160ms;
+      transition-timing-function: var(--ease-out);
+    }
+    button:not(.maplibregl-marker, .maplibregl-ctrl button, :disabled):active,
+    .press:active {
+      transform: scale(0.97);
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
   a {
     color: var(--primary);
   }

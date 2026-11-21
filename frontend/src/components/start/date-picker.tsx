@@ -53,14 +53,14 @@ export function DatePicker({
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div role="radiogroup" aria-label="Okres analizy" className="flex flex-wrap gap-1 self-start rounded-xl bg-chip p-1 max-sm:grid max-sm:grid-cols-3 max-sm:self-stretch">
+      <div role="radiogroup" aria-label="Okres analizy" className="flex flex-wrap gap-1 self-start rounded-[22px] bg-chip p-1 max-sm:grid max-sm:grid-cols-3 max-sm:self-stretch">
         {MODES.map((m) => (
           <button
             key={m.id}
             role="radio"
             aria-checked={mode === m.id}
             onClick={() => pickMode(m.id)}
-            className={`min-h-11 rounded-[9px] px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-tab-active font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
+            className={`min-h-11 rounded-full px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-tab-active font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
           >
             {m.id === "dzis" ? `Dziś · ${shortDate(today)}` : m.label}
           </button>

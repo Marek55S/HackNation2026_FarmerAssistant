@@ -1,23 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight } from "next/font/google";
+// Fonts are self-hosted from npm (Fontsource): the build needs no network (Docker / Cloud Build)
+// and the installed PWA has its fonts offline. Families are mapped to CSS variables in globals.css.
+import "@fontsource-variable/inter";
+import "@fontsource-variable/red-hat-display";
+import "@fontsource-variable/inter-tight";
 import { ServiceWorker } from "@/components/service-worker";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-// Display font for the dark ("trace") look — tight grotesque headlines.
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600"],
-});
-
 // Applies the saved look before the first paint (no flash of the other theme).
-const THEME_SCRIPT = `try{var t=localStorage.getItem("asystent-wodny:wyglad");if(t==="trace")document.documentElement.dataset.theme="trace"}catch(e){}`;
+const THEME_SCRIPT = `try{var t=localStorage.getItem("asystent-wodny:wyglad");if(t==="trace"){document.documentElement.dataset.theme="trace";var m=document.querySelector('meta[name="theme-color"]');if(m)m.content="#0c1113"}}catch(e){}`;
 
 export const metadata: Metadata = {
   title: { default: "Asystent Wodny", template: "%s · Asystent Wodny" },
@@ -26,15 +17,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1E5B3A",
+  // Status bar matches the top of the page (the light header); the dark look updates it from JS.
+  themeColor: "#FBFBF7",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Android: the software keyboard shrinks the layout viewport, so bottom-pinned UI moves above it.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pl" className={`${inter.variable} ${interTight.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="pl" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

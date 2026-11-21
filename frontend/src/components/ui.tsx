@@ -21,11 +21,19 @@ export const ICON = {
   fields: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14",
   doc: "M6 3h9l4 4v14H6zM9 12h7M9 16h7",
   pin: "M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11zM12 8v4",
-  rain: "M7 16a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1 7.9M9 19l-1 2M13 19l-1 2M17 19l-1 2",
-  sun: "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4",
-  sand: "M3 20h18M5 16h2M10 16h2M15 16h2M7 12h2M12 12h2M9 8h2",
-  slope: "M3 20 21 6M15 6h6v6",
-  ditch: "M3 8c3 2 6 2 9 0s6-2 9 0M3 14c3 2 6 2 9 0s6-2 9 0",
+  // Cause icons: one line style, 24 × 24, drawn to read at 18–20 px
+  rain: "M7 14.5a4 4 0 1 1 .8-7.9A5 5 0 0 1 17.5 7.6 3.4 3.4 0 0 1 17 14.5H7zM8.5 18v2M12 17.5v3M15.5 18v2",
+  sun: "M10 13.6V5.5a2 2 0 1 1 4 0v8.1a3.8 3.8 0 1 1-4 0zM12 9v7.5M17.5 6h2.5M17.5 9.5h2",
+  sand: "M3 7.5c3-1.4 6-1.4 9 0s6 1.4 9 0M3 12.5h18M3 17.5h18M7 15h.01M12 10h.01M16.5 15h.01M9.5 20h.01M15 20h.01",
+  slope: "M3 19h18L3 8.5V19zM16 5c0 1.2-1.3 2.3-1.3 3.3a1.3 1.3 0 0 0 2.6 0c0-1-1.3-2.1-1.3-3.3",
+  ditch: "M3 6.5 7 17h10l4-10.5M8.3 13.2c1.2.8 2.5.8 3.7 0s2.5-.8 3.7 0",
+  map: "M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4zM9 4v14M15 6v14",
+  // Recommendation icons (same line style as the cause icons)
+  gate: "M4 6.5 7.5 17h9L20 6.5M9.5 4v13M14.5 4v13M9.5 9.5h5",
+  pond: "M3 15.5c0-2.4 4-4.3 9-4.3s9 1.9 9 4.3-4 4.3-9 4.3-9-1.9-9-4.3zM8 15.8c1.3.7 2.7.7 4 0s2.7-.7 4 0M12 3.5c0 1.3-1.5 2.4-1.5 3.5a1.5 1.5 0 0 0 3 0c0-1.1-1.5-2.2-1.5-3.5",
+  trees: "M3 20.5h18M7 20.5v-4M17 20.5v-4M7 16.5a3 3 0 0 1-3-3c0-2.5 3-6.5 3-6.5s3 4 3 6.5a3 3 0 0 1-3 3zM17 16.5a3 3 0 0 1-3-3c0-2.5 3-6.5 3-6.5s3 4 3 6.5a3 3 0 0 1-3 3z",
+  watering: "M12 3c2.8 3.6 4.6 6 4.6 8.3a4.6 4.6 0 0 1-9.2 0C7.4 9 9.2 6.6 12 3zM5 18v2M9 18.5v2.5M15 18.5v2.5M19 18v2",
+  chevronDown: "M6 9l6 6 6-6",
   plus: "M12 5v14M5 12h14",
   calendar: "M4 6h16v15H4zM4 10h16M9 3v4M15 3v4",
   moon: "M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z",
@@ -98,7 +106,8 @@ export function Tank({ pct, threshold, width = 56, height = 92, label }: { pct: 
   );
 }
 
-export const STATUS_BG: Record<StatusTone, string> = {
+/** Status dot colour (pipeline_plan.md etap 5). */
+export const STATUS_DOT: Record<StatusTone, string> = {
   susza: "bg-status-susza",
   zagrozenie: "bg-status-zagrozenie",
   spokojnie: "bg-status-spokojnie",
@@ -106,20 +115,18 @@ export const STATUS_BG: Record<StatusTone, string> = {
   "poza-zakresem": "bg-status-poza",
 };
 
-export const STATUS_ICON: Record<StatusTone, string> = {
-  susza: ICON.warn,
-  zagrozenie: ICON.warn,
-  spokojnie: ICON.check,
-  plan: ICON.calendar,
-  "poza-zakresem": ICON.x,
-};
-
-export function StatusPill({ tone, label, small = false }: { tone: StatusTone; label: string; small?: boolean }) {
+/**
+ * Report status as a quiet pill: a coloured dot + label, no saturated fill.
+ * `onDark` for the dark feature card.
+ */
+export function StatusPill({ tone, label, small = false, onDark = false }: { tone: StatusTone; label: string; small?: boolean; onDark?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-bold text-white ${small ? "text-[13px]" : "text-sm"} ${STATUS_BG[tone]}`}
+      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full font-semibold ${small ? "px-2.5 py-1 text-[12px]" : "px-3 py-1.5 text-[13px]"} ${
+        onDark ? "bg-white/12 text-feature-ink" : "border border-rule-strong bg-paper text-ink"
+      }`}
     >
-      <Icon d={STATUS_ICON[tone]} size={small ? 14 : 16} stroke={2.4} />
+      <span className={`h-2 w-2 flex-none rounded-full ${STATUS_DOT[tone]} ${onDark ? "ring-2 ring-white/25" : ""}`} aria-hidden="true" />
       {label}
     </span>
   );

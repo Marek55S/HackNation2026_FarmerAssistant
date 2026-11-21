@@ -51,9 +51,9 @@ export default function PickMap({ selected, onPick }: { selected: string | null;
           })),
         },
       });
-      map.addLayer({ id: "dzialki-fill", type: "fill", source: "dzialki", paint: { "fill-color": "#FFFFFF", "fill-opacity": 0.15 } });
-      map.addLayer({ id: "dzialki-obwodka", type: "line", source: "dzialki", paint: { "line-color": "#FFFFFF", "line-width": 4, "line-opacity": 0.9 } });
-      map.addLayer({ id: "dzialki-linia", type: "line", source: "dzialki", paint: { "line-color": "#1E5B3A", "line-width": 2 } });
+      map.addLayer({ id: "dzialki-fill", type: "fill", source: "dzialki", paint: { "fill-color": "#F2C14E", "fill-opacity": 0.16 } });
+      map.addLayer({ id: "dzialki-obwodka", type: "line", source: "dzialki", paint: { "line-color": "#1A1C19", "line-width": 5, "line-opacity": 0.35 } });
+      map.addLayer({ id: "dzialki-linia", type: "line", source: "dzialki", paint: { "line-color": "#F2C14E", "line-width": 2.5 } });
       map.on("click", "dzialki-fill", (e) => {
         const nr = e.features?.[0]?.properties?.nr;
         if (typeof nr === "string") onPickRef.current(nr);
@@ -88,12 +88,12 @@ export default function PickMap({ selected, onPick }: { selected: string | null;
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    map.setPaintProperty("dzialki-linia", "line-color", ["case", ["==", ["get", "nr"], selected ?? ""], "#F2B53A", "#1E5B3A"]);
-    map.setPaintProperty("dzialki-linia", "line-width", ["case", ["==", ["get", "nr"], selected ?? ""], 4, 2]);
+    map.setPaintProperty("dzialki-linia", "line-color", ["case", ["==", ["get", "nr"], selected ?? ""], "#FFFFFF", "#F2C14E"]);
+    map.setPaintProperty("dzialki-linia", "line-width", ["case", ["==", ["get", "nr"], selected ?? ""], 4, 2.5]);
     map.getContainer().querySelectorAll<HTMLButtonElement>("button[data-nr]").forEach((b) => {
       const sel = b.dataset.nr === selected;
       b.setAttribute("aria-pressed", String(sel));
-      b.className = `rounded-md px-2 py-1 text-xs font-bold shadow-sm ${sel ? "bg-[#1E5B3A] text-white" : "bg-white/95 text-[#1A1C19]"}`;
+      b.className = `rounded-md px-2 py-1 text-xs font-bold shadow-sm ${sel ? "bg-[#2F4D3C] text-white" : "bg-white/95 text-[#1A1C19]"}`;
     });
   }, [selected, ready]);
 

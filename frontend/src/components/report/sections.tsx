@@ -1,16 +1,32 @@
 "use client";
 
 import { shortDate } from "@/lib/dates";
-import type { ActionCategory, CauseLevel, DroughtTag, MapLayer, Report, Zalecenie } from "@/lib/types";
+import { useState } from "react";
+import type { ActionCategory, CauseLevel, DroughtTag, MapLayer, Report, RuleId, Zalecenie } from "@/lib/types";
 import { Card, ICON, Icon, SCALE } from "../ui";
 import { CAT, LAYERS } from "./map-style";
 
+const RULE_ICON: Partial<Record<RuleId, string>> = {
+  R1: ICON.gate,
+  R2: ICON.pond,
+  R3: ICON.trees,
+  R5: ICON.sprout,
+  R7: ICON.watering,
+  R8: ICON.watering,
+};
+
+/**
+ * "Co zrobić i gdzie": compact cards (icon, title, when) that expand for the details.
+ * Clicking a card selects it on the map and opens it; clicking the open card again closes it.
+ */
 export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin: number; onPick: (a: Zalecenie) => void }) {
+  // The selected card is open unless the user closed it; selecting another card (or a map pin) opens that one.
+  const [closedFor, setClosedFor] = useState<number | null>(null);
   const groups: ActionCategory[] = ["ret", "agro", "irr"];
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="text-xl font-extrabold">Co zrobić i gdzie</h2>
+        <h2 className="text-xl font-bold">Co zrobić i gdzie</h2>
         <span className="text-[13px] text-muted">numery jak na mapie</span>
       </div>
       {groups.map((g) => {
@@ -18,70 +34,74 @@ export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin
         if (items.length === 0) return null;
         return (
           <div key={g} className="flex flex-col gap-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-[0.06em]" style={{ color: CAT[g].ink }}>
-              {CAT[g].name}
+            <h3 className="text-xs font-bold uppercase tracking-[0.06em]" style={{ color: CAT[g].ink }}>
+              {CAT[g].name.replace(/^\d · /, "")}
             </h3>
             {items.map((a) => {
-              const sel = pin === a.n;
+              const selected = pin === a.n;
+              const open = selected && closedFor !== a.n;
               return (
                 <div
                   key={a.n}
-                  className={`print-break-avoid overflow-hidden rounded-[var(--r-card)] ${sel ? "border-2 border-ink" : "border border-rule bg-paper"}`}
-                  style={sel ? { background: CAT[a.kategoria].bg } : undefined}
+                  className={`print-break-avoid overflow-hidden rounded-[18px] border bg-paper transition-[border-color,box-shadow] duration-150 ${
+                    selected ? "border-heading shadow-[0_0_0_1px_var(--heading)]" : "border-rule hover:border-rule-strong"
+                  }`}
                 >
                   <button
-                    onClick={() => onPick(a)}
-                    aria-expanded={sel}
-                    className="flex w-full items-start gap-3 border-0 bg-transparent px-3.5 py-3 text-left text-ink"
+                    onClick={() => {
+                      if (selected) setClosedFor(open ? a.n : null);
+                      else {
+                        setClosedFor(null);
+                        onPick(a);
+                      }
+                    }}
+                    aria-expanded={open}
+                    className="flex w-full items-center gap-3.5 px-3.5 py-3 text-left"
                   >
-                    <span
-                      className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[15px] font-extrabold text-white"
-                      style={{ background: CAT[a.kategoria].color }}
-                    >
-                      {a.n}
-                    </span>
-                    <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                      <span className="text-base font-extrabold">{a.co}</span>
-                      <span className="text-[13px] text-ink">
-                        <b className="font-semibold">Gdzie:</b> {a.gdzie}
+                    <span className="relative flex-none">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-chip text-heading">
+                        <Icon d={RULE_ICON[a.regula] ?? ICON.check} size={24} stroke={1.6} />
                       </span>
-                      <span className="text-[13px] text-ink">
-                        <b className="font-semibold">Kiedy:</b> {a.kiedy}
-                      </span>
-                      {a.ile && (
-                        <span className="text-[13px] text-ink">
-                          <b className="font-semibold">Ile:</b> {a.ile}
-                        </span>
-                      )}
-                      <span className="mt-0.5 flex flex-wrap gap-1">
-                        {a.bo.map((b) => (
-                          <span key={b} className="rounded-full bg-cause-tint px-2.5 py-[3px] text-xs font-semibold text-cause-ink">
-                            bo {b}
-                          </span>
-                        ))}
-                      </span>
-                      <span className="inline-flex items-start gap-1.5 text-[13px] font-semibold text-ok-ink">
-                        <Icon d={ICON.trend} size={14} stroke={2.6} className="mt-0.5" />
-                        Co zyskasz: {a.co_zyskasz}
+                      <span
+                        className="absolute -right-1.5 -top-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-paper px-1 text-[11px] font-bold text-white"
+                        style={{ background: CAT[a.kategoria].color }}
+                      >
+                        {a.n}
                       </span>
                     </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-[15px] font-semibold leading-snug text-ink">{a.co}</span>
+                      <span className={`text-[13px] text-muted ${open ? "" : "truncate"}`}>{a.kiedy}</span>
+                    </span>
+                    <Icon d={ICON.chevronDown} size={18} className={`text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
                   </button>
-                  {sel && (
-                    <div className="flex flex-col gap-2 pb-3.5 pl-[58px] pr-3.5 max-sm:pl-3.5">
-                      <span className="text-sm leading-relaxed text-ink">{a.dlaczego}</span>
-                      {a.tagi.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {a.tagi.map((c) => (
-                            <span key={c} className="rounded-full border border-rule-strong bg-paper px-2.5 py-1 text-xs font-semibold">
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <span className="text-xs text-muted">
+                  {open && (
+                    <div className="flex flex-col gap-3 border-t border-rule-soft px-3.5 pb-4 pt-3 text-[13px]">
+                      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                        <dt className="text-muted">Gdzie</dt>
+                        <dd className="text-ink">{a.gdzie}</dd>
+                        {a.ile && (
+                          <>
+                            <dt className="text-muted">Ile</dt>
+                            <dd className="text-ink">{a.ile}</dd>
+                          </>
+                        )}
+                        <dt className="text-muted">Dlaczego</dt>
+                        <dd className="text-ink">{a.bo.join("; ")}</dd>
+                      </dl>
+                      <p className="flex items-start gap-2 rounded-xl bg-primary-tint px-3 py-2 text-ink">
+                        <Icon d={ICON.trend} size={16} stroke={2} className="mt-0.5 text-heading" />
+                        <span>
+                          <span className="font-semibold text-heading">Co zyskasz: </span>
+                          {a.co_zyskasz}
+                        </span>
+                      </p>
+                      <p className="leading-relaxed text-ink-2">{a.dlaczego}</p>
+                      {a.tagi.length > 0 && <p className="text-muted">{a.tagi.join(" · ")}</p>}
+                      <p className="text-xs text-muted">
                         Reguła {a.regula} · na podstawie: {a.fakty.join(", ")}
-                        <span className="no-print"> · na mapie: widok „{LAYERS[a.warstwa]}”</span>
-                      </span>
+                        <span className="no-print"> · na mapie: {LAYERS[a.warstwa].toLowerCase()}</span>
+                      </p>
                     </div>
                   )}
                 </div>
@@ -94,44 +114,71 @@ export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin
   );
 }
 
-const LVL: Record<CauseLevel, string> = { główna: SCALE[4], duża: SCALE[2], mała: SCALE[0] };
+/** Cause weight as a quiet 3-step meter (like signal bars) instead of coloured pills. */
+const WEIGHT: Record<CauseLevel, { n: number; label: string }> = {
+  główna: { n: 3, label: "główny wpływ" },
+  duża: { n: 2, label: "duży wpływ" },
+  mała: { n: 1, label: "mały wpływ" },
+};
+
+function WeightMeter({ level }: { level: CauseLevel }) {
+  const w = WEIGHT[level];
+  return (
+    <span className="inline-flex items-center gap-2 text-xs text-muted" title={w.label}>
+      <span className="inline-flex h-3.5 items-end gap-[3px]" aria-hidden="true">
+        {[1, 2, 3].map((i) => (
+          <span key={i} className={`w-[5px] rounded-[2px] ${i <= w.n ? "bg-heading" : "bg-rule-strong"}`} style={{ height: 4 + i * 3.5 }} />
+        ))}
+      </span>
+      <span className="whitespace-nowrap">{w.label}</span>
+    </span>
+  );
+}
+
+const ORDER: Record<CauseLevel, number> = { główna: 0, duża: 1, mała: 2 };
 
 export function Causes({ report, onShow }: { report: Report; onShow: (l: MapLayer) => void }) {
+  const byWeight = [...report.causes].sort((a, b) => ORDER[a.level] - ORDER[b.level]);
+  const groups = [
+    { title: "Pogoda", note: "na to nie masz wpływu", items: byWeight.filter((c) => !c.layer) },
+    { title: "Cechy działki", note: "na to można wpłynąć — zobacz zalecenia", items: byWeight.filter((c) => c.layer) },
+  ].filter((g) => g.items.length > 0);
   return (
-    <Card className="print-break-avoid flex min-w-0 flex-[999_1_560px] flex-col gap-3 p-5 max-sm:p-4">
-      <h2 className="text-lg font-extrabold">Co zwiększa ryzyko na tej działce</h2>
-      <ul className="flex flex-col">
-        {report.causes.map((c) => (
-          <li key={c.id} className="flex flex-wrap items-center gap-3 border-t border-chip py-2.5">
-            <span
-              className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-full"
-              style={{ background: c.color, color: c.icon === "sand" ? "#1A1C19" : "#FFFFFF" }}
-            >
-              <Icon d={ICON[c.icon]} size={20} />
-            </span>
-            <span className="flex min-w-[200px] flex-1 flex-col gap-0.5">
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-[15px] font-bold">{c.name}</span>
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${LVL[c.level]}`}>{c.level}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${c.layer ? "bg-ok-tint text-ok-ink" : "bg-weather-tint text-weather-ink"}`}
-                >
-                  {c.layer ? "cecha działki — da się zmienić" : "pogoda"}
+    <Card className="print-break-avoid flex min-w-0 flex-[999_1_560px] flex-col gap-5 p-6 max-sm:p-4">
+      <h2 className="text-xl font-bold">Co zwiększa ryzyko na tej działce</h2>
+      {groups.map((g) => (
+        <div key={g.title} className="flex flex-col">
+          <h3 className="flex flex-wrap items-baseline gap-x-2 pb-1 text-xs font-bold uppercase tracking-[0.06em] text-heading">
+            {g.title}
+            <span className="text-[11px] font-medium normal-case tracking-normal text-muted">{g.note}</span>
+          </h3>
+          <ul className="flex flex-col">
+            {g.items.map((c) => (
+              <li key={c.id} className="flex items-start gap-3.5 border-t border-rule-soft py-3 first:border-t-0">
+                <span className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-chip text-heading">
+                  <Icon d={ICON[c.icon]} size={24} stroke={1.6} />
                 </span>
-              </span>
-              <span className="text-[13px] text-ink-3">{c.evidence}</span>
-            </span>
-            {c.layer && (
-              <button
-                onClick={() => onShow(c.layer!)}
-                className="no-print min-h-10 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3 text-[13px] font-semibold text-primary hover:border-primary"
-              >
-                Pokaż na mapie
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                    <span className="text-[15px] font-semibold text-ink">{c.name}</span>
+                    <WeightMeter level={c.level} />
+                  </span>
+                  <span className="text-[13px] leading-snug text-ink-3">{c.evidence}</span>
+                  {c.layer && (
+                    <button
+                      onClick={() => onShow(c.layer!)}
+                      className="no-print mt-0.5 inline-flex items-center gap-1.5 self-start rounded-full py-1 text-[13px] font-semibold text-heading hover:underline"
+                    >
+                      <Icon d={ICON.map} size={15} stroke={1.75} />
+                      Pokaż na mapie: {LAYERS[c.layer].toLowerCase()}
+                    </button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </Card>
   );
 }
@@ -193,9 +240,10 @@ export function Justification({ report }: { report: Report }) {
   if (!j) return null;
   return (
     <Card className="print-break-avoid p-5 max-sm:p-4">
-      <details>
-        <summary className="min-h-8 text-base font-extrabold text-ink">
-          Uzasadnienie: kryterium suszy IUNG i 10 ostatnich sezonów
+      <details className="group">
+        <summary className="flex min-h-8 list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <Icon d={ICON.chevronRight} size={18} className="text-heading transition-transform duration-200 group-open:rotate-90" />
+          <h2 className="text-xl font-bold">Uzasadnienie: kryterium suszy IUNG i 10 ostatnich sezonów</h2>
         </summary>
         <div className="flex flex-col gap-3 pt-3 text-[13px] text-ink-2">
           <p className="text-sm text-ink">{j.iungNow}</p>
@@ -220,34 +268,37 @@ export function Justification({ report }: { report: Report }) {
 }
 
 export function Sources({ report }: { report: Report }) {
-  const cls = { ok: "bg-primary-tint-2 text-primary", current: "bg-amber-tint text-amber-ink", missing: "bg-danger-tint text-danger-ink" };
-  const fetched = report.sources.find((s) => s.fetchedAt)?.fetchedAt;
+  const fetched = report.sources.find((x) => x.fetchedAt)?.fetchedAt;
   return (
-    <Card className="print-break-avoid flex flex-col gap-3 p-5 max-sm:p-4">
-      <div className="flex flex-wrap items-baseline gap-2">
-        <h2 className="text-lg font-extrabold">Skąd wiemy</h2>
-        {fetched && <span className="text-xs text-muted">dane pobrane {shortDate(fetched)}</span>}
+    <Card className="print-break-avoid flex flex-col gap-5 p-6 max-sm:p-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="text-xl font-bold">Skąd wiemy</h2>
+        <span className="text-[13px] text-muted">
+          {report.sources.length} źródeł danych publicznych{fetched && ` · pobrane ${shortDate(fetched)}`}
+        </span>
       </div>
-      <ul className="flex flex-wrap gap-2">
-        {report.sources.map((s, i) => (
-          <li key={`${s.id}-${i}`} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-semibold ${cls[s.state]}`}>
-            {s.state === "ok" && <Icon d={ICON.check} size={14} stroke={3} />}
-            {s.state === "missing" && <Icon d={ICON.x} size={14} stroke={3} />}
-            {s.label}
-          </li>
+
+      {/* Plain two-column list: what · where from. Caveats only where something is off — no badges. */}
+      <dl className="grid gap-x-12 md:grid-cols-2">
+        {report.sources.map((x, i) => (
+          <div key={`${x.id}-${i}`} className="flex items-baseline justify-between gap-4 border-t border-rule-soft py-2.5 text-[13px]">
+            <dt className="font-medium text-ink">{x.what}</dt>
+            <dd className="flex flex-col items-end text-right">
+              <span className={x.source ? "text-ink-2" : "text-muted"}>{x.source ?? "brak danych"}</span>
+              {x.note && <span className={`text-xs ${x.state === "missing" ? "text-danger-ink" : "text-muted"}`}>{x.note}</span>}
+            </dd>
+          </div>
         ))}
-      </ul>
+      </dl>
 
       {report.notChecked.length > 0 && (
-        <div className="flex flex-col gap-1.5 border-t border-rule-soft pt-3">
-          <h3 className="text-sm font-bold">Czego nie sprawdziliśmy</h3>
-          <ul className="flex flex-col gap-1 text-[13px] text-ink-2">
+        <div className="flex flex-col gap-1">
+          <h3 className="pb-1 text-xs font-bold uppercase tracking-[0.06em] text-heading">Czego nie sprawdziliśmy</h3>
+          <ul className="flex flex-col">
             {report.notChecked.map((n) => (
-              <li key={n.what} className="flex gap-2">
-                <Icon d={ICON.x} size={14} stroke={2.6} className="mt-0.5 text-danger-ink" />
-                <span>
-                  <b className="font-semibold text-ink">{n.what}</b> — {n.why}
-                </span>
+              <li key={n.what} className="flex items-baseline justify-between gap-4 border-t border-rule-soft py-2.5 text-[13px]">
+                <span className="font-medium text-ink">{n.what}</span>
+                <span className="text-right text-muted">{n.why}</span>
               </li>
             ))}
           </ul>
@@ -255,9 +306,12 @@ export function Sources({ report }: { report: Report }) {
       )}
 
       {report.advisorDetails.length > 0 && (
-        <details className="border-t border-rule-soft pt-2.5">
-          <summary className="min-h-8 text-sm font-semibold text-primary">Szczegóły dla doradcy: liczby, metody, ograniczenia</summary>
-          <ul className="mt-2.5 list-disc pl-[18px] text-[13px] leading-relaxed text-ink">
+        <details className="group border-t border-rule-soft pt-3">
+          <summary className="flex min-h-8 list-none items-center gap-1.5 text-sm font-semibold text-heading [&::-webkit-details-marker]:hidden">
+            <Icon d={ICON.chevronRight} size={15} className="transition-transform duration-200 group-open:rotate-90" />
+            Szczegóły dla doradcy: liczby, metody, ograniczenia
+          </summary>
+          <ul className="mt-2.5 list-disc pl-[18px] text-[13px] leading-relaxed text-ink-2">
             {report.advisorDetails.map((d) => (
               <li key={d}>{d}</li>
             ))}

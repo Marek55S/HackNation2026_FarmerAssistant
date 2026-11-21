@@ -125,9 +125,10 @@ export function buildReport({ parcelId, date, from, crop, today }: ReportParams)
   const isToday = date === today;
   const fetchedAt = today;
 
-  const src = (id: string, label: string, state: SourceStatus["state"] = "ok"): SourceStatus => ({
-    id, label, state, fetchedAt: state === "missing" ? null : fetchedAt,
+  const src = (id: string, what: string, source: string | null, state: SourceStatus["state"] = "ok", note?: string): SourceStatus => ({
+    id, what, source, state, note, fetchedAt: state === "missing" ? null : fetchedAt,
   });
+  const presentDay = "stan obecny, nie z dnia analizy";
 
   const common = {
     parcel,
@@ -159,7 +160,7 @@ export function buildReport({ parcelId, date, from, crop, today }: ReportParams)
         risk: null,
         justification: null,
         map: { features: [], rasters: {}, labels: [] },
-        sources: [src("P0", "granice — ULDK GUGiK"), src("P4", "pokrycie terenu — IUNG-PIB")],
+        sources: [src("P0", "Granice działki", "ULDK GUGiK", "current", presentDay), src("P4", "Pokrycie terenu", "IUNG-PIB")],
         notChecked: [{ what: "Bilans wody i zalecenia", why: "działka nierolnicza (kod IUNG: las, woda, zabudowa lub drogi)" }],
         advisorDetails: [],
       },
@@ -221,18 +222,20 @@ export function buildReport({ parcelId, date, from, crop, today }: ReportParams)
   if (!chosen.hasOfficialThreshold) notChecked.unshift({ what: "Urzędowe kryterium suszy IUNG", why: `brak progu dla uprawy „${cropLower}” w tabeli IUNG` });
 
   const sources: SourceStatus[] = [
-    src("P0", "granice — ULDK GUGiK"),
-    src("P1", `pogoda ${win.firstYear - 20}–${win.lastYear} — ERA5-Land (Open-Meteo)`),
-    isToday ? src("P3", "prognoza 7 dni — Open-Meteo") : src("P3", "prognoza — średnia z 10 lat (data archiwalna)", "current"),
-    src("P11", cropSource.startsWith("podpowiedź") ? `uprawa — ${cropHint?.source}` : "uprawa — wybrana przez Ciebie"),
-    src("P10", `satelita — ${win.satSrc} (Planetary Computer)`),
-    src("P4", "gleba — IUNG-PIB, SoilGrids"),
-    src("P6", chosen.hasOfficialThreshold ? "progi suszy — IUNG" : "progi suszy — brak dla tej uprawy", chosen.hasOfficialThreshold ? "ok" : "missing"),
-    src("P7", "teren — Copernicus DEM 30 m"),
-    src("P8", "rowy — BDOT10k"),
-    src("P12", "tło suszy — EDO"),
-    src("P7", "granice, rowy, teren — stan na dziś", "current"),
-    src("—", "wody gruntowe — brak danych", "missing"),
+    src("P1", `Pogoda ${win.firstYear - 20}–${win.lastYear}`, "ERA5-Land (Open-Meteo)"),
+    isToday
+      ? src("P3", "Prognoza 7 dni", "Open-Meteo")
+      : src("P3", "Prognoza", "średnia z 10 lat", "current", "data archiwalna — bez prognozy z tamtego dnia"),
+    src("P10", "Zdjęcia satelitarne", `${win.satSrc} (Planetary Computer)`),
+    src("P11", "Uprawa", cropSource.startsWith("podpowiedź") ? `${cropHint?.source}` : "wybrana przez Ciebie"),
+    src("P4", "Gleba", "IUNG-PIB, SoilGrids"),
+    chosen.hasOfficialThreshold
+      ? src("P6", "Progi suszy", "IUNG-PIB")
+      : src("P6", "Progi suszy", null, "missing", `brak progu dla uprawy „${cropLower}”`),
+    src("P12", "Tło suszy w Europie", "EDO Copernicus"),
+    src("P0", "Granice działki", "ULDK GUGiK", "current", presentDay),
+    src("P7", "Rzeźba terenu", "Copernicus DEM 30 m", "current", presentDay),
+    src("P8", "Rowy i cieki", "BDOT10k", "current", presentDay),
   ];
 
   const confidence = early

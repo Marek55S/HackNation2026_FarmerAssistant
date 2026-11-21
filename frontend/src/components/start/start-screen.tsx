@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFarm } from "@/lib/farm";
 import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
+import { AppHeader } from "../app-header";
 import { MobileNav } from "../mobile-nav";
 import { ThemeToggle } from "../theme-toggle";
-import { Card, ICON, Icon, Logo, StepNumber } from "../ui";
+import { Card, ICON, Icon, StepNumber } from "../ui";
+import { longDate } from "@/lib/dates";
 import { DatePicker, type DateChoice } from "./date-picker";
 import { ParcelPicker } from "./parcel-picker";
 import { FarmPanel, ProgressPanel, type ProgressState } from "./side-panels";
@@ -148,32 +150,27 @@ export function StartScreen({
 
   return (
     <div className="min-h-screen bg-bg pb-24 text-ink md:pb-0">
-      <header className="app-header border-b border-rule bg-paper">
-        <div className="mx-auto flex max-w-[1376px] flex-wrap items-center gap-4 px-8 py-3.5 max-sm:px-4">
-          <div className="flex items-center gap-2.5">
-            <Logo />
-            <div className="flex flex-col">
-              <span className="brand-name text-[17px] font-extrabold tracking-tight">Asystent Wodny</span>
-              <span className="brand-sub text-xs text-muted">woda na Twojej działce — z danych publicznych</span>
-            </div>
-          </div>
-          <ThemeToggle className="ml-auto sm:hidden" />
-          <nav className="ml-auto flex flex-wrap items-center gap-2 max-sm:hidden">
-            <ThemeToggle />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint-2 px-3 py-2 text-xs font-semibold text-primary">
-              <Icon d={ICON.lock} size={14} />
-              Bez logowania · bez danych osobowych
-            </span>
-          </nav>
-        </div>
-      </header>
+      <AppHeader active="start" reportHref={farm.find((f) => f.tone)?.url ?? null}>
+        <ThemeToggle />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-heading max-lg:hidden">
+          <Icon d={ICON.lock} size={14} />
+          Bez logowania · bez danych osobowych
+        </span>
+      </AppHeader>
 
       <main className="mx-auto flex max-w-[1376px] flex-wrap items-start gap-6 px-8 pb-12 pt-8 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
         <Card className="flex min-w-0 flex-[999_1_560px] flex-col gap-7 p-8 max-sm:gap-6 max-sm:p-4">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-[32px] font-extrabold leading-tight tracking-tight max-sm:text-[26px]">Sprawdź wodę <span className="accent-word">na swojej działce</span>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[27px]">
+              Sprawdź wodę <span className="accent-word">na swojej działce</span>
             </h1>
-            <p className="text-base text-ink-3">Podaj działkę i dzień. Glebę, teren i pogodę z 10 lat pobierzemy sami, uprawę podpowiemy z deklaracji ARiMR.</p>
+            <p className="inline-flex items-center gap-1.5 text-sm text-ink-2">
+              <Icon d={ICON.calendar} size={16} className="text-muted" />
+              {longDate(today)}
+            </p>
+            <p className="max-w-[60ch] text-base text-ink-3">
+              Podaj działkę i dzień. Glebę, teren i pogodę z 10 lat pobierzemy sami, uprawę podpowiemy z deklaracji ARiMR.
+            </p>
           </div>
 
           <div className="flex flex-col gap-3.5">
