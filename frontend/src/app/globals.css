@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Palette from the UI mockup (makieta-ui/*.dc.html). */
+:root {
+  --bg: #f6f5f0;
+  --paper: #ffffff;
+  --ink: #1a1c19;
+  --ink-2: #3f423c;
+  --ink-3: #4a4d47;
+  --muted: #5f625b;
+  --rule: #e3e1d8;
+  --rule-soft: #eceae2;
+  --rule-strong: #d5d3c9;
+  --chip: #f1f0ea;
+  --primary: #1e5b3a;
+  --primary-dark: #123d26;
+  --primary-tint: #eef5ef;
+  --primary-tint-2: #e6efe8;
+  --primary-border: #cfe2d4;
+  --brown: #7a4e14;
+  --brown-tint: #f7efe3;
+  --blue: #1f6fc9;
+  --blue-dark: #123f78;
+  --blue-tint: #e9f1fc;
+  --hl: #f2b53a;
+  --danger: #c2362f;
+  --warn-bg: #fbf3ec;
+  --warn-ink: #5a2a12;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-rule-strong: var(--rule-strong);
+  --color-chip: var(--chip);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-tint-2: var(--primary-tint-2);
+  --color-primary-border: var(--primary-border);
+  --color-brown: var(--brown);
+  --color-brown-tint: var(--brown-tint);
+  --color-blue: var(--blue);
+  --color-blue-dark: var(--blue-dark);
+  --color-blue-tint: var(--blue-tint);
+  --color-hl: var(--hl);
+  --color-danger: var(--danger);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+a {
+  color: var(--primary);
+}
+
+summary {
+  cursor: pointer;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bottom bar on phones respects the home indicator. */
+.safe-bottom {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+/* Printing / "Save as PDF": A4, no interactive chrome, details expanded. */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-break-avoid {
+    break-inside: avoid;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  section,
+  aside > div {
+    border-color: #ccc !important;
+  }
+}
+
+.print-only {
+  display: none;
+}
