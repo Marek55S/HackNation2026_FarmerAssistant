@@ -1,0 +1,38 @@
+# Credentials and private workstation state
+.env
+.env.*
+!.env.example
+!.env.*.example
+.codex/
+
+# Temporary and editor files
+*.orig
+*.rej
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Dependencies and build output
+/node_modules
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+*.pem
+
+# Debug logs
+npm-debug.log*
+.pnpm-debug.log*
+
+# Google Cloud credentials
+*service-account*.json
+
+
+*.sha256
+
+
+# pnpm store created by the dev container
+.pnpm-store/
