@@ -3,6 +3,19 @@
 Next.js 16 + TypeScript + Tailwind 4, the same setup as [quickReport](https://github.com/Marek55S/quickReport).
 The UI follows the mockups in [`../makieta-ui`](../makieta-ui). All data is **example data** from a mock API.
 
+### In Docker (nothing to install on the host except Docker)
+
+```bash
+docker compose up dev            # http://localhost:3000 — hot reload, edits in src/ apply immediately
+docker compose up --build prod   # http://localhost:8080 — the same image as Cloud Run (PWA + offline work)
+docker compose down              # stop
+```
+
+Dependencies, the pnpm store and the Next.js cache stay in Docker volumes, not in the project folder.
+After changing `package.json` run `docker compose down -v && docker compose up dev` to reinstall.
+
+### Without Docker (Node 24 + pnpm)
+
 ```bash
 pnpm install
 pnpm dev        # http://localhost:3000

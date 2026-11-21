@@ -33,3 +33,6 @@ npm-debug.log*
 
 *.sha256
 
+
+# pnpm store created by the dev container
+.pnpm-store/

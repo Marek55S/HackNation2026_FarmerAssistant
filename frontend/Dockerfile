@@ -1,3 +1,12 @@
+# Development image (docker compose up dev): source is bind-mounted, dependencies live in volumes.
+# Unused when building for Cloud Run — the last stage ("run") is the production image.
+FROM node:24-slim AS dev
+WORKDIR /app
+RUN corepack enable && mkdir -p node_modules .next && chown -R node:node /app
+USER node
+EXPOSE 3000
+CMD ["sh", "-c", "pnpm install --frozen-lockfile && pnpm dev --hostname 0.0.0.0"]
+
 # Production image for Cloud Run (Next.js standalone output).
 FROM node:24-slim AS build
 WORKDIR /app
