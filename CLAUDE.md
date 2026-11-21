@@ -16,6 +16,8 @@ Use the project skills in `.claude/skills/` when relevant:
 - `data-tables` for data-heavy tables
 - `design-system-governance` for shared tokens and components
 - `visual-qa` before declaring UI work complete
+- `mobile-native` for phone/PWA behaviour, `break-ui` to stress-test screens with worst-case data
+- `emil-design-eng` for interaction polish, `prototype` (explicit) to compare UI variants, `learn-taste` at the end of a session to record the user's design corrections in `DESIGN.md`
 
 ### Global rules
 - Inspect the existing stack and design system before changing them.
