@@ -1,7 +1,8 @@
-// Example parcels (mock of ULDK + ARiMR GSA + IUNG land cover). All values are illustrative.
+// Example parcels (mock of ULDK + ARiMR GSA + IUNG land cover). Boundaries are real ULDK geometry; crops are illustrative.
 
 import { parseIso } from "../dates";
 import type { Crop, CropHint, CropId, Parcel, ParcelLookup } from "../types";
+import { PARCEL_GEOMETRY } from "./geometry";
 
 export const CROPS: Crop[] = [
   { id: "kukurydza", name: "Kukurydza", hint: "na ziarno lub kiszonkę", hasOfficialThreshold: true },
@@ -22,30 +23,33 @@ export function cropById(id: string | null | undefined): Crop | undefined {
 /** EGiB parcel id: TERYT unit (6 digits + _ + digit) . precinct (4 digits) . number (with optional /sub) */
 export const PARCEL_ID_RE = /^\d{6}_\d\.\d{4}\.\d+(\/\d+)?$/;
 
-export const DEMO_PARCEL_ID = "040410_2.0012.245/3";
+export const DEMO_PARCEL_ID = "041005_5.0011.22/15";
 
 interface DemoParcel extends Parcel {
-  /** Crop declared/mapped per year (ARiMR GSA 2020–2026, JRC 2018, 2022) */
+  /** Crop declared/mapped per year (ARiMR GSA 2020–2026, JRC 2018, 2022) — example values */
   crops: Record<number, CropId>;
 }
 
-const base = { gmina: "Szubin", obreb: "Godzimierz", wojewodztwo: "kujawsko-pomorskie" };
+// Real parcels in gm. Szubin (boundaries from ULDK); land use read from the orthophoto, crops are example data.
+const base = { gmina: "Szubin", wojewodztwo: "kujawsko-pomorskie" };
 
 const DEMO: DemoParcel[] = [
   {
-    ...base, id: DEMO_PARCEL_ID, number: "245/3", areaHa: 4.82, landUse: "grunty orne", landCover: "rolny",
+    ...base, id: DEMO_PARCEL_ID, number: "22/15", obreb: "Kołaczkowo", areaHa: 14.88, landUse: "grunty orne", landCover: "rolny",
+    geometry: PARCEL_GEOMETRY[DEMO_PARCEL_ID],
     crops: { 2018: "pszenica", 2020: "rzepak", 2021: "pszenica", 2022: "kukurydza", 2023: "jare", 2024: "pszenica", 2025: "kukurydza", 2026: "kukurydza" },
   },
   {
-    ...base, id: "040410_2.0012.118", number: "118", areaHa: 6.1, landUse: "grunty orne", landCover: "rolny",
+    ...base, id: "041005_5.0021.662/11", number: "662/11", obreb: "Rynarzewo", areaHa: 19.36, landUse: "grunty orne", landCover: "rolny",
+    geometry: PARCEL_GEOMETRY["041005_5.0021.662/11"],
     crops: { 2018: "kukurydza", 2020: "pszenica", 2021: "rzepak", 2022: "pszenica", 2023: "kukurydza", 2024: "jare", 2025: "pszenica", 2026: "pszenica" },
   },
+  // Forest parcel to show "Poza zakresem" (IUNG code 11)
   {
-    ...base, id: "040410_2.0012.119/2", number: "119/2", areaHa: 2.3, landUse: "łąki trwałe", landCover: "organiczna",
-    crops: { 2018: "laka", 2020: "laka", 2021: "laka", 2022: "laka", 2023: "laka", 2024: "laka", 2025: "laka", 2026: "laka" },
+    ...base, id: "041005_5.0029.3225/6", number: "3225/6", obreb: "Szkocja", areaHa: 26.84, landUse: "lasy", landCover: "las",
+    geometry: PARCEL_GEOMETRY["041005_5.0029.3225/6"],
+    crops: {},
   },
-  // Non-agricultural parcel to show "Poza zakresem" (IUNG code 11 = forest)
-  { ...base, id: "040410_2.0012.301", number: "301", areaHa: 3.4, landUse: "lasy", landCover: "las", crops: {} },
 ];
 
 /** ARiMR GSA covers 2020–2026, JRC EU Crop Map 2018 and 2022; 2016, 2017 and 2019 have no crop data (pipeline_plan.md F0). */

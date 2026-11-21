@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isValidIso, MIN_DATE, todayIso } from "@/lib/dates";
+import { todayIso, validatePeriod } from "@/lib/dates";
 import { stepDefs, stepsAt } from "@/lib/mock/analysis";
 import { buildReport, reportUrl } from "@/lib/mock/report";
 import type { AnalyzeEvent } from "@/lib/types";
@@ -7,27 +7,27 @@ import type { AnalyzeEvent } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/analyze {dzialka, data, uprawa?} → report JSON (TODO T1.1).
+ * POST /api/analyze {dzialka, data, od?, uprawa?} → report JSON (TODO T1.1). `od` = start of a period to summarise; `data` = its end (D).
  * With `Accept: application/x-ndjson` the response is a stream of progress events ending with the report.
  */
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { dzialka?: unknown; data?: unknown; uprawa?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { dzialka?: unknown; data?: unknown; od?: unknown; uprawa?: unknown } | null;
   const dzialka = typeof body?.dzialka === "string" ? body.dzialka.trim() : "";
   const data = typeof body?.data === "string" ? body.data : "";
+  const od = typeof body?.od === "string" ? body.od : null;
   const uprawa = typeof body?.uprawa === "string" ? body.uprawa : null;
   const today = todayIso();
 
   if (!dzialka || dzialka.length > 64) return NextResponse.json({ error: "Podaj identyfikator działki." }, { status: 400 });
-  if (!isValidIso(data) || data < MIN_DATE || data > today) {
-    return NextResponse.json({ error: `Data musi być między ${MIN_DATE} a dziś.` }, { status: 400 });
-  }
-  const result = buildReport({ parcelId: dzialka, date: data, crop: uprawa, today });
+  const dateError = validatePeriod(od, data, today);
+  if (dateError) return NextResponse.json({ error: dateError }, { status: 400 });
+  const result = buildReport({ parcelId: dzialka, date: data, from: od, crop: uprawa, today });
   if ("error" in result) {
     return result.error === "not-found"
       ? NextResponse.json({ error: "Nie ma takiej działki w ewidencji." }, { status: 404 })
       : NextResponse.json({ error: "Brak danych o uprawie dla tego roku — wybierz uprawę." }, { status: 422 });
   }
-  const url = reportUrl({ dzialka: result.report.parcel.id, data, uprawa });
+  const url = reportUrl({ dzialka: result.report.parcel.id, data, od, uprawa });
 
   if (!req.headers.get("accept")?.includes("application/x-ndjson")) {
     return NextResponse.json(result.report);

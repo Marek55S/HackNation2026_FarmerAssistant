@@ -1,10 +1,13 @@
 // Asystent Wodny service worker.
 // - pages: network first, cached copy when offline (the last opened report works in the field)
 // - static assets (/_next/static, icons, fonts): cache first
+// - map tiles (Geoportal orthophoto, OpenStreetMap): cache first, last ~600 tiles kept
 // - API: network only
-const VERSION = "v2";
+const VERSION = "v3";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
+const TILES = `tiles-${VERSION}`;
+const MAX_TILES = 600;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -19,7 +22,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => ![PAGES, ASSETS].includes(k)).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => ![PAGES, ASSETS, TILES].includes(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -56,12 +59,29 @@ async function cacheFirst(request) {
   return res;
 }
 
+async function tile(request) {
+  const cache = await caches.open(TILES);
+  const hit = await cache.match(request);
+  if (hit) return hit;
+  const res = await fetch(request);
+  if (res.ok) {
+    await cache.put(request, res.clone());
+    const keys = await cache.keys();
+    if (keys.length > MAX_TILES) await Promise.all(keys.slice(0, keys.length - MAX_TILES).map((k) => cache.delete(k)));
+  }
+  return res;
+}
+
+const isTile = (url) =>
+  (url.hostname === "mapy.geoportal.gov.pl" && url.searchParams.get("REQUEST") === "GetTile") || url.hostname === "tile.openstreetmap.org";
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) {
-    if (url.hostname.endsWith("fonts.gstatic.com")) event.respondWith(cacheFirst(request));
+    if (isTile(url)) event.respondWith(tile(request));
+    else if (url.hostname.endsWith("fonts.gstatic.com")) event.respondWith(cacheFirst(request));
     return;
   }
   if (request.mode === "navigate") {

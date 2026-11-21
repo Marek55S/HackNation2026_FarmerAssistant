@@ -6,7 +6,7 @@ import { useFarm } from "@/lib/farm";
 import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
 import { MobileNav } from "../mobile-nav";
 import { Card, ICON, Icon, Logo, StepNumber } from "../ui";
-import { DatePicker } from "./date-picker";
+import { DatePicker, type DateChoice } from "./date-picker";
 import { ParcelPicker } from "./parcel-picker";
 import { FarmPanel, ProgressPanel, type ProgressState } from "./side-panels";
 
@@ -18,12 +18,24 @@ const FARM_STATUS: Record<Report["status"]["tone"], string> = {
   "poza-zakresem": "Poza zakresem",
 };
 
-export function StartScreen({ today, initialParcelId, initialDate }: { today: string; initialParcelId: string; initialDate: string }) {
+export function StartScreen({
+  today,
+  initialParcelId,
+  initialDate,
+  initialFrom,
+}: {
+  today: string;
+  initialParcelId: string;
+  initialDate: string;
+  initialFrom: string | null;
+}) {
   const router = useRouter();
   const { farm, upsert, remove } = useFarm();
   const [lookup, setLookup] = useState<ParcelLookup | null>(null);
   const [crop, setCrop] = useState<CropId | null>(null);
   const [date, setDate] = useState(initialDate);
+  const [from, setFrom] = useState<string | null>(initialFrom);
+  const [dateValid, setDateValid] = useState(true);
   const [status, setStatus] = useState<ProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -31,6 +43,13 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
   const abort = useRef<AbortController | null>(null);
 
   useEffect(() => () => abort.current?.abort(), []);
+
+  const onDate = useCallback((c: DateChoice) => {
+    setDateValid(c.valid);
+    if (!c.valid) return;
+    setDate(c.date);
+    setFrom(c.from);
+  }, []);
 
   const onLookup = useCallback((l: ParcelLookup | null) => {
     setLookup((prev) => {
@@ -41,7 +60,7 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
   }, []);
 
   const cropMissing = !!lookup && !lookup.outOfScope && !lookup.cropHint && !crop;
-  const canStart = !!lookup && !cropMissing && !running;
+  const canStart = !!lookup && !cropMissing && dateValid && !running;
 
   function saveToFarm(report: Report, url: string) {
     const p = report.parcel;
@@ -68,7 +87,7 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, uprawa: crop ?? undefined }),
+        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, od: from ?? undefined, uprawa: crop ?? undefined }),
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) {
@@ -113,6 +132,7 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
     if (!lookup) return;
     const { parcel } = lookup;
     const q = new URLSearchParams({ dzialka: parcel.id, data: date });
+    if (from) q.set("od", from);
     if (crop) q.set("uprawa", crop);
     upsert({
       parcelId: parcel.id,
@@ -137,9 +157,6 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
             </div>
           </div>
           <nav className="ml-auto flex flex-wrap items-center gap-2 max-sm:hidden">
-            <a href="#jak" className="rounded-[10px] px-3.5 py-2.5 text-sm font-medium text-ink-2 no-underline hover:bg-chip">
-              Jak to działa
-            </a>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint-2 px-3 py-2 text-xs font-semibold text-primary">
               <Icon d={ICON.lock} size={14} />
               Bez logowania · bez danych osobowych
@@ -166,9 +183,9 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
           <div className="flex flex-col gap-3.5">
             <div className="flex items-center gap-2.5">
               <StepNumber n={2} />
-              <h2 className="text-[19px] font-bold">Na jaki dzień?</h2>
+              <h2 className="text-[19px] font-bold">Na jaki dzień lub okres?</h2>
             </div>
-            <DatePicker value={date} today={today} onChange={setDate} />
+            <DatePicker date={date} from={from} today={today} onChange={onDate} />
           </div>
 
           <div className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
@@ -186,29 +203,20 @@ export function StartScreen({ today, initialParcelId, initialDate }: { today: st
                 ? "Najpierw wskaż działkę."
                 : cropMissing
                   ? "Wybierz uprawę, żeby zacząć."
+                  : !dateValid
+                    ? "Popraw datę, żeby zacząć."
                   : "Tylko publiczne, bezpłatne dane: GUGiK, ARiMR, IUNG-PIB, Copernicus, USGS Landsat, Open-Meteo, IMGW-PIB, Wody Polskie."}
             </span>
           </div>
         </Card>
 
         <aside className="flex min-w-0 flex-[1_1_380px] flex-col gap-6 max-sm:gap-4">
-          <div ref={progressRef} className={running || status || error ? "scroll-mt-4" : "max-md:hidden"}>
-            <ProgressPanel status={status} error={error} />
-          </div>
+          {(running || status || error) && (
+            <div ref={progressRef} className="scroll-mt-4">
+              <ProgressPanel status={status} error={error} />
+            </div>
+          )}
           <FarmPanel farm={farm} onAdd={addToFarm} onRemove={remove} canAdd={!!lookup} />
-          <Card className="flex flex-col gap-2 p-6 text-sm text-ink-3 max-sm:p-4">
-            <h2 id="jak" className="scroll-mt-4 text-[17px] font-bold text-ink">
-              Jak to działa
-            </h2>
-            <p>
-              Łączymy bezpłatne dane publiczne: granice działki (GUGiK), uprawy (ARiMR), pogodę (ERA5-Land), glebę (IUNG-PIB), rzeźbę
-              terenu i zdjęcia satelitarne. Liczymy bilans wody w glebie i porównujemy go z progami suszy IUNG.
-            </p>
-            <p>
-              Pogoda z poprzednich sezonów to scenariusze na najbliższe tygodnie i kolejny sezon. W raporcie zobaczysz na mapie, co zrobić
-              i gdzie: najpierw zatrzymanie wody, potem zabiegi na polu, na końcu nawadnianie.
-            </p>
-          </Card>
         </aside>
       </main>
 

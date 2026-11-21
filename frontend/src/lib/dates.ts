@@ -95,3 +95,35 @@ export function historyWindow(iso: string) {
     satSrc,
   };
 }
+
+const DAY = 86400000;
+
+function toUtc(iso: string): number {
+  const { y, m, d } = parseIso(iso);
+  return Date.UTC(y, m - 1, d);
+}
+
+export function addDays(iso: string, n: number): string {
+  const dt = new Date(toUtc(iso) + n * DAY);
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+}
+
+/** Number of days in the period, both ends included. */
+export function periodDays(from: string, to: string): number {
+  return Math.round((toUtc(to) - toUtc(from)) / DAY) + 1;
+}
+
+/** Longest period the report summarises. */
+export const MAX_PERIOD_DAYS = 366;
+
+/** Validates an analysis date or period; returns a message for the farmer or null when OK. */
+export function validatePeriod(from: string | null, to: string, today: string): string | null {
+  if (!isValidIso(to)) return "Podaj datę.";
+  if (to < MIN_DATE || to > today) return `Data musi być między ${shortDate(MIN_DATE)} a dziś.`;
+  if (from === null) return null;
+  if (!isValidIso(from)) return "Podaj początek okresu.";
+  if (from < MIN_DATE) return `Okres może zaczynać się najwcześniej ${shortDate(MIN_DATE)}.`;
+  if (from >= to) return "Początek okresu musi być wcześniej niż koniec.";
+  if (periodDays(from, to) > MAX_PERIOD_DAYS) return "Okres może mieć najwyżej 12 miesięcy.";
+  return null;
+}

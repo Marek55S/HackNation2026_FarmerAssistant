@@ -71,9 +71,6 @@ export function FarmPanel({
       >
         <Icon d={ICON.plus} /> Dodaj wskazaną działkę
       </button>
-      <span className="text-xs leading-snug text-muted">
-        Zastawki, oczka i pasy mogą obejmować kilka działek — w widoku gospodarstwa pokażemy wspólne miejsca retencji.
-      </span>
     </Card>
   );
 }
@@ -90,19 +87,13 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
   return (
     <Card className="flex flex-col gap-4 p-6 max-sm:p-4">
       <div className="flex items-center gap-2.5">
-        <h2 className="text-[17px] font-bold">{status?.done ? "Analiza gotowa" : status ? "Trwa analiza działki" : "Analiza działki"}</h2>
+        <h2 className="text-[17px] font-bold">{status?.done ? "Analiza gotowa" : "Trwa analiza działki"}</h2>
         {status && (
           <span className="tabular ml-auto text-sm font-bold text-primary">
             {status.elapsed.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s
           </span>
         )}
       </div>
-      {!status && !error && (
-        <p className="text-sm text-ink-3">
-          Po kliknięciu „Sprawdź działkę” pobierzemy równolegle granice, uprawy, pogodę, glebę, teren i zdjęcia satelitarne.
-          Zwykle trwa to poniżej 30 sekund.
-        </p>
-      )}
       {error && (
         <p role="alert" className="rounded-lg bg-warn-bg px-3 py-2.5 text-sm text-warn-ink">
           {error}
@@ -144,11 +135,12 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
           </p>
         </>
       )}
-      <p className="rounded-[10px] bg-bg p-3 text-[13px] text-ink-3">
-        {failed > 0
-          ? `${failed === 1 ? "Jedno źródło nie dało" : `${failed} źródła nie dały`} wyniku — analiza i tak się kończy, a raport powie wprost, czego zabrakło.`
-          : "Jeśli któreś źródło nie odpowie, analiza i tak się zakończy — raport powie wprost, czego zabrakło."}
-      </p>
+      {failed > 0 && (
+        <p className="rounded-[10px] bg-bg p-3 text-[13px] text-ink-3">
+          {failed === 1 ? "Jedno źródło nie dało" : `${failed} źródła nie dały`} wyniku — analiza i tak się kończy, a raport powie wprost,
+          czego zabrakło.
+        </p>
+      )}
     </Card>
   );
 }

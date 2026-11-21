@@ -32,7 +32,11 @@ export interface Parcel {
   areaHa: number;
   landUse: string;
   landCover: LandCover;
+  /** Outer ring of the parcel boundary, [lon, lat] in EPSG:4326 (ULDK geom_wkt) */
+  geometry: LngLat[];
 }
+
+export type LngLat = [number, number];
 
 /** F0: crop hint for the year of the analysis date. null = no data for that year → the farmer picks from tiles. */
 export interface CropHint {
@@ -75,9 +79,8 @@ export interface Zalecenie {
   /** Number on the map and in the list (1…6) */
   n: number;
   kategoria: ActionCategory;
-  /** Pin position on the map, percent of width/height (will come from the GeoJSON layers, T5.6) */
-  x: number;
-  y: number;
+  /** Where the pin goes on the map, [lon, lat] */
+  punkt: LngLat;
   /** Map view that shows why the action is placed here */
   warstwa: MapLayer;
   /** Longer explanation shown when the card is opened */
@@ -122,8 +125,71 @@ export interface NotChecked {
   why: string;
 }
 
+/** Summary of a chosen period (from–to); recommendations are still computed for D = `to`. */
+export interface PeriodSummary {
+  from: string;
+  to: string;
+  days: number;
+  /** Days of the period inside the growing season 21.III–30.IX */
+  seasonDays: number;
+  rainMm: number;
+  rainNormMm: number;
+  et0Mm: number;
+  et0NormMm: number;
+  /** Climatic water balance (rain − ET0) over the period */
+  kbwMm: number;
+  /** Days with root-zone water below the crop stress threshold (F4 < F4p) */
+  stressDays: number;
+  minSoilPct: number;
+  /** IUNG drought criterion met at some point in the period; null when the period is outside the season */
+  iungDrought: boolean | null;
+  /** In how many of the previous 10 years the same period was wetter */
+  wetterYears: number;
+  say: string;
+}
+
+/** Grid raster over a bounding box; values are class indexes (see the map legend), -1 = outside the parcel. */
+export interface RasterGrid {
+  bbox: [number, number, number, number]; // west, south, east, north
+  cols: number;
+  rows: number;
+  /** Row-major from the north-west corner */
+  values: number[];
+  /** Cell size in metres (Sentinel-2 = 10 m) */
+  cellM: number;
+}
+
+export type MapFeatureKind = "row" | "zaglebienie" | "strefa-podlewania" | "pas-zadrzewien" | "splyw";
+
+export interface MapFeature {
+  kind: MapFeatureKind;
+  /** Rule that this feature belongs to (highlighted when its recommendation is selected) */
+  regula: RuleId | null;
+  geometry: { type: "LineString"; coordinates: LngLat[] } | { type: "Polygon"; coordinates: LngLat[][] };
+  /** Map views where the feature is drawn */
+  layers: MapLayer[];
+}
+
+export interface MapLabel {
+  punkt: LngLat;
+  text: string;
+  layers: MapLayer[];
+  tone: "ink" | "red" | "blue" | "muted";
+  /** Hidden on narrow maps */
+  minor?: boolean;
+}
+
+/** Map layers for the report (T5.6: geometries as GeoJSON). */
+export interface ReportMap {
+  features: MapFeature[];
+  rasters: Partial<Record<Exclude<MapLayer, "plan">, RasterGrid>>;
+  labels: MapLabel[];
+}
+
 export interface Report {
   parcel: Parcel;
+  map: ReportMap;
+  period: PeriodSummary | null;
   crop: Crop | null;
   cropSource: string;
   date: string; // ISO yyyy-mm-dd

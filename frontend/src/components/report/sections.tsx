@@ -3,7 +3,7 @@
 import { shortDate } from "@/lib/dates";
 import type { ActionCategory, CauseLevel, DroughtTag, MapLayer, Report, Zalecenie } from "@/lib/types";
 import { Card, ICON, Icon, SCALE } from "../ui";
-import { CAT, LAYERS } from "./parcel-map";
+import { CAT, LAYERS } from "./map-style";
 
 export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin: number; onPick: (a: Zalecenie) => void }) {
   const groups: ActionCategory[] = ["ret", "agro", "irr"];
@@ -264,6 +264,52 @@ export function Sources({ report }: { report: Report }) {
           </ul>
         </details>
       )}
+    </Card>
+  );
+}
+
+/** Summary of the chosen period (from–to); shown only when the farmer picked a range. */
+export function PeriodSummaryCard({ report }: { report: Report }) {
+  const p = report.period;
+  if (!p) return null;
+  const fmt = (n: number) => n.toLocaleString("pl-PL");
+  const diff = (a: number, b: number) => `${a >= b ? "+" : "−"}${fmt(Math.abs(a - b))} mm wobec normy`;
+  const stats: { label: string; value: string; note: string }[] = [
+    { label: "Opad", value: `${fmt(p.rainMm)} mm`, note: diff(p.rainMm, p.rainNormMm) },
+    { label: "Parowanie (ET0)", value: `${fmt(p.et0Mm)} mm`, note: diff(p.et0Mm, p.et0NormMm) },
+    { label: "Bilans wody", value: `${p.kbwMm < 0 ? "−" : "+"}${fmt(Math.abs(p.kbwMm))} mm`, note: "opad minus parowanie" },
+    {
+      label: "Dni stresu uprawy",
+      value: p.seasonDays > 0 ? `${p.stressDays} z ${p.seasonDays}` : "—",
+      note: p.seasonDays > 0 ? `najniższy zapas wody ${p.minSoilPct}%` : "okres poza sezonem",
+    },
+  ];
+  return (
+    <Card className="print-break-avoid flex flex-col gap-3.5 p-5 max-sm:p-4">
+      <div className="flex flex-wrap items-baseline gap-2">
+        <h2 className="text-lg font-extrabold">Podsumowanie okresu</h2>
+        <span className="text-[13px] text-muted">
+          {shortDate(p.from)} – {shortDate(p.to)} · {p.days} dni
+        </span>
+      </div>
+      <p className="text-[15px] font-semibold leading-snug">{p.say}</p>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col gap-0.5 border-l-2 border-rule pl-3">
+            <dt className="text-xs font-semibold text-muted">{s.label}</dt>
+            <dd className="tabular text-xl font-extrabold">{s.value}</dd>
+            <dd className="text-xs text-ink-3">{s.note}</dd>
+          </div>
+        ))}
+      </dl>
+      <span className="text-xs text-muted">
+        {p.iungDrought === null
+          ? "Kryterium suszy IUNG dotyczy sezonu 21.III–30.IX — ten okres jest poza nim."
+          : p.iungDrought
+            ? "W tym okresie spełnione było kryterium suszy rolniczej IUNG."
+            : "W tym okresie nie było spełnione kryterium suszy rolniczej IUNG."}{" "}
+        Norma: ten sam okres w 10 poprzednich latach (ERA5-Land). Zalecenia niżej dotyczą dnia {shortDate(p.to)}.
+      </span>
     </Card>
   );
 }

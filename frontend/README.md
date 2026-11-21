@@ -26,21 +26,23 @@ pnpm build && pnpm start   # production build (the service worker only runs here
 
 | Path | Screen |
 |---|---|
-| `/` | Start: choose the parcel (id / gmina+obręb+numer / map), date, "Twoje gospodarstwo", analysis progress |
-| `/raport?dzialka=…&data=yyyy-mm-dd&uprawa=…` | Report: status, map with layers (plan / gdzie sucho / teren / gleba), what to do and where, causes, risk, sources |
+| `/` | Start: choose the parcel (id / gmina+obręb+numer / map), today / a day / a period (od–do), "Twoje gospodarstwo", analysis progress |
+| `/raport?dzialka=…&data=yyyy-mm-dd&od=…&uprawa=…` | Report: status, map with layers (plan / gdzie sucho / teren / gleba), what to do and where, causes, risk, sources |
 
 The report mode follows the date (pipeline_plan.md F13): **in season 21.III–30.IX** ("water now", label *Susza trwa / nadchodzi*, *Zagrożenie* or *Spokojnie*)
 and **off season** ("Plan na sezon {rok}" — retain water for next year). Non-agricultural parcels get **Poza zakresem**.
 The crop is a hint from ARiMR declarations (2020–2026) or the JRC crop map (2018, 2022); for years without data (e.g. 2016, 2017, 2019) the farmer picks it from tiles.
 On phones (< 768 px) the layout is a single column with a bottom navigation bar. "Drukuj / zapisz PDF" uses the browser's print dialog with an A4 print stylesheet (collapsed sections are expanded for print).
 
-Demo parcels (mock data): `040410_2.0012.245/3`, `040410_2.0012.118`, `040410_2.0012.119/2` (grassland, no official IUNG threshold), `040410_2.0012.301` (forest → out of scope). Other ids return "not found" — the mock does not invent parcels.
+Demo parcels — real parcels in gm. Szubin with boundaries from ULDK; everything else about them is mock data: `041005_5.0011.22/15` (Kołaczkowo, field), `041005_5.0021.662/11` (Rynarzewo, field), `041005_5.0029.3225/6` (Szkocja, forest → out of scope). Other ids return "not found" — the mock does not invent parcels.
+
+The map uses MapLibre GL on the Geoportal orthophoto (GUGiK WMTS, free, no API key) with an OpenStreetMap switch; if the orthophoto delivers no tile within 6 s the map falls back to OSM. Parcel boundary, recommendation features and 10 m rasters come from the report JSON (`Report.map`, `Parcel.geometry`, `Zalecenie.punkt`, all in EPSG:4326).
 
 ## API (mock — to be replaced by the real pipeline)
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /api/analyze` `{dzialka, data, uprawa?}` | report JSON (TODO T1.1). With `Accept: application/x-ndjson`: stream of `progress` events, then `report` |
+| `POST /api/analyze` `{dzialka, data, od?, uprawa?}` | report JSON (TODO T1.1). `od` = start of a period (max 12 months) summarised in `period`; recommendations are for `data`. With `Accept: application/x-ndjson`: stream of `progress` events, then `report` |
 | `GET /api/health` | health check |
 | `GET /api/parcel?id=…&data=…` / `?gmina=…&obreb=…&nr=…&data=…` / `?mapa=<numer>&data=…` | parcel lookup (ULDK mock) + crop hint for the year of `data` |
 

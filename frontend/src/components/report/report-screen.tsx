@@ -1,16 +1,26 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { MapLayer, Report, Zalecenie } from "@/lib/types";
 import { MobileNav } from "../mobile-nav";
+import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, Logo, StatusPill, Tank } from "../ui";
-import { CAT, LAYERS, LEGEND, ParcelMap } from "./parcel-map";
-import { ActionList, Causes, Justification, Risk, Sources } from "./sections";
+import { CAT, LAYERS, LEGEND } from "./map-style";
+import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, Sources } from "./sections";
+
+// MapLibre needs the browser (WebGL), so the map is loaded on the client only.
+const ParcelMap = dynamic(() => import("./parcel-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid aspect-[4/5] w-full place-items-center rounded-[14px] bg-[#DDE7D5] text-sm text-muted sm:aspect-[3/2]">Wczytuję mapę…</div>
+  ),
+});
 
 export function ReportScreen({ report, url }: { report: Report; url: string }) {
   const p = report.parcel;
-  const startHref = `/?${new URLSearchParams({ dzialka: p.id, data: report.date })}`;
+  const startHref = `/?${new URLSearchParams({ dzialka: p.id, data: report.date, ...(report.period ? { od: report.period.from } : {}) })}`;
   const outOfScope = report.status.tone === "poza-zakresem";
 
   // Print / "Save as PDF" shows collapsed sections too.
@@ -38,7 +48,7 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
               {report.crop && <span className="text-xs font-semibold text-muted max-sm:hidden">({report.cropSource})</span>}
             </span>
             <span className="text-[13px] text-muted max-sm:text-xs">
-              stan na {report.dateLong}
+              {report.period ? `okres ${shortDate(report.period.from)}–${shortDate(report.period.to)} · zalecenia na ${report.dateLong}` : `stan na ${report.dateLong}`}
               {!outOfScope && (
                 <>
                   {" "}
@@ -97,6 +107,9 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
   );
 }
 
+const NO_ACTIONS: Zalecenie[] = [];
+const noop = () => {};
+
 function OutOfScope({ report, startHref }: { report: Report; startHref: string }) {
   return (
     <Card className="flex flex-col gap-3 rounded-[20px] p-6 max-sm:p-4">
@@ -107,6 +120,9 @@ function OutOfScope({ report, startHref }: { report: Report; startHref: string }
         <h1 className="text-2xl font-extrabold leading-tight max-sm:text-xl">{report.headline}</h1>
       </div>
       <p className="max-w-[70ch] text-sm text-ink-2">{report.summary}</p>
+      <div className="max-w-3xl">
+        <ParcelMap parcel={report.parcel.geometry} data={report.map} actions={NO_ACTIONS} layer="plan" pin={0} onPin={noop} />
+      </div>
       <Link
         href={startHref}
         className="inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] bg-primary px-4 text-sm font-semibold text-white no-underline"
@@ -189,6 +205,8 @@ function AgriReport({ report }: { report: Report }) {
         )}
       </Card>
 
+      <PeriodSummaryCard report={report} />
+
       {/* Map with layers + action list */}
       <section className="flex flex-wrap items-start gap-5" aria-label="Plan na działce">
         <div
@@ -212,7 +230,7 @@ function AgriReport({ report }: { report: Report }) {
               ))}
             </div>
           </div>
-          <ParcelMap actions={report.actions} layer={layer} pin={pin} onPin={(a) => select(a)} />
+          <ParcelMap parcel={report.parcel.geometry} data={report.map} actions={report.actions} layer={layer} pin={pin} onPin={select} />
           <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
             {LEGEND[layer].map((l) => (
               <span key={l.t} className="inline-flex items-center gap-1.5 text-xs text-ink-2">

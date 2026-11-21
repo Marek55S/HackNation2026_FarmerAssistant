@@ -1,10 +1,11 @@
 // Example report built from the UI mockup (makieta-ui/Raport.dc.html) and the rules in pipeline_plan.md.
 // All numbers are illustrative. The real pipeline replaces buildReport() and returns the same `Report` JSON.
 
-import { historyWindow, isEarlySeason, longDate, seasonOf, shortDate } from "../dates";
+import { addDays, historyWindow, isEarlySeason, longDate, periodDays, seasonOf, shortDate } from "../dates";
 import type {
-  Cause, Crop, DroughtTag, MapLayer, NotChecked, Report, SeasonHistory, SourceStatus, StatusTone, Zalecenie,
+  Cause, Crop, DroughtTag, MapLayer, NotChecked, PeriodSummary, Report, SeasonHistory, SourceStatus, StatusTone, Zalecenie,
 } from "../types";
+import { buildParcelMap } from "./map";
 import { cropById, findParcelById } from "./parcels";
 
 /** Number of weather scenarios (N = 10 or 30 – decided by hindcast, METODY.md §7). */
@@ -12,23 +13,23 @@ const N = 10;
 
 const BASE_ACTIONS: Zalecenie[] = [
   {
-    regula: "R1", n: 1, kategoria: "ret", x: 93.5, y: 11, warstwa: "teren",
-    co: "Zastawka na rowie", gdzie: "rów R-3 przy północno-wschodnim rogu", kiedy: "jesienią, przed zimą",
+    regula: "R1", n: 1, kategoria: "ret", punkt: [0, 0], warstwa: "teren",
+    co: "Zastawka na rowie", gdzie: "rów R-3 wzdłuż wschodniej granicy", kiedy: "jesienią, przed zimą",
     ile: null, bo: ["rowem ucieka woda z wiosny"], fakty: ["F8", "F7b"],
     co_zyskasz: `na wiosnę gleba startuje pełniejsza; ryzyko w czerwcu 4/${N} → 3/${N}`,
     dlaczego: "Rów (BDOT10k) biegnie 15 m od działki i odprowadza wodę z ok. 40 ha. Piętrzenie od jesieni zatrzyma wodę z roztopów, której w lipcu brakuje na lekkiej glebie.",
     tagi: ["koszt niski", "spowolnienie odpływu (NWRM)", "zgłoszenie wodnoprawne"],
   },
   {
-    regula: "R2", n: 2, kategoria: "ret", x: 78.7, y: 22.5, warstwa: "teren",
-    co: "Zatrzymaj wodę w zagłębieniu", gdzie: "najniższy róg pola (NE), ok. 0,15 ha", kiedy: "po zbiorze",
+    regula: "R2", n: 2, kategoria: "ret", punkt: [0, 0], warstwa: "teren",
+    co: "Zatrzymaj wodę w zagłębieniu", gdzie: "zagłębienie przy wschodniej granicy, ok. 0,15 ha", kiedy: "po zbiorze",
     ile: "ok. 300 m³", bo: ["tu spływa deszcz z 70% pola"], fakty: ["F7", "F7b", "F10"],
     co_zyskasz: "ok. 300 m³ na lipiec — jedna dawka 20 mm dla 1,5 ha",
     dlaczego: "Model terenu pokazuje zagłębienie bez odpływu — zmieści ok. 300 m³. W 9 z 10 sezonów było tu wilgotniej niż na reszcie pola.",
     tagi: ["NWRM N01", "możliwe dofinansowanie"],
   },
   {
-    regula: "R3", n: 3, kategoria: "ret", x: 85.5, y: 80, warstwa: "teren",
+    regula: "R3", n: 3, kategoria: "ret", punkt: [0, 0], warstwa: "teren",
     co: "Pas trawy lub drzew", gdzie: "wschodni skraj pola", kiedy: "od jesieni",
     ile: "pas 6–10 m", bo: ["stok do 7% — woda z ulew ucieka"], fakty: ["F7", "F7b"],
     co_zyskasz: "o ok. 30–50% mniej wody ucieka z ulew na wschodzie",
@@ -36,7 +37,7 @@ const BASE_ACTIONS: Zalecenie[] = [
     tagi: ["NWRM A02", "ekoschematy"],
   },
   {
-    regula: "R5", n: 4, kategoria: "agro", x: 33, y: 52, warstwa: "gleba",
+    regula: "R5", n: 4, kategoria: "agro", punkt: [0, 0], warstwa: "gleba",
     co: "Międzyplon i resztki po zbiorze", gdzie: "całe pole", kiedy: "wrzesień, zaraz po zbiorze",
     ile: null, bo: ["lekka gleba", "mało próchnicy"], fakty: ["F6", "F6c"],
     co_zyskasz: `średnio 6 dni stresu mniej w sezonie (w 7 z ${N} scenariuszy)`,
@@ -44,9 +45,9 @@ const BASE_ACTIONS: Zalecenie[] = [
     tagi: ["cała działka", "NWRM A08 / A13", "zniszcz wcześnie wiosną"],
   },
   {
-    regula: "R7", n: 5, kategoria: "irr", x: 74.5, y: 62, warstwa: "sucho",
-    co: "Podlej wschodnią część", gdzie: "wschodnia część, ok. 1,6 ha", kiedy: "w ciągu 3 dni, rano lub wieczorem",
-    ile: "25 mm netto · ok. 450 m³", bo: ["najsuchsza część pola", "uprawa w fazie wrażliwej"], fakty: ["F4", "F4p", "F11", "F10"],
+    regula: "R7", n: 5, kategoria: "irr", punkt: [0, 0], warstwa: "sucho",
+    co: "Podlej południową część", gdzie: "południowa część pola", kiedy: "w ciągu 3 dni, rano lub wieczorem",
+    ile: "25 mm netto", bo: ["najsuchsza część pola", "uprawa w fazie wrażliwej"], fakty: ["F4", "F4p", "F11", "F10"],
     co_zyskasz: `stres w najbliższych tygodniach: 9/${N} → 2/${N} scenariuszy`,
     dlaczego: "Zapas wody w glebie (24%) jest poniżej progu stresu, a prognoza na 7 dni daje tylko 3 mm. W fazie wrażliwej brak wody najbardziej obniża plon.",
     tagi: ["bilans FAO-56 + prognoza"],
@@ -73,18 +74,18 @@ const OFF_SEASON: Partial<Record<number, Partial<Zalecenie>>> = {
   },
   5: {
     regula: "R8", co: "Przygotuj nawadnianie na lato", kiedy: "plan teraz, podlewanie czerwiec–lipiec",
-    ile: "60–110 mm na sezon · ok. 1000–1800 m³", bo: [`w 5 z ${N} scenariuszy zabraknie wody w lipcu`], fakty: ["F18", "F19", "F10"],
+    ile: "60–110 mm na sezon", bo: [`w 5 z ${N} scenariuszy zabraknie wody w lipcu`], fakty: ["F18", "F19", "F10"],
     co_zyskasz: `ryzyko strat w lipcu 5/${N} → 1/${N}; zagłębienie (2) pokryje ok. 1/3 potrzeb`,
-    dlaczego: `Scenariusze z ${N} sezonów: w typowym roku uprawa na wschodzie będzie potrzebować ok. 60 mm dodatkowej wody, w suchym ok. 110 mm. Teraz nie podlewaj — gleba odbudowuje zapas.`,
+    dlaczego: `Scenariusze z ${N} sezonów: w typowym roku uprawa na południu pola będzie potrzebować ok. 60 mm dodatkowej wody, w suchym ok. 110 mm. Teraz nie podlewaj — gleba odbudowuje zapas.`,
     tagi: ["sprawdź źródło wody i pozwolenie"],
   },
 };
 
 const CAUSES: Cause[] = [
   { id: "C1", name: "Mało deszczu", evidence: "od maja 74 mm zamiast ok. 140 mm normy · SPEI −1,7", level: "główna", icon: "rain", color: "#2a78d6", layer: null },
-  { id: "C3", name: "Lekka, piaszczysta gleba", evidence: "kat. I–II IUNG — mały „zbiornik” na wodę, zwłaszcza na wschodzie", level: "duża", icon: "sand", color: "#C9A46B", layer: "gleba" },
+  { id: "C3", name: "Lekka, piaszczysta gleba", evidence: "kat. I–II IUNG — mały „zbiornik” na wodę, zwłaszcza na południu pola", level: "duża", icon: "sand", color: "#C9A46B", layer: "gleba" },
   { id: "C2", name: "Upał", evidence: "9 dni ponad 30°C w ostatnich 30 dniach — parowanie o ok. 30% wyższe", level: "duża", icon: "sun", color: "#d65f2b", layer: null },
-  { id: "C4", name: "Woda spływa z pola", evidence: "stok do 7% na wschodzie; przy ulewach ok. 18% deszczu ucieka", level: "mała", icon: "slope", color: "#5F625B", layer: "teren" },
+  { id: "C4", name: "Woda spływa z pola", evidence: "stok do 7% przy wschodniej granicy; przy ulewach ok. 18% deszczu ucieka", level: "mała", icon: "slope", color: "#5F625B", layer: "teren" },
   { id: "C5", name: "Rów odprowadza wodę", evidence: "rów R-3 15 m od pola zbiera wodę z zagłębienia", level: "mała", icon: "ditch", color: "#1f6fc9", layer: "teren" },
 ];
 
@@ -107,13 +108,15 @@ function seasonTone(share: number): StatusTone {
 export interface ReportParams {
   parcelId?: string | null;
   date: string;
+  /** Start of the period to summarise (optional) */
+  from?: string | null;
   crop?: string | null;
   today: string;
 }
 
 export type BuildResult = { report: Report } | { error: "not-found" } | { error: "crop-required" };
 
-export function buildReport({ parcelId, date, crop, today }: ReportParams): BuildResult {
+export function buildReport({ parcelId, date, from, crop, today }: ReportParams): BuildResult {
   const found = parcelId ? findParcelById(parcelId, date) : null;
   if (!found) return { error: "not-found" };
   const { parcel, cropHint, outOfScope } = found;
@@ -128,6 +131,7 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
 
   const common = {
     parcel,
+    period: null as PeriodSummary | null,
     date,
     dateLong: longDate(date),
     isToday,
@@ -154,12 +158,15 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
         causes: [],
         risk: null,
         justification: null,
+        map: { features: [], rasters: {}, labels: [] },
         sources: [src("P0", "granice — ULDK GUGiK"), src("P4", "pokrycie terenu — IUNG-PIB")],
         notChecked: [{ what: "Bilans wody i zalecenia", why: "działka nierolnicza (kod IUNG: las, woda, zabudowa lub drogi)" }],
         advisorDetails: [],
       },
     };
   }
+
+  if (from) common.period = periodSummary(from, date);
 
   const chosen: Crop | undefined = cropById(crop) ?? (cropHint ? cropById(cropHint.crop) : undefined);
   if (!chosen) return { error: "crop-required" };
@@ -169,8 +176,18 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
   const early = isEarlySeason(date);
   const nextYear = win.lastYear + 1;
 
+  const geo = buildParcelMap(parcel.geometry);
+  const zoneHa = geo.irrigationHa.toLocaleString("pl-PL");
   const actions = BASE_ACTIONS.map((a) => {
-    const x = { ...a, ...(late ? OFF_SEASON[a.n] : {}) };
+    const x = { ...a, ...(late ? OFF_SEASON[a.n] : {}), punkt: geo.pins[a.n] };
+    if (x.regula === "R7") {
+      x.gdzie = `południowa część pola, ok. ${zoneHa} ha`;
+      x.ile = `25 mm netto · ok. ${Math.round(geo.irrigationHa * 250).toLocaleString("pl-PL")} m³`;
+    }
+    if (x.regula === "R8") {
+      x.gdzie = `południowa część pola, ok. ${zoneHa} ha`;
+      x.ile = `60–110 mm na sezon · ok. ${Math.round(geo.irrigationHa * 600).toLocaleString("pl-PL")}–${Math.round(geo.irrigationHa * 1100).toLocaleString("pl-PL")} m³`;
+    }
     if (x.regula === "R7" && !isToday) {
       x.bo = [...x.bo, "bez prognozy z tamtego dnia — przyjęto średnią z 10 lat"];
     }
@@ -233,16 +250,16 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
     },
     sucho: {
       say: late
-        ? `Latem ${win.lastYear} wschodni pas wysechł pierwszy — tak samo w latach z suszą.`
-        : "Wschodni pas wysycha pierwszy; zagłębienie w rogu trzyma wodę najdłużej.",
+        ? `Latem ${win.lastYear} południowy klin pola wysechł pierwszy — tak samo w latach z suszą.`
+        : "Południowy klin pola wysycha pierwszy; zagłębienie przy wschodniej granicy trzyma wodę najdłużej.",
       src: `Wilgotność roślin (NDMI) z Sentinel-2 w szczycie sezonu ${win.lastYear}, w porównaniu z latami ${win.firstYear}–${win.lastYear - 1}`,
     },
     teren: {
-      say: "Deszcz spływa z zachodu do zagłębienia w rogu (NE) i dalej rowem R-3 poza pole.",
+      say: "Deszcz spływa z zachodu i południa do zagłębienia przy wschodniej granicy, a dalej rowem R-3 poza pole.",
       src: "Copernicus DEM 30 m (spadki, kierunki spływu, zagłębienia); dokładny NMT GUGiK 1 m w tle · rów: BDOT10k",
     },
     gleba: {
-      say: "Im dalej na wschód, tym lżejsza gleba — piasek trzyma najmniej wody.",
+      say: "Im dalej na południe, tym lżejsza gleba — piasek trzyma najmniej wody.",
       src: "Kategorie podatności gleb na suszę IUNG-PIB · skład gleby SoilGrids 250 m",
     },
   };
@@ -270,7 +287,7 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
     return {
       report: {
         ...common,
-        crop: chosen, cropSource, actions, mapInfo, causes: CAUSES, sources, notChecked, advisorDetails, justification, confidence,
+        crop: chosen, cropSource, actions, map: geo.map, mapInfo, causes: CAUSES, sources, notChecked, advisorDetails, justification, confidence,
         soilWaterPct: 61,
         stressThresholdPct: 45,
         status: { label: `Plan na sezon ${nextYear}`, tone: "plan" },
@@ -298,7 +315,7 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
   return {
     report: {
       ...common,
-      crop: chosen, cropSource, actions, mapInfo, causes: CAUSES, sources, notChecked, advisorDetails, justification, confidence,
+      crop: chosen, cropSource, actions, map: geo.map, mapInfo, causes: CAUSES, sources, notChecked, advisorDetails, justification, confidence,
       soilWaterPct: soil,
       stressThresholdPct: threshold,
       status: { label, tone },
@@ -307,7 +324,7 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
       urgent: {
         n: 5,
         label: "PILNE TERAZ",
-        title: "Podlej 25 mm wschodnią część w ciągu 3 dni",
+        title: "Podlej 25 mm południową część w ciągu 3 dni",
         sub: isToday ? "prognoza na 7 dni: tylko 3 mm deszczu" : "bez prognozy z tamtego dnia — średnio 3 mm w kolejnych 7 dniach",
       },
       risk: {
@@ -324,6 +341,28 @@ export function buildReport({ parcelId, date, crop, today }: ReportParams): Buil
   };
 }
 
+/** Example numbers for a period, scaled by its length and the part that falls in the growing season. */
+function periodSummary(from: string, to: string): PeriodSummary {
+  const days = periodDays(from, to);
+  let seasonDays = 0;
+  for (let i = 0; i < days; i++) if (seasonOf(addDays(from, i)) === "sezon") seasonDays++;
+  const offDays = days - seasonDays;
+  const rainNormMm = Math.round(seasonDays * 2.0 + offDays * 1.4);
+  const rainMm = Math.round(rainNormMm * 0.62);
+  const et0NormMm = Math.round(seasonDays * 3.0 + offDays * 0.6);
+  const et0Mm = Math.round(et0NormMm * 1.12);
+  const kbwMm = rainMm - et0Mm;
+  const stressDays = Math.round(seasonDays * 0.45);
+  const minSoilPct = seasonDays > 0 ? 21 : 58;
+  const iungDrought = seasonDays >= 30 ? true : seasonDays > 0 ? false : null;
+  const wetterYears = 8;
+  const say =
+    seasonDays === 0
+      ? `Poza sezonem: opad ${rainMm} mm przy normie ok. ${rainNormMm} mm — zapas wody odbudowywał się wolniej niż zwykle.`
+      : `Okres był suchy: ${rainMm} mm deszczu zamiast ok. ${rainNormMm} mm, a uprawa była w stresie przez ${stressDays} z ${seasonDays} dni sezonu. Tak sucho było tylko w ${10 - wetterYears} z 10 poprzednich lat.`;
+  return { from, to, days, seasonDays, rainMm, rainNormMm, et0Mm, et0NormMm, kbwMm, stressDays, minSoilPct, iungDrought, wetterYears, say };
+}
+
 function emptyMapInfo(): Record<MapLayer, { say: string; src: string }> {
   const x = { say: "", src: "" };
   return { plan: x, sucho: x, teren: x, gleba: x };
@@ -338,11 +377,13 @@ function weekCols(iso: string): string[] {
 }
 
 export function reportTitle(r: Report): string {
-  return `Działka ${r.parcel.number}${r.crop ? ` · ${r.crop.name.toLowerCase()}` : ""} · ${shortDate(r.date)}`;
+  const when = r.period ? `${shortDate(r.period.from)}–${shortDate(r.period.to)}` : shortDate(r.date);
+  return `Działka ${r.parcel.number}${r.crop ? ` · ${r.crop.name.toLowerCase()}` : ""} · ${when}`;
 }
 
-export function reportUrl(p: { dzialka: string; data: string; uprawa?: string | null }): string {
+export function reportUrl(p: { dzialka: string; data: string; od?: string | null; uprawa?: string | null }): string {
   const q = new URLSearchParams({ dzialka: p.dzialka, data: p.data });
+  if (p.od) q.set("od", p.od);
   if (p.uprawa) q.set("uprawa", p.uprawa);
   return `/raport?${q}`;
 }

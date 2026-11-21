@@ -1,8 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { CROPS } from "@/lib/mock/parcels";
-import type { CropId, ParcelLookup } from "@/lib/types";
+import type { CropId, LngLat, ParcelLookup } from "@/lib/types";
 import { ICON, Icon } from "../ui";
 
 type Mode = "id" | "name" | "map";
@@ -15,11 +16,15 @@ const MODES: { id: Mode; label: string }[] = [
 
 /** Demo parcels available in the prototype (mock data). */
 const DEMO_IDS = [
-  { id: "040410_2.0012.245/3", label: "245/3 · grunt orny" },
-  { id: "040410_2.0012.118", label: "118 · grunt orny" },
-  { id: "040410_2.0012.119/2", label: "119/2 · łąka" },
-  { id: "040410_2.0012.301", label: "301 · las" },
+  { id: "041005_5.0011.22/15", label: "Kołaczkowo 22/15 · pole" },
+  { id: "041005_5.0021.662/11", label: "Rynarzewo 662/11 · pole" },
+  { id: "041005_5.0029.3225/6", label: "Szkocja 3225/6 · las" },
 ];
+
+const PickMap = dynamic(() => import("./pick-map"), {
+  ssr: false,
+  loading: () => <div className="grid aspect-[4/3] place-items-center rounded-[14px] bg-[#DDE7D5] text-sm text-muted sm:aspect-[16/9]">Wczytuję mapę…</div>,
+});
 
 const LAND_COVER: Record<string, string> = { las: "las", woda: "wody", zabudowa: "teren zabudowany", drogi: "drogi / nieużytki" };
 
@@ -43,7 +48,7 @@ export function ParcelPicker({
 }) {
   const [mode, setMode] = useState<Mode>("id");
   const [id, setId] = useState(initialId);
-  const [name, setName] = useState({ gmina: "Szubin", obreb: "Godzimierz", nr: "245/3" });
+  const [name, setName] = useState({ gmina: "Szubin", obreb: "Kołaczkowo", nr: "22/15" });
   const [mapPick, setMapPick] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -186,7 +191,7 @@ export function ParcelPicker({
           className={`flex flex-col overflow-hidden rounded-[14px] border ${lookup.outOfScope ? "border-rule-strong bg-chip" : "border-primary-border bg-primary-tint"}`}
         >
           <div className="flex flex-wrap items-center gap-3.5 p-3.5">
-            <ParcelShape />
+            <ParcelShape ring={parcel.geometry} />
             <div className="flex min-w-[200px] flex-1 flex-col gap-0.5">
               <span className={`inline-flex items-center gap-1.5 text-[15px] font-bold ${lookup.outOfScope ? "text-ink" : "text-primary"}`}>
                 <Icon d={ICON.check} stroke={2.5} />
@@ -268,63 +273,21 @@ export function ParcelPicker({
   );
 }
 
-function ParcelShape() {
+/** Thumbnail of the real parcel outline (ULDK geometry). */
+function ParcelShape({ ring }: { ring: LngLat[] }) {
+  const lat0 = ring[0][1];
+  const kx = Math.cos((lat0 * Math.PI) / 180);
+  const xs = ring.map((p) => p[0] * kx);
+  const ys = ring.map((p) => -p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const scale = Math.min(80 / (x1 - x0), 60 / (y1 - y0));
+  const ox = (96 - (x1 - x0) * scale) / 2;
+  const oy = (76 - (y1 - y0) * scale) / 2;
+  const points = ring.map((_, i) => `${(ox + (xs[i] - x0) * scale).toFixed(1)},${(oy + (ys[i] - y0) * scale).toFixed(1)}`).join(" ");
   return (
     <svg width="96" height="76" viewBox="0 0 96 76" role="img" aria-label="Kształt znalezionej działki" style={{ flex: "none" }}>
       <rect width="96" height="76" rx="8" fill="#DDE8DA" />
-      <path d="M0 30 L96 22 M30 0 L36 76 M70 0 L62 76" stroke="#C6D6C2" strokeWidth="1.5" />
-      <polygon points="14,18 58,10 84,16 80,64 40,70 16,60" fill="#FFFFFF" fillOpacity="0.55" stroke="#1E5B3A" strokeWidth="2.5" strokeLinejoin="round" />
+      <polygon points={points} fill="#FFFFFF" fillOpacity="0.6" stroke="#1E5B3A" strokeWidth="2" strokeLinejoin="round" />
     </svg>
-  );
-}
-
-/** Demo map with neighbouring parcels (stand-in for the ULDK GetParcelByXY click). */
-function PickMap({ selected, onPick }: { selected: string | null; onPick: (nr: string) => void }) {
-  const parcels = [
-    { nr: "118", pts: "4,20 96,10 104,150 8,160", fill: "#CFE3B9" },
-    { nr: "245/3", pts: "104,10 210,4 214,140 104,150", fill: "#CFE3B9" },
-    { nr: "119/2", pts: "210,4 256,6 258,138 214,140", fill: "#DCE9C8" },
-    { nr: "301", pts: "256,6 296,8 296,136 258,138", fill: "#9DBF8E" },
-  ];
-  return (
-    <div className="flex flex-col gap-2">
-      <svg viewBox="0 0 300 170" className="w-full rounded-[14px] bg-[#DDE7D5]" role="group" aria-label="Mapa: kliknij swoją działkę">
-        <path d="M0 165 L300 158" stroke="#D8D2C2" strokeWidth="7" />
-        {parcels.map((p) => {
-          const sel = selected === p.nr;
-          const xs = p.pts.split(" ").map((s) => +s.split(",")[0]);
-          return (
-            <g
-              key={p.nr}
-              role="button"
-              tabIndex={0}
-              aria-pressed={sel}
-              aria-label={`Działka ${p.nr}`}
-              onClick={() => onPick(p.nr)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onPick(p.nr);
-                }
-              }}
-              className="cursor-pointer outline-none [&:focus-visible>polygon]:stroke-[#F2B53A]"
-            >
-              <polygon
-                points={p.pts}
-                fill={sel ? "#EEF5EF" : p.fill}
-                fillOpacity={sel ? 0.95 : 0.8}
-                stroke={sel ? "#1E5B3A" : "#8FA982"}
-                strokeWidth={sel ? 3 : 1.5}
-                strokeLinejoin="round"
-              />
-              <text x={xs.reduce((a, b) => a + b) / xs.length} y="82" textAnchor="middle" fontSize="12" fontWeight="700" fill="#1A1C19">
-                {p.nr}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-      <span className="text-[13px] text-muted">Mapa przykładowa z działkami demo. Docelowo ortofotomapa z granicami działek (Geoportal).</span>
-    </div>
   );
 }
