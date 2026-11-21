@@ -44,6 +44,48 @@ Trasy API frontu przekazują zapytania do backendu: `/api/parcel` → `/api/dzia
 `/api/analyze` i strona `/raport` → `/api/raport` (raport w kształcie `Report` z `frontend/src/lib/types.ts`),
 `/api/pola` → pola uprawne ARiMR w widoku mapy (pośrednik, bo serwer ARiMR odrzuca zapytania z przeglądarki).
 
+### W Dockerze
+
+Backend i frontend mają własne `compose.yaml`; uruchom każdy w osobnym terminalu (frontend łączy się z backendem
+na porcie 8000 hosta):
+
+```bash
+cd backend && docker compose up dev     # http://localhost:8000
+cd frontend && docker compose up dev    # http://localhost:3000
+```
+
+## Wdrożenie (Google Cloud Run)
+
+Działa na projekcie `asystent-wodny-hn26`, region `europe-central2` (Warszawa):
+
+- aplikacja: https://asystent-wodny-888051665742.europe-central2.run.app
+- backend (publiczny, docs pod `/docs`): https://asystent-backend-888051665742.europe-central2.run.app
+
+Nowa wersja – ręcznie, z zacommitowanego kodu (wymaga `docker` i zalogowanego `gcloud`):
+
+```bash
+./deploy.sh              # backend + frontend
+./deploy.sh backend      # albo tylko jeden serwis
+./deploy.sh frontend
+```
+
+Skrypt buduje obrazy lokalnie (tag = skrót commita), wysyła je do Artifact Registry
+(`europe-central2-docker.pkg.dev/asystent-wodny-hn26/asystent`), wdraża na Cloud Run, sprawdza `/api/health`
+backendu i stronę główną frontu, a na koniec usuwa lokalne obrazy. Przy niezacommitowanych zmianach przerywa
+(`--force` wdraża mimo to, z tagiem `-dirty-…`).
+
+Klucze CDSE są w Secret Manager (`cdse-client-id`, `cdse-client-secret`), nie w obrazie. Zmiana klucza:
+
+```bash
+printf %s 'NOWA_WARTOSC' | gcloud secrets versions add cdse-client-secret --data-file=- --project asystent-wodny-hn26
+./deploy.sh backend      # nowa rewizja pobiera najnowszą wersję sekretu
+```
+
+Jednorazowa konfiguracja (już zrobiona; do odtworzenia w innym projekcie): `gcloud projects create`, podpięcie
+billingu, `gcloud services enable run.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com`,
+`gcloud artifacts repositories create asystent --repository-format=docker --location=europe-central2`, utworzenie
+obu sekretów i nadanie domyślnemu kontu serwisowemu Compute roli `roles/secretmanager.secretAccessor` do nich.
+
 ## Co liczy backend (z danych), a co jest jeszcze MOCK
 
 | Element | Stan | Źródło / metoda |
