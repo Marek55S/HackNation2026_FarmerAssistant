@@ -113,8 +113,14 @@ export interface SeasonHistory {
 export interface SourceStatus {
   /** P1–P13 */
   id: string;
-  label: string;
+  /** What the data is, e.g. "Pogoda 1997–2026" */
+  what: string;
+  /** Where it comes from, e.g. "ERA5-Land (Open-Meteo)"; null when missing */
+  source: string | null;
+  /** ok · current = present-day state, not as of the analysis date · missing = no data */
   state: "ok" | "current" | "missing";
+  /** Short caveat shown next to the row (only when something is off) */
+  note?: string;
   /** ISO date the data was fetched */
   fetchedAt: string | null;
 }

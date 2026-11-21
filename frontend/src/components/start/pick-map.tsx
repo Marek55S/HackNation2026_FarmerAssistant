@@ -26,7 +26,7 @@ const POLA_TIMEOUT_MS = 500; // slower answer = skip (map stays responsive), nex
 const POLA_DEBOUNCE_MS = 200;
 const POLA_GRID = 0.004; // view rounded outward to this grid (deg) so small pans hit the cache
 const POLA_KOLOR = "#F07A1A"; // one highlight colour for all fields (no colour per crop)
-const WYBOR_KOLOR = "#F2B53A"; // selected parcel (as in the report map)
+const WYBOR_KOLOR = "#F2C14E"; // selected parcel (as in the report map)
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 type PolaStan = "zoom" | "ok" | "wolno" | "blad";
 

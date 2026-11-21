@@ -7,16 +7,17 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type ExpressionSpecification } from "maplibre-gl";
-import type { Feature, FeatureCollection } from "geojson";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { LngLat, MapLayer, RasterGrid, ReportMap, Zalecenie } from "@/lib/types";
 import { BaseSwitch } from "../map/base-switch";
 import { createMap, fitPadding, setBase, watchOrtho, type BaseLayer } from "../map/base-map";
-import { CAT, LAYERS, RASTER_COLORS } from "./map-style";
+import { CAT, LAYERS, RASTER_RGBA } from "./map-style";
 
-type FC = FeatureCollection;
 
-const HL = "#F2B53A";
+// Selected recommendation: a white halo, which reads on the photo without adding another colour.
+// Field boundary: yellow, as in FarmSense.
+const HL = "#FFFFFF";
+const FIELD = "#F2C14E";
 
 function bounds(ring: LngLat[]): [LngLat, LngLat] {
   const lons = ring.map((p) => p[0]);
@@ -29,24 +30,34 @@ function bounds(ring: LngLat[]): [LngLat, LngLat] {
 
 const RASTER_KEYS = ["sucho", "teren", "gleba"] as const;
 
-function rasterToGeoJSON(g: RasterGrid | undefined): FC {
-  if (!g) return { type: "FeatureCollection", features: [] };
-  const [w, s, e, n] = g.bbox;
-  const dx = (e - w) / g.cols;
-  const dy = (n - s) / g.rows;
-  const features: Feature[] = [];
-  g.values.forEach((c, k) => {
-    if (c < 0) return;
-    const x0 = w + (k % g.cols) * dx;
-    const y0 = n - Math.floor(k / g.cols) * dy;
-    features.push({
-      type: "Feature",
-      properties: { c },
-      geometry: { type: "Polygon", coordinates: [[[x0, y0], [x0 + dx, y0], [x0 + dx, y0 - dy], [x0, y0 - dy], [x0, y0]]] },
-    });
+/**
+ * Raster grid → small PNG (one pixel per cell). MapLibre stretches it over the bbox with linear
+ * resampling, so 10 m cells read as a smooth field instead of hard squares; cells outside the parcel
+ * are transparent and fade out at the boundary.
+ */
+function rasterImage(g: RasterGrid, palette: [number, number, number, number][]): string {
+  const c = document.createElement("canvas");
+  c.width = g.cols;
+  c.height = g.rows;
+  const ctx = c.getContext("2d")!;
+  const img = ctx.createImageData(g.cols, g.rows);
+  g.values.forEach((v, k) => {
+    const [r, gr, b, a] = v >= 0 ? palette[v] ?? [0, 0, 0, 0] : [0, 0, 0, 0];
+    img.data.set([r, gr, b, Math.round(a * 255)], k * 4);
   });
-  return { type: "FeatureCollection", features };
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL("image/png");
 }
+
+const corners = (g: RasterGrid): [[number, number], [number, number], [number, number], [number, number]] => {
+  const [w, s, e, n] = g.bbox;
+  return [
+    [w, n],
+    [e, n],
+    [e, s],
+    [w, s],
+  ];
+};
 
 /** Pin button element (fixed size, keyboard accessible). */
 function pinElement(a: Zalecenie, onClick: () => void): HTMLButtonElement {
@@ -82,7 +93,10 @@ export default function ParcelMap({
   layer,
   pin,
   onPin,
+  children,
 }: {
+  /** Floating panel rendered over the map (top-right on tablets and up) */
+  children?: ReactNode;
   parcel: LngLat[];
   data: ReportMap;
   actions: Zalecenie[];
@@ -116,8 +130,11 @@ export default function ParcelMap({
     map.on("load", () => {
       const ring = [...parcel];
       map.addSource("pole", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } } });
-      // One source + layer per raster view, toggled by visibility (swapping data in one source left stale tiles at high zoom).
-      for (const k of RASTER_KEYS) map.addSource(`raster-${k}`, { type: "geojson", data: rasterToGeoJSON(data.rasters[k]) });
+      // One image source + layer per raster view, toggled by visibility (swapping data in one source left stale tiles at high zoom).
+      for (const k of RASTER_KEYS) {
+        const g = data.rasters[k];
+        if (g) map.addSource(`raster-${k}`, { type: "image", url: rasterImage(g, RASTER_RGBA[k]), coordinates: corners(g) });
+      }
       map.addSource("obiekty", {
         type: "geojson",
         data: {
@@ -130,17 +147,15 @@ export default function ParcelMap({
         },
       });
 
+      map.addLayer({ id: "pole-wypelnienie", type: "fill", source: "pole", paint: { "fill-color": FIELD, "fill-opacity": 0.14 } });
       for (const k of RASTER_KEYS) {
+        if (!data.rasters[k]) continue;
         map.addLayer({
           id: `raster-${k}`,
-          type: "fill",
+          type: "raster",
           source: `raster-${k}`,
           layout: { visibility: "none" },
-          paint: {
-            "fill-color": ["match", ["get", "c"], ...RASTER_COLORS[k].flatMap((c, i) => [i, c]), "#f0efec"] as unknown as ExpressionSpecification,
-            "fill-opacity": 0.82,
-            "fill-antialias": false,
-          },
+          paint: { "raster-opacity": 1, "raster-resampling": "linear", "raster-fade-duration": 0 },
         });
       }
       map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2a78d6", "fill-opacity": 0.22 } });
@@ -151,7 +166,7 @@ export default function ParcelMap({
         source: "obiekty",
         filter: ["==", ["get", "regula"], "-"],
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": HL, "line-width": 10, "line-opacity": 0.95 },
+        paint: { "line-color": HL, "line-width": 9, "line-opacity": 0.85, "line-blur": 1.5 },
       });
       map.addLayer({ id: "strefa-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "line-color": "#1f6fc9", "line-width": 2, "line-dasharray": [3, 2] } });
       map.addLayer({ id: "zaglebienie-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "line-color": "#123f78", "line-width": 2, "line-dasharray": [2, 1.5] } });
@@ -179,8 +194,8 @@ export default function ParcelMap({
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": "#123f78", "line-width": 3 },
       });
-      map.addLayer({ id: "pole-obwodka", type: "line", source: "pole", paint: { "line-color": "#FFFFFF", "line-width": 5, "line-opacity": 0.9 } });
-      map.addLayer({ id: "pole", type: "line", source: "pole", layout: { "line-join": "round" }, paint: { "line-color": "#1A1C19", "line-width": 2.5 } });
+      map.addLayer({ id: "pole-obwodka", type: "line", source: "pole", paint: { "line-color": "#1A1C19", "line-width": 5, "line-opacity": 0.35 } });
+      map.addLayer({ id: "pole", type: "line", source: "pole", layout: { "line-join": "round" }, paint: { "line-color": FIELD, "line-width": 2.5 } });
 
       // Labels (fixed size HTML markers)
       labels.current = data.labels.map((l) => {
@@ -232,13 +247,14 @@ export default function ParcelMap({
       }
       map.setFilter(id, ["all", ["==", ["get", "kind"], kind], inLayer]);
     }
-    for (const k of RASTER_KEYS) map.setLayoutProperty(`raster-${k}`, "visibility", k === layer ? "visible" : "none");
+    for (const k of RASTER_KEYS) if (map.getLayer(`raster-${k}`)) map.setLayoutProperty(`raster-${k}`, "visibility", k === layer ? "visible" : "none");
 
     const sel = actions.find((a) => a.n === pin);
     const rule = sel?.regula === "R8" ? "R7" : (sel?.regula ?? "-");
     map.setFilter("wyroznienie", ["==", ["get", "regula"], rule]);
-    map.setPaintProperty("pole", "line-color", sel?.regula === "R5" ? HL : "#1A1C19");
+    map.setPaintProperty("pole", "line-color", sel?.regula === "R5" ? HL : FIELD);
     map.setPaintProperty("pole", "line-width", sel?.regula === "R5" ? 5 : 2.5);
+    map.setLayoutProperty("pole-wypelnienie", "visibility", layer === "plan" ? "visible" : "none");
 
     labels.current.forEach((l) => (l.el.style.display = l.layers.includes(layer) ? "" : "none"));
     pins.current.forEach((el, n) => styleSelected(el, n === pin));
@@ -271,6 +287,7 @@ export default function ParcelMap({
           </button>
         }
       />
+      {children}
       {!ready && <span className="absolute inset-0 grid place-items-center text-sm text-muted">Wczytuję mapę…</span>}
     </div>
   );
