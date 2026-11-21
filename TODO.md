@@ -24,8 +24,9 @@ Dopiero gdy to działa i jest wdrożone pod linkiem, dokładamy teren, satelitę
 
 ## 0. Organizacja i decyzje (pierwsza godzina)
 
-- [x] **T0.1 [MVP]** Wybrać stack. Propozycja: backend Python (FastAPI + `httpx` async, `shapely`, `pyproj`, `numpy`, `rasterio`), frontend React + Vite + MapLibre GL (lub Leaflet), PDF przez druk przeglądarki / `weasyprint`. — _zrobione: FastAPI + httpx + numpy (bez shapely/pyproj – własna geometria), frontend: czysty HTML+JS + Leaflet_
+- [x] **T0.1 [MVP]** Wybrać stack. — _backend: Python FastAPI + httpx + numpy + rasterio/pyproj (`backend/`); frontend: Next.js 16 + TypeScript + Tailwind jako PWA (`frontend/`), PDF przez druk przeglądarki_
 - [ ] **T0.2 [MVP]** Wybrać hosting z publicznym linkiem dla jury (np. Render / Railway / Fly.io / VPS) i sprawdzić, że wychodzące zapytania do API GUGiK/IUNG działają z tego hosta.
+  **Ustalono:** Google Cloud Run (`frontend/Dockerfile`); zapytań do GUGiK/IUNG z Cloud Run jeszcze nie sprawdzono.
 - [ ] **T0.3 [MVP]** Podział ról: dane+fakty / teren+satelita / reguły+raport / frontend / dokumentacja+prezentacja.
 - [~] **T0.4 [MVP]** Ustalić strukturę repo (`backend/`, `frontend/`, `dane/`, `docs/`, `tests/`) i dodać do gita `dane/kbw_progi_iung.csv` (teraz jest nieśledzony). — _częściowo: struktura backend/ + frontend/ jest; CSV progów nadal do dodania do gita_
 - [ ] **T0.5 [MVP]** Repo prywatne + plan udostępnienia jury (instrukcja z platformy konkursowej).
@@ -42,7 +43,7 @@ Dopiero gdy to działa i jest wdrożone pod linkiem, dokładamy teren, satelitę
 - [x] **T1.3 [MVP]** Warstwa pobierania: klient HTTP z timeoutami, retry, równoległością (`asyncio.gather`) i cache na dysku (klucz = źródło + parametry + data `D`). — _backend/app/net.py_
 - [x] **T1.4 [MVP]** Zasada „brak danych = komunikat”: każdy pobieracz zwraca wynik albo jawny brak z powodem, nigdy wyjątek, który zabija analizę. — _zrobione_
 - [x] **T1.5 [MVP]** Konfiguracja wszystkich progów ⚙️ w jednym pliku (`config/progi.yaml`), żeby kalibracja nie wymagała zmian w kodzie. — _zrobione jako backend/app/config.py_
-- [x] **T1.6 [MVP]** Frontend: pusty szkielet z routingiem Start → Postęp → Raport, wywołanie API. — _frontend/index.html → raport.html_
+- [x] **T1.6 [MVP]** Frontend: pusty szkielet z routingiem Start → Postęp → Raport, wywołanie API. *(UI gotowe na mocku w `frontend/`; podpięcie do backendu – T10.10)*
 
 ## 2. Etap 1 – lokalizacja działki
 
@@ -146,19 +147,20 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 ## 10. Frontend (wg makiety)
 
-- [x] **T10.1 [MVP]** Ekran Start: pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`). — _gmina/obręb/numer = MOCK (T2.3)_
-- [x] **T10.2 [MVP]** Ekran postępu analizy (kroki pobierania, czas, błędy źródeł). — _zrobione_
-- [x] **T10.3 [MVP]** Raport: „Co Cię czeka”, „Pilne”, „Co zrobić i gdzie” (karty z „bo…”), „Co zwiększa ryzyko”, „Skąd wiemy” (źródła, daty, ograniczenia). — _zrobione_
-- [x] **T10.4 [+]** Mapa działki z widokami: plan (numery zaleceń) / gdzie sucho / teren i spływ / gleba; podkład ortofoto lub OSM. — _widoki: plan / gdzie sucho (Sentinel‑2) / teren i spływ (DEM + BDOT10k) / gleba (IUNG)_
-- [x] **T10.5 [+]** Wykres „Ryzyko w kolejnych miesiącach” bez działań vs z planem (F18/F21) i brak wody (F19). — _zrobione_
-- [x] **T10.6 [+]** Zwinięte uzasadnienie: kryterium IUNG teraz (F3) i historia 10 lat (F5, F0h). — _zrobione_
-- [ ] **T10.7 [+]** Wersja mobilna (makieta `Mobile.dc.html`) – działa w przeglądarce telefonu.
-- [x] **T10.8 [MVP]** Stany: ładowanie, błąd ULDK, brak danych źródła, działka poza zakresem. — _zrobione_
-- [x] **T10.9 [opc]** Panel gospodarstwa: kilka działek zapisanych lokalnie (bez danych osobowych). — _localStorage_
+- [ ] **T10.1 [MVP]** Ekran Start (kolejność: najpierw data, potem działka – uprawa zależy od roku daty): pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`).
+- [x] **T10.2 [MVP]** Ekran postępu analizy (kroki pobierania, czas, błędy źródeł). *(UI gotowe na mocku w `frontend/`)*
+- [x] **T10.3 [MVP]** Raport: „Co Cię czeka”, „Pilne”, „Co zrobić i gdzie” (karty z „bo…”), „Co zwiększa ryzyko”, „Skąd wiemy” (źródła, daty, ograniczenia). *(UI gotowe na mocku w `frontend/`)*
+- [ ] **T10.4 [+]** Mapa działki z widokami: plan (numery zaleceń) / gdzie sucho / teren i spływ / gleba; podkład ortofoto lub OSM.
+- [ ] **T10.5 [+]** Wykres „Ryzyko w kolejnych miesiącach” bez działań vs z planem (F18/F21) i brak wody (F19).
+- [x] **T10.6 [+]** Zwinięte uzasadnienie: kryterium IUNG teraz (F3) i historia 10 lat (F5, F0h). *(UI gotowe na mocku w `frontend/`)*
+- [x] **T10.7 [+]** Wersja mobilna (makieta `Mobile.dc.html`) – działa w przeglądarce telefonu. *(UI gotowe na mocku w `frontend/`)*
+- [x] **T10.8 [MVP]** Stany: ładowanie, błąd ULDK, brak danych źródła, działka poza zakresem. *(UI gotowe na mocku w `frontend/`)*
+- [x] **T10.9 [opc]** Panel gospodarstwa: kilka działek zapisanych lokalnie (bez danych osobowych). *(UI gotowe na mocku w `frontend/`)*
+- [ ] **T10.10 [MVP]** Podpiąć frontend Next.js do backendu: `POST /api/dzialka` (działka + podpowiedź uprawy dla roku daty), `GET /api/szukaj` (gmina/obręb/numer), `POST /api/analiza` (raport: `status`, `akcje`, `przyczyny`, `ryzyko`, `historia`, warstwy mapy `teren` i `sucho`, `zrodla`, `braki`) zamiast `frontend/src/lib/mock`.
 
 ## 11. Zapis raportu (wymóg 3.3 pkt 6)
 
-- [x] **T11.1 [MVP]** Widok do druku A4 (CSS `@media print`, makieta `Pdf.dc.html`) + przycisk „Drukuj / Zapisz PDF”. — _Drukuj / PDF = druk przeglądarki_
+- [x] **T11.1 [MVP]** Widok do druku A4 (CSS `@media print`, makieta `Pdf.dc.html`) + przycisk „Drukuj / Zapisz PDF”. *(UI gotowe na mocku w `frontend/`)*
 - [ ] **T11.2 [+]** Generowanie pliku PDF po stronie serwera (z mapą jako obrazem).
 - [ ] **T11.3 [opc]** Zapis raportu w systemie (link do raportu / pobranie JSON).
 

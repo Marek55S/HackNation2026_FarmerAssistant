@@ -1,12 +1,16 @@
 # Asystent Wodny – HackNation 2026 (KOWR „Zatrzymaj wodę, chroń plony”)
+<!-- repozytorium: HackNation2026_FarmerAssistant -->
 
 Aplikacja webowa: rolnik wskazuje dzień i działkę ewidencyjną, a narzędzie liczy sytuację wodną działki z danych
 publicznych (bieżących i z 10 lat) i daje zalecenia w kolejności KOWR: **zatrzymaj wodę → na polu → nawadnianie**.
 
-> Stan: prototyp w budowie. Elementy jeszcze niepodpięte do danych są w interfejsie oznaczone fioletową etykietą **MOCK**.
+> Stan: prototyp w budowie. Backend (`backend/`) liczy analizę z danych publicznych; frontend PWA (`frontend/`, Next.js)
+> działa na razie na danych przykładowych (`frontend/src/lib/mock`) – podpięcie do API backendu: TODO T10.10.
 > Postęp prac: [TODO.md](TODO.md) (`[x]` zrobione, `[~]` częściowo).
 
 ## Uruchomienie
+
+### Backend (API analizy)
 
 Wymagania: Python 3.10+.
 
@@ -17,16 +21,19 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --port 8000
 ```
 
-Zmiany we frontendzie widać po odświeżeniu strony. Po zmianie kodu backendu zrestartuj serwer (Ctrl+C i ponownie):
-na Windowsie `--reload` wykrywa zmiany, ale potrafi zostawić stary proces, który dalej odpowiada.
+Po zmianie kodu backendu zrestartuj serwer (Ctrl+C i ponownie): na Windowsie `--reload` wykrywa zmiany,
+ale potrafi zostawić stary proces, który dalej odpowiada.
 
-Otwórz http://localhost:8000 (ekran startowy) – dokumentacja API: http://localhost:8000/docs.
-Testy: `cd backend && python -m pytest -q`.
+Dokumentacja API: http://localhost:8000/docs. Testy: `cd backend && python -m pytest -q`.
 
-Przykład: działka `041005_5.0008.57/11` (gm. Szubin), data `2018-07-15`, uprawa „kukurydza”
-→ http://localhost:8000/raport.html?id=041005_5.0008.57/11&data=2018-07-15&uprawa=kukurydza
+Przykład: `POST /api/analiza` z `{"id": "041005_5.0008.57/11", "data": "2018-07-15", "uprawa": "kukurydza"}`
+(działka w gm. Szubin, susza 2018).
 
-## Co jest liczone z danych, a co jest jeszcze MOCK
+### Frontend (PWA)
+
+Next.js + TypeScript w katalogu [`frontend/`](frontend/README.md) — makieta UI z danymi przykładowymi, mock API, gotowe pod Cloud Run.
+
+## Co liczy backend (z danych), a co jest jeszcze MOCK
 
 | Element | Stan | Źródło / metoda |
 |---|---|---|
@@ -53,7 +60,7 @@ backend/app/   main.py (API), analysis.py (diagnoza i reguły), facts.py (KBW, F
                terrain.py (DEM, NMT), bdot.py (BDOT10k), satellite.py (Sentinel‑2 / Landsat NDMI), context.py (EDO, SoilGrids), cdse.py (mapa upraw CLMS, Sentinel Hub),
                sources.py (ULDK, Open‑Meteo, IUNG, ARiMR, progi CSV), crops.py, geo.py, net.py (HTTP + cache), config.py (progi ⚙️)
 backend/tests/ testy jednostkowe
-frontend/      index.html (start), raport.html (wynik), app.js, app.css – według makieta-ui/
+frontend/      PWA Next.js według makieta-ui/ (na razie dane przykładowe)
 dane/          progi KBW IUNG
 ```
 

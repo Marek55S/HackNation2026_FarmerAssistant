@@ -1,4 +1,13 @@
-# Premium SaaS UI Standards
+# Asystent Wodny – instrukcje dla Claude Code
+
+## Projekt
+- Plan i logika: `pipeline_plan.md` (identyfikatory P*, F*, C*, R*), zadania: `TODO.md`, metody: `METODY.md`, źródła: `ZRODLA_DANYCH.md`.
+- Makiety UI: `makieta-ui/*.dc.html` – specyfikacja układu, tekstów i interakcji.
+- Frontend: `frontend/` (Next.js 16 + TypeScript + Tailwind 4, PWA, docelowo Google Cloud Run). Uruchomienie i mock API: `frontend/README.md`.
+  Kontrakt danych raportu: `frontend/src/lib/types.ts`. Tokeny kolorów: `frontend/src/app/globals.css`.
+- Język interfejsu i dokumentacji: polski.
+
+## Premium SaaS UI Standards
 
 Use the project skills in `.claude/skills/` when relevant:
 - `premium-ui-design` for product screens and visual direction
@@ -7,8 +16,10 @@ Use the project skills in `.claude/skills/` when relevant:
 - `data-tables` for data-heavy tables
 - `design-system-governance` for shared tokens and components
 - `visual-qa` before declaring UI work complete
+- `mobile-native` for phone/PWA behaviour, `break-ui` to stress-test screens with worst-case data
+- `emil-design-eng` for interaction polish, `prototype` (explicit) to compare UI variants, `learn-taste` at the end of a session to record the user's design corrections in `DESIGN.md`
 
-## Global rules
+### Global rules
 - Inspect the existing stack and design system before changing them.
 - Make product-specific design decisions; avoid generic AI-generated layouts.
 - Do not wrap every element in a card or add decorative gradients, badges, and effects without purpose.
@@ -20,7 +31,7 @@ Use the project skills in `.claude/skills/` when relevant:
 - Use semantic HTML and accessible interaction patterns.
 - Never call a UI task complete based only on successful compilation; use browser-based visual QA when available.
 
-## Workflow
+### Workflow
 1. Inspect product context, routes, components, and tokens.
 2. Define UX intent and visual direction for substantial screens.
 3. Reuse or extend the existing design system.
