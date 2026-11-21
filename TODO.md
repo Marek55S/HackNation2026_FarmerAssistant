@@ -3,6 +3,8 @@
 Lista zadań od pustego repo do zgłoszenia. Kolejność = kolejność pracy.
 Odnośniki `P*`, `F*`, `C*`, `R*` to identyfikatory z [pipeline_plan.md](pipeline_plan.md). Metody: [METODY.md](METODY.md), źródła: [ZRODLA_DANYCH.md](ZRODLA_DANYCH.md), UI: [makieta-ui/](makieta-ui/).
 
+Status: `[x]` zrobione · `[~]` częściowo · `[ ]` do zrobienia. Elementy niepodpięte są w aplikacji oznaczone etykietą **MOCK**.
+
 Priorytety: **[MVP]** – bez tego nie ma zgłoszenia · **[+]** – mocno punktowane, robimy po MVP · **[opc]** – jeśli starczy czasu.
 
 ---
@@ -22,10 +24,10 @@ Dopiero gdy to działa i jest wdrożone pod linkiem, dokładamy teren, satelitę
 
 ## 0. Organizacja i decyzje (pierwsza godzina)
 
-- [ ] **T0.1 [MVP]** Wybrać stack. Propozycja: backend Python (FastAPI + `httpx` async, `shapely`, `pyproj`, `numpy`, `rasterio`), frontend React + Vite + MapLibre GL (lub Leaflet), PDF przez druk przeglądarki / `weasyprint`.
+- [x] **T0.1 [MVP]** Wybrać stack. Propozycja: backend Python (FastAPI + `httpx` async, `shapely`, `pyproj`, `numpy`, `rasterio`), frontend React + Vite + MapLibre GL (lub Leaflet), PDF przez druk przeglądarki / `weasyprint`. — _zrobione: FastAPI + httpx + numpy (bez shapely/pyproj – własna geometria), frontend: czysty HTML+JS + Leaflet_
 - [ ] **T0.2 [MVP]** Wybrać hosting z publicznym linkiem dla jury (np. Render / Railway / Fly.io / VPS) i sprawdzić, że wychodzące zapytania do API GUGiK/IUNG działają z tego hosta.
 - [ ] **T0.3 [MVP]** Podział ról: dane+fakty / teren+satelita / reguły+raport / frontend / dokumentacja+prezentacja.
-- [ ] **T0.4 [MVP]** Ustalić strukturę repo (`backend/`, `frontend/`, `dane/`, `docs/`, `tests/`) i dodać do gita `dane/kbw_progi_iung.csv` (teraz jest nieśledzony).
+- [~] **T0.4 [MVP]** Ustalić strukturę repo (`backend/`, `frontend/`, `dane/`, `docs/`, `tests/`) i dodać do gita `dane/kbw_progi_iung.csv` (teraz jest nieśledzony). — _częściowo: struktura backend/ + frontend/ jest; CSV progów nadal do dodania do gita_
 - [ ] **T0.5 [MVP]** Repo prywatne + plan udostępnienia jury (instrukcja z platformy konkursowej).
 - [ ] **T0.6 [+]** Umówić konsultacje z mentorami (lista ⚙️ z sekcji 11 pipeline'u) – najlepiej wcześnie, bo progi wpływają na reguły:
   - dr Bolewski: WOD/TAW dla kategorii IUNG, progi C1–C6, dawki nawadniania;
@@ -35,21 +37,21 @@ Dopiero gdy to działa i jest wdrożone pod linkiem, dokładamy teren, satelitę
 
 ## 1. Szkielet aplikacji
 
-- [ ] **T1.1 [MVP]** Backend: endpoint `POST /api/analyze {dzialka, data}` → JSON raportu; `GET /api/health`.
-- [ ] **T1.2 [MVP]** Model danych: `Fakt {id, wartość, jednostka, źródło, data_pobrania, dostępny, powód_braku}`, `Zalecenie {reguła, co, gdzie, kiedy, ile, bo[], co_zyskasz, fakty[]}`, `Raport`.
-- [ ] **T1.3 [MVP]** Warstwa pobierania: klient HTTP z timeoutami, retry, równoległością (`asyncio.gather`) i cache na dysku (klucz = źródło + parametry + data `D`).
-- [ ] **T1.4 [MVP]** Zasada „brak danych = komunikat”: każdy pobieracz zwraca wynik albo jawny brak z powodem, nigdy wyjątek, który zabija analizę.
-- [ ] **T1.5 [MVP]** Konfiguracja wszystkich progów ⚙️ w jednym pliku (`config/progi.yaml`), żeby kalibracja nie wymagała zmian w kodzie.
-- [ ] **T1.6 [MVP]** Frontend: pusty szkielet z routingiem Start → Postęp → Raport, wywołanie API.
+- [x] **T1.1 [MVP]** Backend: endpoint `POST /api/analyze {dzialka, data}` → JSON raportu; `GET /api/health`. — _`POST /api/analiza`, `POST /api/dzialka`, `GET /api/health`, `GET /api/uprawy`_
+- [~] **T1.2 [MVP]** Model danych: `Fakt {id, wartość, jednostka, źródło, data_pobrania, dostępny, powód_braku}`, `Zalecenie {reguła, co, gdzie, kiedy, ile, bo[], co_zyskasz, fakty[]}`, `Raport`. — _częściowo: model jako dict/JSON, bez klas_
+- [x] **T1.3 [MVP]** Warstwa pobierania: klient HTTP z timeoutami, retry, równoległością (`asyncio.gather`) i cache na dysku (klucz = źródło + parametry + data `D`). — _backend/app/net.py_
+- [x] **T1.4 [MVP]** Zasada „brak danych = komunikat”: każdy pobieracz zwraca wynik albo jawny brak z powodem, nigdy wyjątek, który zabija analizę. — _zrobione_
+- [x] **T1.5 [MVP]** Konfiguracja wszystkich progów ⚙️ w jednym pliku (`config/progi.yaml`), żeby kalibracja nie wymagała zmian w kodzie. — _zrobione jako backend/app/config.py_
+- [x] **T1.6 [MVP]** Frontend: pusty szkielet z routingiem Start → Postęp → Raport, wywołanie API. — _frontend/index.html → raport.html_
 
 ## 2. Etap 1 – lokalizacja działki
 
-- [ ] **T2.1 [MVP]** ULDK `GetParcelById` (identyfikator EGiB) → WKT, TERYT, gmina, obręb.
-- [ ] **T2.2 [MVP]** ULDK `GetParcelByXY` (klik na mapie).
-- [ ] **T2.3 [+]** ULDK `GetParcelByIdOrNr` (gmina + obręb + numer) z podpowiadaniem obrębów.
-- [ ] **T2.4 [MVP]** Geometria: centroid (WGS84), bbox, bufor +500 m, bufor −10 m, powierzchnia (w EPSG:2180).
-- [ ] **T2.5 [MVP]** Obsługa braku działki: komunikat „wskaż ją na mapie” → analiza na geometrii z kliknięcia.
-- [ ] **T2.6 [MVP]** Wykrycie działki nierolniczej z warstwy IUNG (kody 11 las, 12 woda, 13 zabudowa, 14 drogi/nieużytki – zob. A4) → „Poza zakresem”.
+- [x] **T2.1 [MVP]** ULDK `GetParcelById` (identyfikator EGiB) → WKT, TERYT, gmina, obręb. — _zrobione_
+- [x] **T2.2 [MVP]** ULDK `GetParcelByXY` (klik na mapie). — _Leaflet + OSM na ekranie startowym_
+- [x] **T2.3 [+]** ULDK `GetParcelByIdOrNr` (gmina + obręb + numer) z podpowiadaniem obrębów. — _ULDK GetParcelByIdOrNr, `GET /api/szukaj`, lista przy wielu trafieniach, filtr gminy_
+- [~] **T2.4 [MVP]** Geometria: centroid (WGS84), bbox, bufor +500 m, bufor −10 m, powierzchnia (w EPSG:2180). — _częściowo: centroid, pole, punkty wewnątrz; bez buforów (potrzebne przy satelicie i terenie)_
+- [x] **T2.5 [MVP]** Obsługa braku działki: komunikat „wskaż ją na mapie” → analiza na geometrii z kliknięcia. — _zrobione_
+- [x] **T2.6 [MVP]** Wykrycie działki nierolniczej z warstwy IUNG (kody 11 las, 12 woda, 13 zabudowa, 14 drogi/nieużytki – zob. A4) → „Poza zakresem”. — _zrobione_
 
 ## 3. Etap 2 – pobieranie danych
 
@@ -58,36 +60,36 @@ Każde źródło: funkcja pobierająca + fallback + zapis źródła i daty pobra
 Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 **Grupa A – rdzeń [MVP]**
-- [ ] **T3.1** P1+P2 Open‑Meteo Archive: opad, ET0, Tmax, Tmin **i wilgotność gleby (dobowe `_mean`)**, 30 lat przed `D`, jedno zapytanie (~2,5 s) → [A2](#a2-open-meteo-archive--pogoda-i-wilgotność-gleby-p1-p2).
-- [ ] **T3.2** P3 prognoza 16 dni (gdy `D` = dziś) / klimatologia z 10 lat (dla dat archiwalnych) → [A3](#a3-open-meteo-forecast--prognoza-p3).
-- [ ] **T3.3** P4 IUNG WMS `Susza:katgl_landuse2024` – GetFeatureInfo w 5–9 punktach → kategoria I–IV, gleba organiczna (kod 5), działka nierolnicza (11–19) → [A4](#a4-iung--kategoria-gleby-i-pokrycie-terenu-p4).
-- [ ] **T3.4** P5 SoilGrids – **tylko 1–2 głębokości** (pełne zapytanie 10–14 s), cache, fallback z kategorii IUNG → [A5](#a5-soilgrids--skład-i-retencja-gleby-p5).
-- [ ] **T3.5** P6 wczytanie `dane/kbw_progi_iung.csv` + tabela mapowania nazw upraw z ARiMR na wiersze CSV → [A6](#a6-progi-kbw-iung--csv-p6).
-- [ ] **T3.9 (przeniesione do MVP)** P11 uprawa z deklaracji ARiMR → podpowiedź w UI, rolnik może zmienić; brak danych → wybór z kafelków → [A10](#a10-arimr-gsa--uprawy-p11).
+- [x] **T3.1** P1+P2 Open‑Meteo Archive: opad, ET0, Tmax, Tmin **i wilgotność gleby (dobowe `_mean`)**, 30 lat przed `D`, jedno zapytanie (~2,5 s) → [A2](#a2-open-meteo-archive--pogoda-i-wilgotność-gleby-p1-p2). — _zrobione_
+- [x] **T3.2** P3 prognoza 16 dni (gdy `D` = dziś) / klimatologia z 10 lat (dla dat archiwalnych) → [A3](#a3-open-meteo-forecast--prognoza-p3). — _zrobione_
+- [x] **T3.3** P4 IUNG WMS `Susza:katgl_landuse2024` – GetFeatureInfo w 5–9 punktach → kategoria I–IV, gleba organiczna (kod 5), działka nierolnicza (11–19) → [A4](#a4-iung--kategoria-gleby-i-pokrycie-terenu-p4). — _zrobione_
+- [x] **T3.4** P5 SoilGrids – **tylko 1–2 głębokości** (pełne zapytanie 10–14 s), cache, fallback z kategorii IUNG → [A5](#a5-soilgrids--skład-i-retencja-gleby-p5). — _SoilGrids 2 głębokości + cache – backend/app/context.py; skład gleby i SOC (F6c) w raporcie_
+- [x] **T3.5** P6 wczytanie `dane/kbw_progi_iung.csv` + tabela mapowania nazw upraw z ARiMR na wiersze CSV → [A6](#a6-progi-kbw-iung--csv-p6). — _tabela upraw: backend/app/crops.py_
+- [x] **T3.9 (przeniesione do MVP)** P11 uprawa z deklaracji ARiMR → podpowiedź w UI, rolnik może zmienić; brak danych → wybór z kafelków → [A10](#a10-arimr-gsa--uprawy-p11). — _ARiMR WFS 2025–2026 + mapa upraw Copernicus (CLMS) 2017–2024 przez CDSE; shapefile ARiMR 2020–2024 – niepotrzebne_
 
 **Grupa B – teren, woda, satelita [+]**
-- [ ] **T3.6** P7 teren: **Copernicus DEM 30 m na pierwszy wynik** (< 1 s); NMT 1 m z GUGiK (60–117 s) jako zadanie w tle z cache, po pobraniu przeliczyć F7/F8 → [A7](#a7-teren--copernicus-dem-30-m-i-nmt-1-m-gugik-p7).
-- [ ] **T3.7** P8 rowy/cieki/zbiorniki: **BDOT10k – z ZIP-a powiatu tylko 4 pliki hydrografii przez HTTP Range (~2 MB, 1–2 s)**. OSM Overpass **nie używać** (brak rowów) → [A8](#a8-bdot10k--rowy-rzeki-wody-p8).
-- [ ] **T3.8** P10 satelita: **Planetary Computer** (bez konta) – Sentinel‑2 L2A 2016+, Landsat C2 L2 2006–2016, MODIS jako tło; odczyt tylko pikseli działki z COG → [A9](#a9-planetary-computer--sentinel-2-landsat-modis-p10).
+- [x] **T3.6** P7 teren: **Copernicus DEM 30 m na pierwszy wynik** (< 1 s); NMT 1 m z GUGiK (60–117 s) jako zadanie w tle z cache, po pobraniu przeliczyć F7/F8 → [A7](#a7-teren--copernicus-dem-30-m-i-nmt-1-m-gugik-p7). — _Copernicus DEM 30 m od razu; NMT 1 m GUGiK pobierany w tle po wskazaniu działki (60–180 s), potem analiza na nim (uśredniony do 5 m)_
+- [x] **T3.7** P8 rowy/cieki/zbiorniki: **BDOT10k – z ZIP-a powiatu tylko 4 pliki hydrografii przez HTTP Range (~2 MB, 1–2 s)**. OSM Overpass **nie używać** (brak rowów) → [A8](#a8-bdot10k--rowy-rzeki-wody-p8). — _HTTP Range (remotezip), parsowanie raz na powiat + cache – backend/app/bdot.py_
+- [x] **T3.8** P10 satelita: **Planetary Computer** (bez konta) – Sentinel‑2 L2A 2016+, Landsat C2 L2 2006–2016, MODIS jako tło; odczyt tylko pikseli działki z COG → [A9](#a9-planetary-computer--sentinel-2-landsat-modis-p10). — _Sentinel‑2 L2A (2016+) z zapasem Landsat 5/7/8/9 (anomalia w obrębie rodziny czujników); MODIS – nie_
 
 **Grupa C – kontekst [opc]**
 - [ ] ~~T3.10 P2 osobno~~ → wchodzi w T3.1.
 - [ ] ~~T3.11 IUNG GAEC2~~ → niepotrzebne, gleby organiczne to kod 5 w T3.3.
-- [ ] **T3.12** P12 EDO WMS – tylko porównanie (GetMap zwraca obrazek, wartość z koloru legendy) → [A11](#a11-edo--tło-suszy-p12-opcjonalnie).
+- [x] **T3.12** P12 EDO WMS – tylko porównanie (GetMap zwraca obrazek, wartość z koloru legendy) → [A11](#a11-edo--tło-suszy-p12-opcjonalnie). — _EDO CDI z koloru piksela GetMap (legenda: obserwacja / ostrzeżenie / alarm), dekada ≤ D_
 - [ ] **T3.13** P13 IMGW hydro – stan rzek jako kontekst (tylko `D` = dziś) → [A12](#a12-imgw--rzeki-i-stacje-p13-opcjonalnie).
 
 ## 4. Etap 3 – fakty rdzeniowe (meteo + gleba + uprawa)
 
-- [ ] **T4.1 [MVP]** F13 tryb daty (sezon 21.III–30.IX / poza sezonem).
-- [ ] **T4.2 [MVP]** F6, F6b, F6c: kategoria gleby, TAW (SoilGrids albo WOD z kategorii), węgiel organiczny.
-- [ ] **T4.3 [MVP]** F1 KBW 60 dni w ostatnim pełnym okresie 6‑dekadowym ≤ `D`; F2 próg z CSV; F3 susza teraz.
-- [ ] **T4.4 [MVP]** Tabela upraw: Kc w fazach, p (FAO‑56), głębokość korzeni, kalendarz faz dla Polski, okna wrażliwości → F12.
-- [ ] **T4.5 [MVP]** F4 bilans wody w strefie korzeniowej FAO‑56 od 1.III (opad efektywny, ET0 × Kc, ograniczenie do [0, TAW]); F4p próg stresu.
-- [ ] **T4.6 [MVP]** F11 opad efektywny w prognozie 7 dni.
-- [ ] **T4.7 [MVP]** F5 częstość suszy w 10 sezonach (dla uprawy z danego roku) + miesiące z największą liczbą przekroczeń.
-- [ ] **T4.8 [+]** F5s potrzeba wody w oknie wrażliwym (mediana, p80).
-- [ ] **T4.9 [+]** F14 opad vs norma 30‑letnia + SPI‑2/SPEI‑2; F15 dni upału i ET0 vs norma.
-- [ ] **T4.10 [MVP]** F0 uprawa – przepływ ustalony:
+- [x] **T4.1 [MVP]** F13 tryb daty (sezon 21.III–30.IX / poza sezonem). — _zrobione_
+- [x] **T4.2 [MVP]** F6, F6b, F6c: kategoria gleby, TAW (SoilGrids albo WOD z kategorii), węgiel organiczny. — _kategoria IUNG + TAW z WOD; SoilGrids – skład, SOC (F6c), θFC/θWP w szczegółach_
+- [x] **T4.3 [MVP]** F1 KBW 60 dni w ostatnim pełnym okresie 6‑dekadowym ≤ `D`; F2 próg z CSV; F3 susza teraz. — _zrobione_
+- [x] **T4.4 [MVP]** Tabela upraw: Kc w fazach, p (FAO‑56), głębokość korzeni, kalendarz faz dla Polski, okna wrażliwości → F12. — _backend/app/crops.py (wartości ⚙️)_
+- [x] **T4.5 [MVP]** F4 bilans wody w strefie korzeniowej FAO‑56 od 1.III (opad efektywny, ET0 × Kc, ograniczenie do [0, TAW]); F4p próg stresu. — _zrobione_
+- [x] **T4.6 [MVP]** F11 opad efektywny w prognozie 7 dni. — _zrobione_
+- [x] **T4.7 [MVP]** F5 częstość suszy w 10 sezonach (dla uprawy z danego roku) + miesiące z największą liczbą przekroczeń. — _zrobione_
+- [~] **T4.8 [+]** F5s potrzeba wody w oknie wrażliwym (mediana, p80). — _częściowo: potrzeba wody w oknie (mediana/p80) liczona w R8_
+- [~] **T4.9 [+]** F14 opad vs norma 30‑letnia + SPI‑2/SPEI‑2; F15 dni upału i ET0 vs norma. — _częściowo: F14, F15 tak; SPI/SPEI – nie_
+- [x] **T4.10 [MVP]** F0 uprawa – przepływ ustalony: — _podpowiedź: ARiMR (2025–26) → mapa upraw Copernicus (2017–24) → kafelki; F0h: każdy sezon z uprawą z tego roku_
   1. po wskazaniu działki pytamy ARiMR (A10) o uprawę w roku `D`;
   2. **jest** → podpowiedź „wg deklaracji ARiMR {rok}: {uprawa}”, kafelki zwinięte pod „Zmień” – rolnik może ją zamienić;
   3. **nie ma** (rok bez danych: 2016, 2017, 2019, brak deklaracji, błąd usługi) → kafelki rozwinięte, rolnik wybiera;
@@ -102,67 +104,67 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 ## 5. Etap 3 – fakty przestrzenne (teren, woda, satelita) [+]
 
-- [ ] **T5.1** F7 spadek z NMT (maks., średni, strefy > 3%).
-- [ ] **T5.2** F7b kierunki i akumulacja spływu (D8), punkty wypływu na granicy; udział odpływu SCS‑CN.
-- [ ] **T5.3** F8 zagłębienia (wypełnianie, próg 0,1 m) – poligon, powierzchnia, objętość.
-- [ ] **T5.4** F9 najbliższy rów/ciek/zbiornik: odległość, typ, punkt najbliżej działki; F9b gleba organiczna.
-- [ ] **T5.5** F10 najsuchsza strefa: z‑score NDMI względem tych samych tygodni z lat okna → poligon; F10b mediana z‑score.
-- [ ] **T5.6** Zapis wszystkich geometrii (strefy, punkty, poligony) jako GeoJSON do warstw mapy w raporcie.
+- [x] **T5.1** F7 spadek z NMT (maks., średni, strefy > 3%). — _spadek średni, p95, udział > 3%_
+- [x] **T5.2** F7b kierunki i akumulacja spływu (D8), punkty wypływu na granicy; udział odpływu SCS‑CN. — _D8 na wypełnionym DEM, punkt wypływu i udział działki; odpływ SCS‑CN z ulew > 10 mm_
+- [x] **T5.3** F8 zagłębienia (wypełnianie, próg 0,1 m) – poligon, powierzchnia, objętość. — _priority‑flood, głębokość > 0,1 m, powierzchnia i objętość; duże obniżenia poza działką odfiltrowane_
+- [x] **T5.4** F9 najbliższy rów/ciek/zbiornik: odległość, typ, punkt najbliżej działki; F9b gleba organiczna. — _rów/kanał, rzeka, wody – odległość od granicy działki i najbliższy punkt_
+- [x] **T5.5** F10 najsuchsza strefa: z‑score NDMI względem tych samych tygodni z lat okna → poligon; F10b mediana z‑score. — _z‑score NDMI per piksel vs te same dni w latach 2016+ (min. 3 czyste sceny), strefa z < −1_
+- [x] **T5.6** Zapis wszystkich geometrii (strefy, punkty, poligony) jako GeoJSON do warstw mapy w raporcie. — _warstwy mapy liczone w backendzie (układ 300×200 jak makieta)_
 
 ## 6. Etap 3b – prognoza scenariuszowa (wyróżnik projektu) [+]
 
-- [ ] **T6.1** F17: N trajektorii bilansu FAO‑56 od zapasu z dnia `D` przez pogodę N poprzednich sezonów (N = 10 albo 30, rozstrzyga T12.8; pierwsze dni z prognozy, gdy `D` = dziś).
-- [ ] **T6.2** F18 ryzyko stresu w czasie (tydzień/miesiąc, udział przebiegów, w raporcie „x/N”), F18d mediana dnia przekroczenia progu.
-- [ ] **T6.3** F19 przewidywany brak wody (mediana, p80).
-- [ ] **T6.4** F20 efekt działań: przebiegi z parametrem zmienionym przez działanie (tabela w pipeline 4b) → „co zyskasz”.
-- [ ] **T6.5** F21 ryzyko z całym planem („bez działań” vs „z planem”).
-- [ ] **T6.6** Poza sezonem: scenariusz przez zimę do 30.IX kolejnego roku, uprawa przewidywana z płodozmianu F0h.
+- [x] **T6.1** F17: N trajektorii bilansu FAO‑56 od zapasu z dnia `D` przez pogodę N poprzednich sezonów (N = 10 albo 30, rozstrzyga T12.8; pierwsze dni z prognozy, gdy `D` = dziś). — _zrobione_
+- [x] **T6.2** F18 ryzyko stresu w czasie (tydzień/miesiąc, udział przebiegów, w raporcie „x/N”), F18d mediana dnia przekroczenia progu. — _zrobione_
+- [x] **T6.3** F19 przewidywany brak wody (mediana, p80). — _zrobione_
+- [x] **T6.4** F20 efekt działań: przebiegi z parametrem zmienionym przez działanie (tabela w pipeline 4b) → „co zyskasz”. — _resztki/mulcz i nawadnianie; retencja (R1–R3) po T5_
+- [x] **T6.5** F21 ryzyko z całym planem („bez działań” vs „z planem”). — _zrobione_
+- [x] **T6.6** Poza sezonem: scenariusz przez zimę do 30.IX kolejnego roku, uprawa przewidywana z płodozmianu F0h. — _uprawa przewidywana = bieżąca (płodozmian po T4.11)_
 
 ## 7. Etap 4 – diagnoza
 
-- [ ] **T7.1 [MVP]** Etykieta i zdanie główne (5.1): Susza nadchodzi / Zagrożenie / Spokojnie / Plan na sezon / Poza zakresem. W MVP z F3/F4, po T6 z F18.
-- [ ] **T7.2 [MVP]** Dopisek „brak urzędowego progu” dla upraw bez wiersza w CSV.
-- [ ] **T7.3 [+]** Pewność (wysoka/średnia/niska) z 4 sygnałów; nazwane braki danych obniżają pewność.
-- [ ] **T7.4 [MVP]** Przyczyny C1–C6 z oceną 0–3, podział: pogoda vs stałe cechy działki.
+- [x] **T7.1 [MVP]** Etykieta i zdanie główne (5.1): Susza nadchodzi / Zagrożenie / Spokojnie / Plan na sezon / Poza zakresem. W MVP z F3/F4, po T6 z F18. — _zrobione_
+- [x] **T7.2 [MVP]** Dopisek „brak urzędowego progu” dla upraw bez wiersza w CSV. — _zrobione_
+- [x] **T7.3 [+]** Pewność (wysoka/średnia/niska) z 4 sygnałów; nazwane braki danych obniżają pewność. — _4 sygnały: opady/próg IUNG, bilans FAO‑56, satelita (NDMI), EDO CDI_
+- [x] **T7.4 [MVP]** Przyczyny C1–C6 z oceną 0–3, podział: pogoda vs stałe cechy działki. — _C1–C6 z danych_
 
 ## 8. Etap 5 – reguły zaleceń
 
-- [ ] **T8.1 [MVP]** Silnik reguł: warunek → zalecenie z polami co/gdzie/kiedy/ile/bo; szablony zdań wypełniane faktami; kolejność retencja → pole → nawadnianie; maks. 6; wybór „PILNE”.
-- [ ] **T8.2 [MVP]** R5 międzyplon/resztki, R7 nawadnianie teraz (dawka, objętość), R7‑ nie podlewaj, R8 plan nawadniania.
-- [ ] **T8.3 [+]** R1 zastawka na rowie, R2 zagłębienie/oczko, R3 pas buforowy, R6 uprawa w poprzek stoku (wymagają T5).
-- [ ] **T8.4 [opc]** R4 ochrona mokradła/gleby organicznej, R9 inna uprawa / termin siewu.
-- [ ] **T8.5 [MVP]** „Gdy żadna reguła się nie uruchomi” + sekcja „Czego nie sprawdziliśmy” (reguły zablokowane brakiem faktów).
-- [ ] **T8.6 [+]** Warunki patrzące w przód: zamiana `F5 ≥ 3/10` na `F18 ≥ 30%` przebiegów po wdrożeniu T6; „co zyskasz” z F20.
+- [x] **T8.1 [MVP]** Silnik reguł: warunek → zalecenie z polami co/gdzie/kiedy/ile/bo; szablony zdań wypełniane faktami; kolejność retencja → pole → nawadnianie; maks. 6; wybór „PILNE”. — _zrobione_
+- [x] **T8.2 [MVP]** R5 międzyplon/resztki, R7 nawadnianie teraz (dawka, objętość), R7‑ nie podlewaj, R8 plan nawadniania. — _zrobione_
+- [x] **T8.3 [+]** R1 zastawka na rowie, R2 zagłębienie/oczko, R3 pas buforowy, R6 uprawa w poprzek stoku (wymagają T5). — _R1 (rów ≤ 100 m), R2 (zagłębienie), R3 (pas przy wypływie), R6 (C4 ≥ 2); piny w prawdziwych miejscach_
+- [~] **T8.4 [opc]** R4 ochrona mokradła/gleby organicznej, R9 inna uprawa / termin siewu. — _R4 (gleba organiczna, kod 5 IUNG) i R9 – tak; TWI – nie_
+- [x] **T8.5 [MVP]** „Gdy żadna reguła się nie uruchomi” + sekcja „Czego nie sprawdziliśmy” (reguły zablokowane brakiem faktów). — _lista braków danych w „Skąd wiemy”_
+- [x] **T8.6 [+]** Warunki patrzące w przód: zamiana `F5 ≥ 3/10` na `F18 ≥ 30%` przebiegów po wdrożeniu T6; „co zyskasz” z F20. — _zrobione_
 
 ## 9. Tryby zależne od daty
 
-- [ ] **T9.1 [MVP]** Ucięcie wszystkich zapytań do `D` (meteo, satelita `datetime ≤ D`); test, że nic z przyszłości nie wchodzi.
-- [ ] **T9.2 [MVP]** Data historyczna: klimatologia zamiast prognozy + komunikat.
-- [ ] **T9.3 [MVP]** Poza sezonem: R1–R6 z terminem „teraz”, R8 zamiast R7.
+- [x] **T9.1 [MVP]** Ucięcie wszystkich zapytań do `D` (meteo, satelita `datetime ≤ D`); test, że nic z przyszłości nie wchodzi. — _zrobione_
+- [x] **T9.2 [MVP]** Data historyczna: klimatologia zamiast prognozy + komunikat. — _zrobione_
+- [x] **T9.3 [MVP]** Poza sezonem: R1–R6 z terminem „teraz”, R8 zamiast R7. — _zrobione_
 - [ ] **T9.4 [+]** Początek sezonu (brak pełnego okresu 60 dni): KBW z niepełnego okresu + obniżona pewność.
 - [ ] **T9.5 [+]** Adnotacje o danych w stanie obecnym (ULDK, BDOT10k, NMT, mapa gleb) i o sensorze satelitarnym per rok.
 
 ## 10. Frontend (wg makiety)
 
-- [ ] **T10.1 [MVP]** Ekran Start: pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`).
-- [ ] **T10.2 [MVP]** Ekran postępu analizy (kroki pobierania, czas, błędy źródeł).
-- [ ] **T10.3 [MVP]** Raport: „Co Cię czeka”, „Pilne”, „Co zrobić i gdzie” (karty z „bo…”), „Co zwiększa ryzyko”, „Skąd wiemy” (źródła, daty, ograniczenia).
-- [ ] **T10.4 [+]** Mapa działki z widokami: plan (numery zaleceń) / gdzie sucho / teren i spływ / gleba; podkład ortofoto lub OSM.
-- [ ] **T10.5 [+]** Wykres „Ryzyko w kolejnych miesiącach” bez działań vs z planem (F18/F21) i brak wody (F19).
-- [ ] **T10.6 [+]** Zwinięte uzasadnienie: kryterium IUNG teraz (F3) i historia 10 lat (F5, F0h).
+- [x] **T10.1 [MVP]** Ekran Start: pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`). — _gmina/obręb/numer = MOCK (T2.3)_
+- [x] **T10.2 [MVP]** Ekran postępu analizy (kroki pobierania, czas, błędy źródeł). — _zrobione_
+- [x] **T10.3 [MVP]** Raport: „Co Cię czeka”, „Pilne”, „Co zrobić i gdzie” (karty z „bo…”), „Co zwiększa ryzyko”, „Skąd wiemy” (źródła, daty, ograniczenia). — _zrobione_
+- [x] **T10.4 [+]** Mapa działki z widokami: plan (numery zaleceń) / gdzie sucho / teren i spływ / gleba; podkład ortofoto lub OSM. — _widoki: plan / gdzie sucho (Sentinel‑2) / teren i spływ (DEM + BDOT10k) / gleba (IUNG)_
+- [x] **T10.5 [+]** Wykres „Ryzyko w kolejnych miesiącach” bez działań vs z planem (F18/F21) i brak wody (F19). — _zrobione_
+- [x] **T10.6 [+]** Zwinięte uzasadnienie: kryterium IUNG teraz (F3) i historia 10 lat (F5, F0h). — _zrobione_
 - [ ] **T10.7 [+]** Wersja mobilna (makieta `Mobile.dc.html`) – działa w przeglądarce telefonu.
-- [ ] **T10.8 [MVP]** Stany: ładowanie, błąd ULDK, brak danych źródła, działka poza zakresem.
-- [ ] **T10.9 [opc]** Panel gospodarstwa: kilka działek zapisanych lokalnie (bez danych osobowych).
+- [x] **T10.8 [MVP]** Stany: ładowanie, błąd ULDK, brak danych źródła, działka poza zakresem. — _zrobione_
+- [x] **T10.9 [opc]** Panel gospodarstwa: kilka działek zapisanych lokalnie (bez danych osobowych). — _localStorage_
 
 ## 11. Zapis raportu (wymóg 3.3 pkt 6)
 
-- [ ] **T11.1 [MVP]** Widok do druku A4 (CSS `@media print`, makieta `Pdf.dc.html`) + przycisk „Drukuj / Zapisz PDF”.
+- [x] **T11.1 [MVP]** Widok do druku A4 (CSS `@media print`, makieta `Pdf.dc.html`) + przycisk „Drukuj / Zapisz PDF”. — _Drukuj / PDF = druk przeglądarki_
 - [ ] **T11.2 [+]** Generowanie pliku PDF po stronie serwera (z mapą jako obrazem).
 - [ ] **T11.3 [opc]** Zapis raportu w systemie (link do raportu / pobranie JSON).
 
 ## 12. Jakość, testy, wydajność
 
-- [ ] **T12.1 [MVP]** Testy jednostkowe: KBW i dobór okresu, odczyt progu z CSV, bilans FAO‑56, każda reguła (wejście → oczekiwana reguła).
+- [x] **T12.1 [MVP]** Testy jednostkowe: KBW i dobór okresu, odczyt progu z CSV, bilans FAO‑56, każda reguła (wejście → oczekiwana reguła). — _backend/tests/test_core.py (10 testów)_
 - [ ] **T12.2 [MVP]** Zestaw testowych działek z różnych regionów Polski (piaski Wielkopolski, lessy Lubelszczyzny, Żuławy, teren górzysty, działka nierolnicza) × daty (dziś, lipiec 2018, listopad 2019, 2016).
 - [ ] **T12.3 [MVP]** Pomiar czasu analizy; cel < 30 s; profilowanie najwolniejszych źródeł (satelita, NMT).
 - [ ] **T12.4 [+]** Backtest 2015/2018/2019 vs SMSR IUNG i EDO CDI + kontrola w latach wilgotnych (2017) → macierz zgodności do README.
@@ -173,7 +175,7 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 ## 13. Wdrożenie
 
-- [ ] **T13.1 [MVP]** Dockerfile / skrypt startowy, zmienne środowiskowe, instrukcja uruchomienia lokalnie w README.
+- [~] **T13.1 [MVP]** Dockerfile / skrypt startowy, zmienne środowiskowe, instrukcja uruchomienia lokalnie w README. — _częściowo: instrukcja w README; bez Dockerfile_
 - [ ] **T13.2 [MVP]** Wdrożenie pod publicznym linkiem; sprawdzenie z innej sieci i na telefonie.
 - [ ] **T13.3 [MVP]** Plan B na finał: wersja lokalna na laptopie + nagrany film na wypadek awarii zewnętrznych API.
 
@@ -181,6 +183,12 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 - [ ] **T14.1** Wprowadzić do `config/progi.yaml` wartości ustalone z mentorami (WOD, progi C1–C6, zagłębienia, odległość rowu, spadek, dawki, z‑score NDMI, kalendarz faz).
 - [ ] **T14.2** Powtórzyć backtest (T12.4) po kalibracji.
+
+## 14b. CDSE (podpięte)
+
+- [x] OAuth z `backend/.env` (`CDSE_CLIENT_ID`, `CDSE_CLIENT_SECRET`, poza gitem) – Sentinel Hub Process API: NDMI Sentinel‑2 od 07.2015 jako kompozyt leastCC (pierwsze źródło satelitarne; zapas: Planetary Computer → Landsat).
+- [x] Mapa upraw CLMS 2017–2024: publiczna usługa podglądu CDSE + oficjalna paleta (kolor → klasa), 10 m; sprawdzone na polu z deklaracją ARiMR (owies → zboża).
+- [ ] Daty wschodów/zbiorów, uprawa wtórna, wilgotność gleby CLMS SSM, DEM 10 m – wymagają pobierania plików (OData/S3), na które token klienta Sentinel Hub nie pozwala („Token audience not allowed”) – potrzebne konto z loginem/hasłem lub klucze S3.
 
 ## 15. Zgłoszenie (wymagania formalne, rozdz. 4)
 
