@@ -1,0 +1,36 @@
+# Backend bez instalowania Pythona na hoście.
+#   docker compose up dev          → http://localhost:8000 (przeładowanie po zmianie w ./app, docs: /docs)
+#   docker compose up --build prod → http://localhost:8000 (ten sam obraz co na Cloud Run)
+# Klucze CDSE (opcjonalne) z backend/.env – plik nie trafia do obrazu, tylko do zmiennych środowiskowych.
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+      additional_contexts:
+        dane: ../dane
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/srv/backend/app:ro
+      - cache:/srv/backend/.cache
+    env_file:
+      - path: .env
+        required: false
+
+  prod:
+    build:
+      context: .
+      additional_contexts:
+        dane: ../dane
+    ports:
+      - "8000:8080"
+    volumes:
+      - cache:/srv/backend/.cache
+    env_file:
+      - path: .env
+        required: false
+
+volumes:
+  # Pobrane dane (pogoda, BDOT10k, zdjęcia satelitarne) – kolejne analizy tej samej okolicy są szybsze.
+  cache:
