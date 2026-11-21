@@ -128,6 +128,10 @@ export default function PickMap({
         { id: "pola-linia", type: "line", source: "pola", paint: { "line-color": POLA_KOLOR, "line-width": 1.4, "line-opacity": 0.9 } },
         "ewidencja",
       );
+      // Clicked field – highlighted at once, before the parcel lookup answers.
+      map.addSource("klik", { type: "geojson", data: EMPTY });
+      map.addLayer({ id: "klik-fill", type: "fill", source: "klik", paint: { "fill-color": WYBOR_KOLOR, "fill-opacity": 0.35 } });
+      map.addLayer({ id: "klik-linia", type: "line", source: "klik", paint: { "line-color": WYBOR_KOLOR, "line-width": 2.5 } });
       map.addSource("wybrana", { type: "geojson", data: EMPTY });
       map.addLayer({ id: "wybrana-obwodka", type: "line", source: "wybrana", paint: { "line-color": "#FFFFFF", "line-width": 6, "line-opacity": 0.9 } });
       map.addLayer({ id: "wybrana-linia", type: "line", source: "wybrana", paint: { "line-color": WYBOR_KOLOR, "line-width": 3.5 } });
@@ -185,9 +189,10 @@ export default function PickMap({
       loadPola();
       // Click on a crop field = pick the cadastral parcel under that point.
       map.on("click", "pola-fill", (e) => {
-        const roslina = String(e.features?.[0]?.properties?.roslina ?? "");
+        const f = e.features?.[0];
+        if (f) (map.getSource("klik") as maplibregl.GeoJSONSource).setData({ type: "Feature", properties: {}, geometry: f.geometry });
         const { lng, lat } = e.lngLat;
-        onPickRef.current(`xy:${lng.toFixed(6)},${lat.toFixed(6)};${roslina};${rokRef.current ?? ""}`);
+        onPickRef.current(`xy:${lng.toFixed(6)},${lat.toFixed(6)}`);
       });
       map.on("mouseenter", "pola-fill", () => (map.getCanvas().style.cursor = "pointer"));
       map.on("mouseleave", "pola-fill", () => (map.getCanvas().style.cursor = ""));

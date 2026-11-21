@@ -7,6 +7,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type ExpressionSpecification } from "maplibre-gl";
+import { cellInParcel } from "@/lib/clip";
 import type { Feature, FeatureCollection } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import type { LngLat, MapLayer, RasterGrid, ReportMap, Zalecenie } from "@/lib/types";
@@ -29,21 +30,22 @@ function bounds(ring: LngLat[]): [LngLat, LngLat] {
 
 const RASTER_KEYS = ["sucho", "teren", "gleba"] as const;
 
-function rasterToGeoJSON(g: RasterGrid | undefined): FC {
-  if (!g) return { type: "FeatureCollection", features: [] };
+/** Raster cells as polygons clipped to the parcel boundary (no squares sticking out beyond the parcel). */
+function rasterToGeoJSON(g: RasterGrid | undefined, ring: LngLat[]): FC {
+  if (!g || ring.length < 3) return { type: "FeatureCollection", features: [] };
   const [w, s, e, n] = g.bbox;
   const dx = (e - w) / g.cols;
   const dy = (n - s) / g.rows;
+  const xs = ring.map((p) => p[0]);
+  const ys = ring.map((p) => p[1]);
+  const pb: [number, number, number, number] = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
   const features: Feature[] = [];
   g.values.forEach((c, k) => {
     if (c < 0) return;
     const x0 = w + (k % g.cols) * dx;
-    const y0 = n - Math.floor(k / g.cols) * dy;
-    features.push({
-      type: "Feature",
-      properties: { c },
-      geometry: { type: "Polygon", coordinates: [[[x0, y0], [x0 + dx, y0], [x0 + dx, y0 - dy], [x0, y0 - dy], [x0, y0]]] },
-    });
+    const y1 = n - Math.floor(k / g.cols) * dy;
+    const part = cellInParcel(ring, pb, x0, y1 - dy, x0 + dx, y1);
+    if (part) features.push({ type: "Feature", properties: { c }, geometry: { type: "Polygon", coordinates: [part] } });
   });
   return { type: "FeatureCollection", features };
 }
@@ -117,7 +119,7 @@ export default function ParcelMap({
       const ring = [...parcel];
       map.addSource("pole", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } } });
       // One source + layer per raster view, toggled by visibility (swapping data in one source left stale tiles at high zoom).
-      for (const k of RASTER_KEYS) map.addSource(`raster-${k}`, { type: "geojson", data: rasterToGeoJSON(data.rasters[k]) });
+      for (const k of RASTER_KEYS) map.addSource(`raster-${k}`, { type: "geojson", data: rasterToGeoJSON(data.rasters[k], parcel) });
       map.addSource("obiekty", {
         type: "geojson",
         data: {

@@ -76,3 +76,22 @@ def grid_points(rings, n: int = 7) -> list[tuple[float, float]]:
     if inside_any(c, rings):
         pts.insert(0, c)
     return pts or [c]
+
+
+def otoczka(pts) -> list[list[float]] | None:
+    """Otoczka wypukła (monotone chain) jako zamknięty pierścień [lon, lat]."""
+    pts = sorted(set((round(x, 7), round(y, 7)) for x, y in pts))
+    if len(pts) < 3:
+        return None
+    cross = lambda o, a, b: (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    lo, up = [], []
+    for p in pts:
+        while len(lo) >= 2 and cross(lo[-2], lo[-1], p) <= 0:
+            lo.pop()
+        lo.append(p)
+    for p in reversed(pts):
+        while len(up) >= 2 and cross(up[-2], up[-1], p) <= 0:
+            up.pop()
+        up.append(p)
+    h = lo[:-1] + up[:-1]
+    return [[round(x, 6), round(y, 6)] for x, y in h + [h[0]]]

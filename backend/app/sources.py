@@ -161,7 +161,8 @@ def progi() -> dict:
 
 
 # ---------- A10. ARiMR GSA – uprawy (WFS 2025–2026) ----------
-async def arimr_uprawa(client, rings, rok: int) -> Wynik:
+async def arimr_uprawa(client, rings, rok: int, punkt: tuple[float, float] | None = None) -> Wynik:
+    """Dominująca uprawa ARiMR w działce; z `punkt` (kliknięcie na mapie) – uprawa pola pod tym punktem."""
     zr = f"ARiMR – deklaracje upraw {rok}"
     if rok not in (2025, 2026):
         return Wynik(zr, None, powod=f"brak usługi WFS dla {rok} (2020–2024: shapefile do przetworzenia – T3.9)")
@@ -184,6 +185,10 @@ async def arimr_uprawa(client, rings, rok: int) -> Wynik:
         if frings and frings[0] and frings[0][0][0] > 40:
             frings = [[(b, a) for a, b in r] for r in frings]
         n = sum(1 for p in pts if geo.inside_any(p, frings))
+        if punkt and geo.inside_any(punkt, frings):
+            w.dane = {"roslina": f["properties"].get("roslina") or "?", "grupa": f["properties"].get("grupa_roslin") or "",
+                      "udzial": 1.0, "inne": [], "pod_punktem": True}
+            return w
         if n:
             licz[(f["properties"].get("roslina") or "?", f["properties"].get("grupa_roslin") or "")] += n
     if not licz:
