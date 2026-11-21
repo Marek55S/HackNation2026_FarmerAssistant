@@ -73,7 +73,7 @@ Zasady implementacyjne, które z tego wynikają:
 - **SPI** (McKee i in., 1993): opad przekształcony do rozkładu normalnego (gamma → N(0,1)), skale 1 i 3 miesiące.
 - **SPEI** (Vicente‑Serrano i in., 2010): to samo dla `P − ET0` (rozkład log‑logistyczny); lepiej oddaje rolę temperatury.
 - **Progi:** ≤ −1 susza umiarkowana, ≤ −1,5 silna, ≤ −2 ekstremalna.
-- **Pułapka:** 10 lat to **za mało**, by stabilnie dopasować rozkład. Parametry dopasowujemy na **30 latach
+- **Pułapka:** 10 lat to **za mało**, by stabilnie dopasować rozkład (WMO, 2012, zaleca co najmniej 30 lat). Parametry dopasowujemy na **30 latach
   poprzedzających datę analizy** z ERA5 (Open‑Meteo ma je za darmo; dla daty 2017‑07‑15 to 1987–2017), a wynik
   pokazujemy dla 10 lat przed datą, jak wymaga zadanie. Stałe okno WMO 1991–2020 „widziałoby przyszłość” dla dat
   < 2020. Opisać to w README jako świadomą decyzję.
@@ -97,10 +97,10 @@ Sposób liczenia dla działki:
    - **VCI** (Kogan, 1995): `(NDVI − min) / (max − min) × 100` w tej samej dekadzie z 10 lat; < 35 = stres.
      Analogicznie VCI dla NDMI.
 
-**10 lat wstecz od dowolnej daty (wymóg jury).** Sentinel‑2 L2A nad Polską jest dostępny od 07.2015 (CDSE)
-lub od 11.2016 (Earth Search). Dla daty analizy np. 2017‑07‑15 okno 2007–2017 wymaga więc **drabiny sensorów**:
-S2 (≥ 2017) → Landsat 8/7 (2013–2016) → Landsat 5/7 (2006–2012) + MODIS 250 m jako spójne tło (szczegóły:
-ZRODLA_DANYCH.md §0). Konsekwencje:
+**10 lat wstecz od dowolnej daty (wymóg jury).** Sentinel‑2 L2A z Planetary Computer pokrywa Polskę od 2016 r.
+(10 scen w lecie 2016, sprawdzone – TEST_API.md). Dla daty analizy np. 2017‑07‑15 okno 2007–2017 wymaga więc
+**drabiny sensorów**: S2 (≥ 2016) → Landsat 8/7 (2013–2015) → Landsat 5/7 (2006–2012) + MODIS 250 m jako spójne tło
+(wszystko z Planetary Computer; szczegóły: ZRODLA_DANYCH.md §0, TODO.md A9). Konsekwencje:
 - anomalię (z‑score, VCI) liczymy **wewnątrz jednego sensora** albo na MODIS; nie mieszamy bezwzględnych NDVI z S2 i Landsata;
 - pikseli w działce jest mniej (30 m zamiast 10 m), co obniża pewność;
 - Landsat 7 po 2003 ma pasy bez danych (SLC‑off) – maskujemy je jak chmury.
@@ -117,7 +117,8 @@ ZRODLA_DANYCH.md §0). Konsekwencje:
 ### 1.6 Wilgotność gleby z mikrofal i reanalizy
 
 - **ERA5‑Land soil moisture** (Open‑Meteo, 3 warstwy): ciągłe szeregi od 1950, ale rozdzielczość ~9 km. Służy do anomalii, nie do wartości bezwzględnych.
-- **CLMS Surface Soil Moisture 1 km (Sentinel‑1)** i **Soil Water Index**: niezależne od chmur, od 2014/2015.
+- **CLMS Surface Soil Moisture 1 km (Sentinel‑1)** i **Soil Water Index**: niezależne od chmur, od 2014/2015
+  (wymagają konta CDSE – zob. USLUGI_Z_KONTEM.md).
 - **EDO `smang` / `smian`** – anomalia indeksu wilgotności gleby (gotowa, ~5 km, co 10 dni).
 - Dopiero ich połączenie z danymi meteorologicznymi i glebowymi daje wiarygodną ocenę (KOWR, „Podstawy naukowe”, s. 2).
 
@@ -147,14 +148,20 @@ i z zasadą KOWR, że satelity nie są interpretowane samodzielnie.
 ### 1.9 Prognoza scenariuszowa – historia jako zbiór możliwych przyszłości ⭐
 
 - **Co:** bilans wody w glebie (1.3) startuje z **dzisiejszego zapasu** i jest liczony dalej z pogodą każdego
-  z 10 ostatnich sezonów (te same dni roku). Pierwsze 7–16 dni bierzemy z prognozy, gdy jest dostępna.
-  Wynik to 10 przebiegów: ryzyko stresu w każdym tygodniu i miesiącu (np. „lipiec: 5/10”), przewidywany brak wody
+  z N poprzednich sezonów (te same dni roku). Pierwsze 7–16 dni bierzemy z prognozy, gdy jest dostępna.
+  Wynik to N przebiegów: ryzyko stresu w każdym tygodniu i miesiącu (np. „lipiec: 5/10”), przewidywany brak wody
   (mediana i 80. percentyl) i dzień, w którym zapas spadnie poniżej progu.
+- **Dlaczego start od dzisiejszego zapasu:** w pierwszym miesiącu prognozy wilgotności gleby trafność wynika głównie ze
+  stanu początkowego, a dopiero później z pogody (Shukla & Lettenmaier, 2011 – eksperymenty ESP / reverse‑ESP).
+  Dlatego najmocniejszy jest horyzont 2–4 tygodni; dalsze miesiące pokazujemy jako ryzyko, nie prognozę.
+- **Liczba scenariuszy N:** 10 (lata z okna historii) albo 30 (te same 30 lat, które i tak pobieramy dla SPEI).
+  Wybór rozstrzyga analiza B z §7. Progi ryzyka w pipeline są wyrażone jako **udział przebiegów**, więc działają dla
+  każdego N. Historyczna podatność (§1.8) zostaje na 10 latach, jak wymaga zadanie.
 - **Efekt działań:** te same przebiegi z parametrami zmienionymi przez działanie (mniejsze parowanie pod mulczem,
   mniejszy spływ z pasem buforowym, zapas z oczka do nawadniania) dają „co zyskasz” dla każdej rekomendacji i ryzyko „z planem”.
 - **Źródło:** Day G.N. (1985) Extended Streamflow Forecasting Using NWSRFS, *J. Water Resour. Plann. Manage.* 111(2):157–170
   (metoda Ensemble Streamflow Prediction). Bilans gleby: FAO‑56.
-- **Ograniczenie, które piszemy wprost:** 10 lat to mała próba, a klimat się ociepla. Scenariusze to „jak bywało”, nie prognoza.
+- **Ograniczenie, które piszemy wprost:** 10 (a nawet 30) sezonów to mała próba, a klimat się ociepla. Scenariusze to „jak bywało”, nie prognoza.
   Opcjonalnie można przesunąć je o trend temperatury z 30 lat.
 
 ---
@@ -168,12 +175,15 @@ a raport pokazuje **ranking przyczyn** z uzasadnieniem.
 |---|---|---|
 | **2.1 Deficyt opadów + wysoka temperatura** | SPI/SPEI, KBW, najdłuższy ciąg dni bez opadu (CDD, P<1 mm), liczba dni z Tmax>30°C, VPD | SPEI‑3 < −1; CDD > 20 dni w V–VII |
 | **2.2 Niska zdolność retencyjna gleby** | kategoria IUNG I–II, WOD, % piasku (SoilGrids), SOC < 1%, klasa bonitacyjna (V–VI) z KIEG | kat. I lub TAW < 100 mm |
-| **2.3 Nadmierny odpływ powierzchniowy** | spadek terenu z NMT 1 m, akumulacja spływu, SCS‑CN (USDA NRCS) dla dni z opadem > 10 mm, brak zadrzewień i oczek w buforze 500 m | średni spadek > 3–5%; udział odpływu > 15% opadu |
-| **2.4 Nadmierne odwodnienie (melioracje)** | odległość do rowów i cieków (BDOT10k / OSM), gęstość rowów w buforze, gleby organiczne (warstwa IUNG GAEC2) | rów w odległości < 100 m + gleba organiczna |
+| **2.3 Nadmierny odpływ powierzchniowy** | spadek terenu z DEM (Copernicus 30 m od razu, NMT 1 m w tle), akumulacja spływu, SCS‑CN (USDA NRCS) dla dni z opadem > 10 mm, brak zadrzewień i oczek w buforze 500 m | średni spadek > 3–5%; udział odpływu > 15% opadu |
+| **2.4 Nadmierne odwodnienie (melioracje)** | odległość do rowów i cieków (BDOT10k), gęstość rowów w buforze, gleby organiczne (kod 5 w warstwie IUNG `katgl_landuse2024`) | rów w odległości < 100 m + gleba organiczna |
 | **2.5 Wrażliwość uprawy** | uprawa × faza × okno krytyczne (FAO‑56, progi IUNG) | deficyt trafił w fazę krytyczną |
 
-- **SCS Curve Number:** `Q = (P − 0,2S)² / (P + 0,8S)`, `S = 25400/CN − 254`. CN wynika z grupy hydrologicznej gleby
-  (z uziarnienia) i użytkowania. Pokazuje, ile wody z ulewy „ucieka” z działki, co dobrze łączy się z tezą KOWR
+- **SCS Curve Number:** `Q = (P − λS)² / (P + (1−λ)S)` dla `P > λS`, `S = 25400/CN − 254`. CN wynika z grupy
+  hydrologicznej gleby (z uziarnienia) i użytkowania. **Przyjmujemy λ = 0,05** zamiast klasycznego 0,2: przeglądy
+  (Hawkins i in., 2009) pokazują, że lepiej pasuje do danych, a różnica jest największa przy małych i średnich opadach
+  oraz niskich CN – czyli w typowych polskich warunkach. Przy λ = 0,05 trzeba przeliczyć CN z tabel NRCS
+  (`S0,05 ≈ 1,33·S0,2^1,15`, S w calach – wzór do sprawdzenia w oryginale przed implementacją). Pokazuje, ile wody z ulewy „ucieka” z działki, co dobrze łączy się z tezą KOWR
   o ulewach przeplatanych suszą.
 - **TWI** (Beven & Kirkby, 1979): `ln(a / tan β)` z NMT – mapa miejsc wilgotnych i suchych w obrębie działki.
 
@@ -184,7 +194,10 @@ a raport pokazuje **ranking przyczyn** z uzasadnieniem.
 Podstawa: European Commission (2014) *NWRM Policy Document* i (2015) *Guide to… NWRM*; zasada „retain water where it falls”.
 Katalog nwrm.eu ma kody działań, które warto podawać w raporcie, np. „(NWRM A02)”, bo uwiarygadnia to rekomendację.
 
-### 3.1 Analiza terenu z NMT 1 m (GUGiK WCS), dla działki + bufor ~300–500 m
+### 3.1 Analiza terenu z DEM, dla działki + bufor ~300–500 m
+
+Pierwszy wynik z Copernicus DEM 30 m (< 1 s); NMT 1 m GUGiK odpowiada 60–117 s, więc doładowuje się w tle
+i podmienia wynik (TEST_API.md). Zagłębienia z DEM 30 m są zgrubne – oznaczamy to w raporcie.
 
 1. **Wypełnianie zagłębień** (Planchon & Darboux 2002 lub Wang & Liu 2006) → różnica DEM_filled − DEM
    = **naturalne zagłębienia bezodpływowe**. To kandydaci na oczko wodne lub mały zbiornik (NWRM N01) albo
@@ -193,10 +206,10 @@ Katalog nwrm.eu ma kody działań, które warto podawać w raporcie, np. „(NWR
    **pas buforowy lub trawiasty** (A02), zadrzewienie śródpolne lub **uprawę w poprzek stoku** (A04).
 3. **Spadek** → > 5%: przeciwerozyjne i spowalniające odpływ (A04, A08, A13); 2–5%: pasy buforowe;
    < 2% i płaskie obniżenia: mała retencja.
-4. **Rowy w pobliżu** (BDOT10k / OSM, ≤ 200 m) → **zastawki / piętrzenie na rowach, sterowany odpływ**
+4. **Rowy w pobliżu** (BDOT10k `OT_SWRM_L`, ≤ 200 m; OSM nie ma rowów – nie używamy) → **zastawki / piętrzenie na rowach, sterowany odpływ**
    (przykładowa rekomendacja z zadania: „spowolnienie odpływu wód w rowach melioracyjnych”). Dodajemy informację
    o wymogach prawa wodnego i kontakcie z Wodami Polskimi lub spółką wodną.
-5. **Gleby organiczne / torfowe** (IUNG GAEC2) → ochrona przed odwodnieniem, utrzymanie wysokiego poziomu wód gruntowych.
+5. **Gleby organiczne / torfowe** (kod 5 w warstwie IUNG `katgl_landuse2024`) → ochrona przed odwodnieniem, utrzymanie wysokiego poziomu wód gruntowych.
 
 ### 3.2 Tabela reguł (fragment – do rozbudowy)
 
@@ -217,17 +230,19 @@ melioracyjny (BDOT10k), a gleba jest kat. II – spowolnienie odpływu zatrzyma 
 
 | Działanie | Kiedy rekomendować | Uzasadnienie / źródło |
 |---|---|---|
-| Międzyplony / okrywa zimowa (A08) | gleby I–III, pole puste po zbiorze, przyczyna 2.2 | infiltracja, SOC; NWRM, CDR e‑poradnik 2025 |
-| Pozostawianie resztek / mulcz (A13) | wysokie ET0, CDD, gleby lekkie | mniejsze parowanie z powierzchni; FAO‑56 (współczynnik parowania Ke) |
+| Międzyplony / okrywa zimowa (A08) | gleby I–III, pole puste po zbiorze, przyczyna 2.2 | lepsze wsiąkanie i ochrona przed erozją; NWRM, CDR e‑poradnik 2025. **Koszt wodny:** międzyplon zużywa wodę – średnio ok. 27 mm mniej wody przesiąka w głąb niż przy gołej glebie (metaanaliza Meyer i in., 2019). Na glebach I–II w suchych regionach zalecamy wczesne zniszczenie wiosną albo mulcz z resztek zamiast międzyplonu |
+| Pozostawianie resztek / mulcz (A13) | wysokie ET0, CDD, gleby lekkie | mniejsze parowanie z powierzchni: **ok. −5% parowania z gleby na każde 10% powierzchni okrytej** (FAO‑56, mulcze; 50% okrycia → ok. −25%) |
 | Uprawa uproszczona / bezorkowa (A06, A07) | gleby lekkie i średnie, spadek > 2% | lepsza struktura i retencja, mniejsza erozja |
-| Zwiększanie materii organicznej (obornik, kompost, wapnowanie) | SOC < 1,5%, kat. I–II | **4 per mille** (Minasny i in., 2017). Uwaga: przyrost AWC jest umiarkowany i długoterminowy (Minasny & McBratney, 2018) – nie obiecywać szybkich efektów |
+| Zwiększanie materii organicznej (obornik, kompost, wapnowanie) | SOC < 1,5%, kat. I–II | **4 per mille** (Minasny i in., 2017). Więcej próchnicy zwiększa pojemność wodną gleby (KOWR, „Podstawy naukowe”, s. 2), ale **efekt narasta latami**: +1 pp. SOC daje średnio +1,16 mm wody dostępnej na 10 cm gleby, najwięcej na piaskach (Minasny & McBratney, 2018). W raporcie: szybkie korzyści = wsiąkanie i struktura; przyrost zapasu wody = perspektywa wieloletnia, liczona z tej zależności, bez obiecywania efektu w 2–3 sezony |
 | Uprawa w poprzek stoku, pasy | spadek > 3% | ogranicza spływ (SCS‑CN, wyższe CN przy uprawie wzdłuż stoku) |
 | Wczesny siew / dobór odmian i gatunków (A09) | susza powtarzalna w IV–VI | ucieczka przed stresem; progi IUNG pokazują różną wrażliwość upraw |
 | Zmiana struktury upraw | kat. I + susza ≥ 5/10 lat dla wybranej uprawy | porównanie częstości przekroczeń progów IUNG dla innych upraw na tej samej glebie, np. „żyto/zboża ozime przekraczały próg 2×, kukurydza 6×” |
 | Płytkie wzruszenie po deszczu, ograniczenie przejazdów (A11) | gleby zlewne, kat. III–IV | przerwanie parowania kapilarnego, mniejsze ugniatanie |
 
-**Innowacyjny element:** symulacja „co jeśli” w bilansie glebowym (§1.3). Np. +10% TAW po latach zwiększania SOC
-albo −20% parowania pod mulczem → ile dni stresu mniej w ostatnich 10 sezonach. To przekłada naukę na liczby,
+**Innowacyjny element:** symulacja „co jeśli” w bilansie glebowym (§1.3). Np. −25% parowania z gleby przy 50% okrycia
+resztkami albo mniejszy odpływ z ulew (niższe CN) → ile dni stresu mniej w ostatnich sezonach. Zmieniamy tylko te
+parametry, których efekt ma oparcie w literaturze (zob. tabela F20 w pipeline_plan.md); TAW w horyzoncie scenariuszy
+pozostaje bez zmian, a efekt próchnicy pokazujemy osobno jako wieloletni. To przekłada naukę na liczby,
 które rolnik rozumie.
 
 ---
@@ -274,13 +289,24 @@ które rolnik rozumie.
 
 ---
 
-## 7. Walidacja (README pkt 4.2.9)
+## 7. Kalibracja i walidacja (README pkt 4.2.9)
 
-1. **Backtesting na znanych latach suszy w Polsce** (2015, 2018, 2019, 2020 – wiosna). Narzędzie powinno pokazywać suszę
-   tam, gdzie SMSR IUNG ją ogłosił, i nie pokazywać jej w latach wilgotnych (np. 2017).
-2. **Porównanie z SMSR IUNG** (tabele dla gmin, mapy KBW) i z **EDO CDI** dla tych samych dat → macierz zgodności w README.
-3. **Spójność wewnętrzna:** bilans FAO‑56 vs ERA5‑Land SM vs CLMS SWI – korelacja szeregów.
-4. **Testy jednostkowe reguł** (każda rekomendacja ma test: wejście → oczekiwana reguła).
+Cel: każda liczba oznaczona ⚙️ w pipeline_plan.md ma uzasadnienie **z cytatu albo z analizy na danych**. Analizy A i B
+korzystają wyłącznie z danych, które pipeline i tak pobiera, więc są wykonalne w czasie hackathonu. C–E to rozszerzenia.
+
+| # | Analiza | Co uzasadnia | Dane | Wynik do README |
+|---|---|---|---|---|
+| **A** | **Backtest na znanych latach suszy** (2015, 2018, 2019, wiosna 2020 vs wilgotny 2017) dla 20–50 punktów w różnych regionach | progi statusu (§5.1 pipeline), liczenie pewności, zgodność z SMSR | archiwum SMSR IUNG (od 2008, gminy), EDO CDI (WMS z `TIME`), plony GUS (BDL, województwa) | macierz zgodności, POD (trafienia) i FAR (fałszywe alarmy) |
+| **B** | **Hindcast prognozy scenariuszowej** na 30 latach: dla każdego roku start z rzeczywistego zapasu, scenariusze z pozostałych lat (leave‑one‑out), porównanie z faktycznym przebiegiem | N = 10 vs 30, horyzont, progi udziału przebiegów (§5.1 pipeline) | Open‑Meteo / ERA5 (już pobierane) | Brier skill score względem klimatologii w funkcji wyprzedzenia; niezawodność (czy „7/10” spełnia się w ~70% przypadków) |
+| **C** | **Bilans glebowy (§1.3) vs niezależna wilgotność gleby** | TAW dla kategorii IUNG (110/150/185/220 mm), `p` z FAO‑56 | ERA5‑Land SM, ESA CCI Soil Moisture (od 1978), CLMS SWI, stacje ISMN (m.in. sieć IA PAN Lublin) | korelacja anomalii; TAW najlepiej dopasowane dla każdej kategorii |
+| **D** | **Analiza wrażliwości** progów ⚙️ (każdy ±20–30%, jeden po drugim) | progi C1–C6, R1–R9 | punkty z analizy A | które zalecenia są odporne, a które zależą od progu – te drugie opisujemy jako mniej pewne |
+| **E** | **AquaCrop (FAO) jako model odniesienia** (offline, pakiet `aquacrop` w Pythonie) | efekty działań F20 (mulcz, nawadnianie), związek „KBW < próg ≈ −20% plonu” | ta sama pogoda i gleba co w pipeline | porównanie naszych „co zyskasz” z modelem plonu FAO |
+
+Dodatkowo:
+- **Testy jednostkowe reguł** – każda rekomendacja ma test: wejście → oczekiwana reguła.
+- **Poprawki wynikające z literatury (już wprowadzone):** efekt materii organicznej na TAW liczony z zależności
+  Minasny & McBratney (2018) jako wieloletni, a nie „+5–10% w 2–3 lata”; mulcz liczony regułą FAO‑56 „−5% parowania na 10% okrycia”; koszt wodny międzyplonu
+  (Meyer i in., 2019); SCS‑CN z λ = 0,05 (Hawkins i in., 2009).
 
 ---
 
@@ -290,30 +316,48 @@ które rolnik rozumie.
   aplikacja na podstawie danych”, i daje powtarzalność wyników przy ocenie jury.
 - **LLM (opcjonalnie) wyłącznie do redakcji** prostego języka z gotowych, policzonych faktów (tzw. grounding:
   model dostaje JSON z wynikami i nie może dodawać liczb). Zawsze jest fallback na szablony tekstowe.
-- **ML (opcjonalne rozszerzenie):** model plonu lub stresu (np. gradient boosting na KBW, SPEI, VCI, kategorii gleby)
-  trenowany na danych historycznych. Tylko jeśli starczy czasu i da się go uczciwie zwalidować.
+- **ML tam, gdzie są etykiety i da się go uczciwie sprawdzić.** Zadanie (pkt 5.1) wprost dopuszcza uczenie maszynowe
+  i analizę obrazu. Podręcznik PolSA (2024), polecany przez KOWR, opisuje RF / SVM / XGBoost do klasyfikacji zdjęć
+  (rozdz. 2) oraz klasyfikację upraw i prognozę plonu z serii zdjęć (rozdz. 6.3.4). Same progi SMSR IUNG wyznaczono
+  „statystyczno‑empirycznymi modelami prognoz i modelem symulacyjnym plonów” (susza.iung.pulawy.pl/system).
+  Diagnoza i reguły zostają deterministyczne; ML dostarcza **faktów wejściowych** i **kalibracji**:
+
+| # | Metoda | Etykiety / dane | Co poprawia | Jak sprawdzamy |
+|---|---|---|---|---|
+| **ML1** ⭐ | **Klasyfikacja uprawy z szeregu czasowego** (LightGBM / RF na miesięcznych medianach NDVI, NDMI, pasm S2 + opcjonalnie S1 VV/VH) | deklaracje ARiMR GSA 2020–2026 (`roslina`) – miliony działek z etykietą | F0/F0h dla lat bez deklaracji i gotowej mapy (2016, 2017, 2019; dla starych dat 2006–2015 – osobny model na cechach Landsata 8, trenowany na latach 2020+) | trening na 2020–2023, test na 2024–2025 i na innych województwach; dokładność per klasa w README |
+| **ML2** | **Wykrywanie gołej gleby zimą i resztek** (NDVI zimą + NDTI = (B11−B12)/(B11+B12), van Deventer i in., 1997) | próg / prosty klasyfikator, etykiety z kontroli wizualnej próbki | personalizacja R5: „pole było gołe zimą w 7 z 10 lat” albo „resztki już zostawiasz – nie zalecamy” | ręczna kontrola 50–100 działek |
+| **ML3** | **Empiryczny model susza → plon** (regresja / gradient boosting anomalii plonu na KBW, SPEI, VCI/NDMI w oknach wrażliwości) | plony GUS dla województw (BDL, dane roczne), uprawy z ML1 | sprawdza tezę IUNG „przekroczenie progu ≈ −20% plonu” i daje „co to znaczy dla plonu” w raporcie; w duchu metodyki SMSR | walidacja leave‑one‑year‑out; wynik na poziomie regionu, opisany jako taki |
+| **ML4** | **LAI / FAPAR / FCOVER z Sentinel‑2 siecią neuronową SNAP** (gotowe wagi ESA, Weiss & Baret) | model wytrenowany przez ESA | anomalia FAPAR na działce w 10 m – ten sam wskaźnik roślinny co w EDO CDI (PolSA 6.3.3) | porównanie z FAPAR EDO / CLMS dla tych samych dekad |
+| **ML5** (rozszerzenie) | **Uzupełnianie luk po chmurach**: model S1 (VV, VH) + pogoda → NDMI | pary dni z czystym S2 i S1 | stan roślin także w pochmurnych tygodniach (dziś: komunikat „brak danych”) | R² / błąd na odłożonych scenach; wynik oznaczony niższą pewnością |
+
+Modele ML1–ML3 trenujemy **wcześniej** i opisujemy w README (dane, daty, wynik walidacji – wymóg 4.2 pkt 5–6);
+aplikacja przy każdej analizie liczy dla działki cechy z pobranych danych i stosuje model, co spełnia wymóg,
+że „wynik oblicza aplikacja”. Bez ML pipeline działa dalej (fallback: kafelki wyboru uprawy, brak ML2–ML5).
 
 ---
 
 ## 9. Wydajność (< 30 s na działkę)
 
 - Równoległe pobieranie (ULDK → wtedy reszta asynchronicznie): Open‑Meteo 10 lat dziennie to 1 zapytanie (< 1 s).
-- Sentinel‑2 za 10 lat to najdroższy element. Opcje:
-  a) **Sentinel Hub Statistical API (CDSE)** – jedno zapytanie zwraca szereg statystyk strefowych dla poligonu (konto darmowe, limit jednostek);
-  b) STAC + odczyt okienkowy COG (tylko piksele działki), ograniczony do okien wrażliwości upraw i scen z małym zachmurzeniem;
+- Satelita za 10 lat to najdroższy element. Plan:
+  a) **domyślnie:** Planetary Computer STAC + odczyt okienkowy COG (tylko piksele działki), okna wrażliwości upraw,
+     ≤ 3 sceny/sezon, ≤ 40% chmur (~10 s, bez konta);
+  b) opcjonalnie **Sentinel Hub Statistical API (CDSE)** – szereg statystyk strefowych w jednym zapytaniu (konto, limit jednostek – USLUGI_Z_KONTEM.md);
   c) cache wyników per (działka, scena) – dopuszczalny, bo aplikacja dalej sama liczy wynik z pobranych danych (opisać w README).
-- NMT 1 m: pobierać tylko bbox działki + bufor (WCS `subset`), max kilka km².
+- Teren: Copernicus DEM 30 m na pierwszy wynik; NMT 1 m (60–117 s niezależnie od obszaru) w tle i w cache.
+- Modele ML (§8) trenowane wcześniej; w analizie tylko predykcja na cechach działki (milisekundy).
 
 ---
 
 ## 10. Uprawa wykrywana automatycznie i tryb zależny od daty
 
-**Uprawa (bez pytania rolnika):**
-1. Deklaracja ARiMR (GSA) dla działki referencyjnej przecinającej działkę ewidencyjną; bierzemy uprawę o największym udziale powierzchni.
-2. Kontrola krzywą NDVI z Sentinel‑2 w bieżącym sezonie: ozime (zielone już w IV), jare (start V), kukurydza (szczyt VII–VIII), użytek zielony (zielony cały sezon). Gdy się zgadza, piszemy „wykryte”; gdy nie, „sprawdź uprawę”.
-3. Brak obu źródeł → kafelki do wyboru (jedyny przypadek, gdy pytamy).
-4. Lata ubiegłe: GSA (jeśli jest historia), Copernicus Crop Types 2017–2021 (2022–2024 zapowiedziane), JRC EU Crop Map 2018 i 2022. Każdy sezon oceniany progiem IUNG **dla uprawy z tego roku**.
-5. **Data analizy w przeszłości:** uprawę „bieżącą” bierzemy dla roku daty analizy, nie dla dziś. Lata bez gotowej mapy upraw (np. 2016, 2023–2024, wszystko < 2017) → klasyfikacja z krzywej NDVI (Sentinel‑2 / Landsat), a gdy niepewna → kafelki do wyboru i adnotacja w raporcie.
+**Uprawa (podpowiedź, rolnik może zmienić – pipeline F0, TODO T4.10):**
+1. Deklaracja ARiMR (GSA) dla roku `D`; bierzemy uprawę o największej wspólnej powierzchni z działką i pokazujemy ją jako podpowiedź.
+2. Brak deklaracji dla roku `D` → klasyfikacja ML1 z serii zdjęć (§8); pewna → podpowiedź „rozpoznane ze zdjęć satelitarnych”, niepewna → kafelki do wyboru.
+3. Wybór rolnika zawsze wygrywa i jest opisany w raporcie.
+4. Lata ubiegłe (F0h): ARiMR 2020–2026, JRC EU Crop Map 2018 i 2022, opcjonalnie CDSE Crop Types 2017–2024 (konto – USLUGI_Z_KONTEM.md);
+   pozostałe lata (2016, 2017, 2019, a dla starych dat 2006–2015) → ML1. Każdy sezon oceniany progiem IUNG **dla uprawy z tego roku**.
+5. **Data analizy w przeszłości:** uprawę „bieżącą” bierzemy dla roku daty analizy, nie dla dziś.
 6. **Numer działki, którego nie ma w ULDK** (np. podzielona po dacie analizy): komunikat „nie znaleziono działki o tym numerze w obecnej ewidencji — wskaż ją na mapie”; dalsza analiza na geometrii z kliknięcia.
 
 **Tryb zależny od daty analizy D:**
@@ -323,7 +367,7 @@ które rolnik rozumie.
 | 21.III–30.IX (sezon progów IUNG) | KBW 60 dni vs próg, zbiornik FAO‑56, satelita | retencja → pole → **nawadnianie teraz** (z prognozą) |
 | 1.X–20.III (poza sezonem) | ocena minionego sezonu (czy i kiedy był próg przekroczony) + obecny zapas wody w glebie (ERA5‑Land) | **retencja teraz** (zastawki, zagłębienia, nasadzenia), nie orać na zimę / okrywa, **nawadnianie jako plan** na następny sezon (potrzeba w mm z 10 sezonów: typowy / suchy rok) |
 | uprawa bez progu IUNG (łąka, pastwisko, burak na kat. I) | zbiornik FAO‑56 + SPEI, komunikat „brak urzędowego progu” | jak wyżej |
-| działka nierolnicza (las, zabudowa, woda – z EGiB / LPIS) | brak oceny rolniczej, komunikat wprost | – |
+| działka nierolnicza (las, woda, zabudowa, drogi – kody 11–14 w warstwie IUNG) | brak oceny rolniczej, komunikat wprost | – |
 
 ## Bibliografia (do przeniesienia do README)
 
@@ -350,6 +394,22 @@ które rolnik rozumie.
 - Minasny B., McBratney A.B. (2018) – Limited effect of organic matter on soil available water capacity, *Eur. J. Soil Sci.* 69: 39–47.
 - Sepulcre‑Canto G. i in. (2012) / Cammalleri i in. (2021) – Combined Drought Indicator (EDO), *NHESS*.
 - Ślusarczyk E. (1979) – retencja użyteczna gleb (podstawa kategorii IUNG).
+- Day G.N. (1985) – Extended Streamflow Forecasting Using NWSRFS, *J. Water Resour. Plann. Manage.* 111(2): 157–170.
+- Shukla S., Lettenmaier D.P. (2011) – Seasonal hydrologic prediction in the United States: understanding the role of
+  initial hydrologic conditions and seasonal climate forecast skill, *HESS* 15: 3529–3538.
+- WMO (2012) – *Standardized Precipitation Index User Guide*, WMO‑No. 1090.
+- Meyer N., Bergez J.‑E., Constantin J., Justes E. (2019) – Cover crops reduce water drainage in temperate climates:
+  a meta‑analysis, *Agronomy for Sustainable Development* 39: 3.
+- Hawkins R.H., Ward T.J., Woodward D.E., Van Mullem J.A. (2009) – *Curve Number Hydrology: State of the Practice*, ASCE.
+- Steduto P., Hsiao T.C., Raes D., Fereres E. (2009) – AquaCrop – the FAO crop model to simulate yield response to water,
+  *Agronomy Journal* 101: 426–437.
+- Dorigo W. i in. (2017) – ESA CCI Soil Moisture for improved Earth system understanding, *Remote Sensing of Environment* 203: 185–215.
+- Dorigo W. i in. (2021) – The International Soil Moisture Network, *HESS* 25: 5749–5804.
+- Weiss M., Baret F. (2016) – *S2ToolBox Level 2 products: LAI, FAPAR, FCOVER*, ATBD v1.1, INRA / ESA.
+- Van Deventer A.P. i in. (1997) – Using Thematic Mapper data to identify contrasting soil plains and tillage practices,
+  *Photogrammetric Engineering & Remote Sensing* 63: 87–93 (NDTI).
+- IUNG‑PIB – *System Monitoringu Suszy Rolniczej: o systemie*, susza.iung.pulawy.pl/system (progi KBW z modeli
+  statystyczno‑empirycznych i symulacyjnego modelu plonów).
 
 *Szczegółowe liczby z 1.5, 2 i 4 (progi, dawki) to punkty startowe do konsultacji z mentorami
 (dr inż. T. Bolewski – bilans wodny; dr hab. D. Gozdowski – agrotechnika i satelity).*
