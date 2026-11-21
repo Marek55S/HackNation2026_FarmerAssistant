@@ -6,7 +6,7 @@
 // Loaded only in the browser (next/dynamic, ssr: false).
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type ExpressionSpecification, type GeoJSONSource } from "maplibre-gl";
+import maplibregl, { type ExpressionSpecification } from "maplibre-gl";
 import type { Feature, FeatureCollection } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import type { LngLat, MapLayer, RasterGrid, ReportMap, Zalecenie } from "@/lib/types";
@@ -26,6 +26,8 @@ function bounds(ring: LngLat[]): [LngLat, LngLat] {
     [Math.max(...lons), Math.max(...lats)],
   ];
 }
+
+const RASTER_KEYS = ["sucho", "teren", "gleba"] as const;
 
 function rasterToGeoJSON(g: RasterGrid | undefined): FC {
   if (!g) return { type: "FeatureCollection", features: [] };
@@ -114,7 +116,8 @@ export default function ParcelMap({
     map.on("load", () => {
       const ring = [...parcel];
       map.addSource("pole", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } } });
-      map.addSource("raster", { type: "geojson", data: rasterToGeoJSON(undefined) });
+      // One source + layer per raster view, toggled by visibility (swapping data in one source left stale tiles at high zoom).
+      for (const k of RASTER_KEYS) map.addSource(`raster-${k}`, { type: "geojson", data: rasterToGeoJSON(data.rasters[k]) });
       map.addSource("obiekty", {
         type: "geojson",
         data: {
@@ -127,12 +130,19 @@ export default function ParcelMap({
         },
       });
 
-      map.addLayer({
-        id: "raster",
-        type: "fill",
-        source: "raster",
-        paint: { "fill-color": "#f0efec", "fill-opacity": 0.82, "fill-antialias": false },
-      });
+      for (const k of RASTER_KEYS) {
+        map.addLayer({
+          id: `raster-${k}`,
+          type: "fill",
+          source: `raster-${k}`,
+          layout: { visibility: "none" },
+          paint: {
+            "fill-color": ["match", ["get", "c"], ...RASTER_COLORS[k].flatMap((c, i) => [i, c]), "#f0efec"] as unknown as ExpressionSpecification,
+            "fill-opacity": 0.82,
+            "fill-antialias": false,
+          },
+        });
+      }
       map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2a78d6", "fill-opacity": 0.22 } });
       map.addLayer({ id: "zaglebienie", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "fill-color": "#9ec5f4", "fill-opacity": 0.75 } });
       map.addLayer({
@@ -222,12 +232,7 @@ export default function ParcelMap({
       }
       map.setFilter(id, ["all", ["==", ["get", "kind"], kind], inLayer]);
     }
-    const g = layer === "plan" ? undefined : data.rasters[layer];
-    (map.getSource("raster") as GeoJSONSource).setData(rasterToGeoJSON(g));
-    if (layer !== "plan") {
-      const colors = RASTER_COLORS[layer];
-      map.setPaintProperty("raster", "fill-color", ["match", ["get", "c"], ...colors.flatMap((c, i) => [i, c]), "#f0efec"] as unknown as ExpressionSpecification);
-    }
+    for (const k of RASTER_KEYS) map.setLayoutProperty(`raster-${k}`, "visibility", k === layer ? "visible" : "none");
 
     const sel = actions.find((a) => a.n === pin);
     const rule = sel?.regula === "R8" ? "R7" : (sel?.regula ?? "-");

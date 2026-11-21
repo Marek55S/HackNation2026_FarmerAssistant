@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ReportScreen } from "@/components/report/report-screen";
-import { isValidIso, MIN_DATE, todayIso, validatePeriod } from "@/lib/dates";
-import { buildReport, reportTitle, reportUrl } from "@/lib/mock/report";
+import { BackendError, fetchReport, reportUrl } from "@/lib/backend";
+import { isValidIso, MIN_DATE, shortDate, todayIso, validatePeriod } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
-async function load(searchParams: PageProps<"/raport">["searchParams"]) {
+async function params(searchParams: PageProps<"/raport">["searchParams"]) {
   const q = await searchParams;
   const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : null);
   const today = todayIso();
@@ -16,21 +16,25 @@ async function load(searchParams: PageProps<"/raport">["searchParams"]) {
   const uprawa = one(q.uprawa);
   const rawFrom = one(q.od);
   const od = rawFrom && validatePeriod(rawFrom, date, today) === null ? rawFrom : null;
-  const result = buildReport({ parcelId: dzialka, date, from: od, crop: uprawa, today });
-  return { result, dzialka, date, od, url: reportUrl({ dzialka: dzialka ?? "", data: date, od, uprawa }) };
+  return { dzialka, date, od, uprawa };
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/raport">): Promise<Metadata> {
-  const { result } = await load(searchParams);
-  return { title: "report" in result ? reportTitle(result.report) : "Raport" };
+  const { dzialka, date } = await params(searchParams);
+  return { title: dzialka ? `Działka ${dzialka.split(".").pop()} · ${shortDate(date)}` : "Raport" };
 }
 
 export default async function RaportPage({ searchParams }: PageProps<"/raport">) {
-  const { result, dzialka, date, od, url } = await load(searchParams);
-  if ("error" in result) {
+  const { dzialka, date, od, uprawa } = await params(searchParams);
+  if (!dzialka) notFound();
+  let report;
+  try {
+    report = await fetchReport({ dzialka, data: date, od, uprawa });
+  } catch (e) {
     // No crop data for that year and none chosen → back to the start screen to pick one (pipeline_plan.md F0).
-    if (result.error === "crop-required") redirect(`/?${new URLSearchParams({ dzialka: dzialka ?? "", data: date, ...(od ? { od } : {}) })}`);
-    notFound();
+    if (e instanceof BackendError && e.status === 422) redirect(`/?${new URLSearchParams({ dzialka, data: date, ...(od ? { od } : {}) })}`);
+    if (e instanceof BackendError && e.status === 404) notFound();
+    throw e;
   }
-  return <ReportScreen report={result.report} url={url} />;
+  return <ReportScreen report={report} url={reportUrl({ dzialka: report.parcel.id, data: date, od, uprawa })} />;
 }

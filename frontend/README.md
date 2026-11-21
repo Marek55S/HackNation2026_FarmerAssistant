@@ -1,7 +1,7 @@
 # Asystent Wodny — frontend (PWA)
 
 Next.js 16 + TypeScript + Tailwind 4, the same setup as [quickReport](https://github.com/Marek55S/quickReport).
-The UI follows the mockups in [`../makieta-ui`](../makieta-ui). All data is **example data** from a mock API.
+The UI follows the mockups in [`../makieta-ui`](../makieta-ui). Data comes from the Python backend in [`../backend`](../backend) (`BACKEND_URL`, default `http://127.0.0.1:8000`).
 
 ### In Docker (nothing to install on the host except Docker)
 
@@ -34,11 +34,9 @@ and **off season** ("Plan na sezon {rok}" — retain water for next year). Non-a
 The crop is a hint from ARiMR declarations (2020–2026) or the JRC crop map (2018, 2022); for years without data (e.g. 2016, 2017, 2019) the farmer picks it from tiles.
 On phones (< 768 px) the layout is a single column with a bottom navigation bar. "Drukuj / zapisz PDF" uses the browser's print dialog with an A4 print stylesheet (collapsed sections are expanded for print).
 
-Demo parcels — real parcels in gm. Szubin with boundaries from ULDK; everything else about them is mock data: `041005_5.0011.22/15` (Kołaczkowo, field), `041005_5.0021.662/11` (Rynarzewo, field), `041005_5.0029.3225/6` (Szkocja, forest → out of scope). Other ids return "not found" — the mock does not invent parcels.
-
 The map uses MapLibre GL on the Geoportal orthophoto (GUGiK WMTS, free, no API key) with an OpenStreetMap switch; if the orthophoto delivers no tile within 6 s the map falls back to OSM. Parcel boundary, recommendation features and 10 m rasters come from the report JSON (`Report.map`, `Parcel.geometry`, `Zalecenie.punkt`, all in EPSG:4326).
 
-## API (mock — to be replaced by the real pipeline)
+## API (proxies to the backend)
 
 | Endpoint | Purpose |
 |---|---|
