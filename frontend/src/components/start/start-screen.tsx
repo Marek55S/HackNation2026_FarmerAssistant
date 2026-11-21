@@ -129,6 +129,8 @@ export function StartScreen({
           ? "Brak połączenia z internetem. Ostatnio otwarte raporty są dostępne w „Twoim gospodarstwie”."
           : (e as Error).message,
       );
+      // The step list is simulated on a timer, so after an error it would keep spinning — show only the error.
+      setStatus(null);
       setRunning(false);
     }
   }

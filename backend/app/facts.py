@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from typing import Callable
 
 import numpy as np
 
@@ -127,10 +128,17 @@ class Plan:
     max_dawka: float = 25.0
 
 
-def bilans(P, ET0, dni: list[date], u: Uprawa, TAW: float, cn: float, Dr0: float = 0.0, plan: Plan | None = None):
-    """Dzienny bilans strefy korzeniowej (FAO‑56 rozdz. 8). Zwraca Dr, stres (bool), niedobór ETc−ETa, nawodnienia."""
+def bilans(P, ET0, dni: list[date], u: Uprawa, TAW: float, cn: float, Dr0: float = 0.0, plan: Plan | None = None,
+           u_roku: Callable[[int], Uprawa] | None = None):
+    """Dzienny bilans strefy korzeniowej (FAO‑56 rozdz. 8). Zwraca Dr, stres (bool), niedobór ETc−ETa, nawodnienia.
+
+    `u_roku(rok)` – uprawa, która rosła w danym roku (historia z ARiMR / mapy upraw). Wtedy Kc, okno wrażliwe, p i głębokość
+    korzeni zmieniają się 1 stycznia; `TAW` dotyczy uprawy `u` i jest skalowane głębokością korzeni uprawy danego roku.
+    Bez `u_roku` cały okres liczony jest dla `u` (scenariusze: przyszły sezon z uprawą wybraną przez rolnika)."""
     plan = plan or Plan()
     S = s_cn(max(30.0, cn - plan.cn_minus))
+    taw_m = TAW / min(u.zr, 1.0)                 # woda dostępna na 1 m profilu (z kategorii gleby)
+    uu, taw, rok = u, TAW, None
     RAW = u.p * TAW
     n = len(dni)
     Dr = np.zeros(n)
@@ -140,22 +148,28 @@ def bilans(P, ET0, dni: list[date], u: Uprawa, TAW: float, cn: float, Dr0: float
     d_r = Dr0
     ost_irr = -99
     for t in range(n):
+        if u_roku is not None and dni[t].year != rok:
+            rok = dni[t].year
+            uu = u_roku(rok) or u
+            taw = taw_m * min(uu.zr, 1.0)
+            RAW = uu.p * taw
+            d_r = min(d_r, taw)                  # inna głębokość korzeni = inna pojemność „zbiornika”
         p = float(P[t])
         q = odplyw(p, S)
         I = 0.0
         if t == 0 and plan.dawka_teraz:
             I = plan.dawka_teraz
-        kc, faza = kc_dnia(u, dni[t], C.KC_POZA)
+        kc, faza = kc_dnia(uu, dni[t], C.KC_POZA)
         weget = faza != "poza wegetacją"
-        if plan.nawadniaj and weget and w_oknie(u, dni[t]) and d_r > RAW and t - ost_irr >= 5:
+        if plan.nawadniaj and weget and w_oknie(uu, dni[t]) and d_r > RAW and t - ost_irr >= 5:
             I = min(d_r, plan.max_dawka)
             ost_irr = t
         d_r = max(0.0, d_r - (p - q) - I)
-        ks = 1.0 if d_r <= RAW else max(0.0, (TAW - d_r) / ((1 - u.p) * TAW))
+        ks = 1.0 if d_r <= RAW else max(0.0, (taw - d_r) / ((1 - uu.p) * taw))
         et = ks * kc * float(ET0[t])
         if plan.mulcz and kc < C.MULCZ_KC_GRANICA:
             et *= 1 - C.MULCZ_REDUKCJA_E
-        d_r = min(TAW, d_r + et)
+        d_r = min(taw, d_r + et)
         Dr[t] = d_r
         stres[t] = weget and ks < 1.0
         brak[t] = kc * float(ET0[t]) - et if weget else 0.0

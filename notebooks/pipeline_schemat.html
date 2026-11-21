@@ -1,0 +1,656 @@
+<title>Pipeline Asystenta Wodnego</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Red+Hat+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two vertical pipelines (API → facts), each a left phase band + numbered rail + step cards with real plots from the notebook */
+:root {
+  --bg: #eeeee5; --paper: #fbfbf7; --ink: #1d2b22; --ink-2: #3a473e; --muted: #687266;
+  --rule: #e2e2d6; --rule-strong: #d1d2c3; --chip: #ecede1;
+  --primary: #2f4d3c; --primary-tint: #eef0dc;
+  --blue: #1f6fc9; --blue-dark: #123f78; --blue-tint: #e9f1fc;
+  --brown: #7a4e14; --brown-tint: #f7efe3;
+  --amber: #a3600a; --amber-tint: #fdf1dc;
+  --red: #c2362f; --red-tint: #fbe3e3;
+  --plan: #a35412;
+  --plate: #ffffff;
+  --on-band: #f6f4e8;
+  --f-display: "Red Hat Display", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141a16; --paper: #1c241f; --ink: #e8ebe2; --ink-2: #c5cbc0; --muted: #98a194;
+    --rule: #2c362f; --rule-strong: #3a463d; --chip: #26302a;
+    --primary: #8fbf9f; --primary-tint: #22302a;
+    --blue: #6ea8ef; --blue-dark: #9cc4f5; --blue-tint: #1a2838;
+    --brown: #d6a96a; --brown-tint: #2c241a;
+    --amber: #e5a74a; --amber-tint: #2e2617;
+    --red: #ef7a70; --red-tint: #3a1f1d;
+    --plan: #e89a5c;
+    --plate: #f4f4ef;
+    --on-band: #141a16;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141a16; --paper: #1c241f; --ink: #e8ebe2; --ink-2: #c5cbc0; --muted: #98a194;
+  --rule: #2c362f; --rule-strong: #3a463d; --chip: #26302a;
+  --primary: #8fbf9f; --primary-tint: #22302a;
+  --blue: #6ea8ef; --blue-dark: #9cc4f5; --blue-tint: #1a2838;
+  --brown: #d6a96a; --brown-tint: #2c241a;
+  --amber: #e5a74a; --amber-tint: #2e2617;
+  --red: #ef7a70; --red-tint: #3a1f1d;
+  --plan: #e89a5c;
+  --plate: #f4f4ef;
+  --on-band: #141a16;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; color: var(--ink); }
+h1 { font-size: clamp(28px, 4.4vw, 44px); line-height: 1.08; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 800; line-height: 1.15; }
+h3 { font-size: 18px; font-weight: 700; line-height: 1.25; }
+p { margin: 0; }
+code, .mono { font-family: var(--f-mono); font-size: 12.5px; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; font-weight: 600; color: var(--muted); }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- header ---------- */
+header { display: flex; flex-direction: column; gap: 14px; }
+header .lead { max-width: 68ch; color: var(--ink-2); font-size: 16px; }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.flow span { background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 6px; padding: 3px 8px; }
+.flow i { font-style: normal; color: var(--muted); }
+.example {
+  background: var(--paper); border: 1px solid var(--rule-strong); border-radius: 14px; padding: 16px 18px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 24px;
+}
+.example div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.example b { font-family: var(--f-display); font-size: 17px; overflow-wrap: anywhere; }
+.example small { color: var(--muted); font-size: 12px; }
+nav.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.tabs a {
+  text-decoration: none; color: var(--ink); background: var(--paper); border: 1px solid var(--rule-strong);
+  border-radius: 999px; padding: 8px 16px; font-weight: 600; font-size: 14px;
+}
+nav.tabs a:hover { border-color: var(--primary); }
+nav.tabs a span { color: var(--muted); font-weight: 400; }
+
+/* ---------- pipeline ---------- */
+.pipe-head { display: flex; flex-direction: column; gap: 8px; max-width: 76ch; }
+.pipe-head p { color: var(--ink-2); }
+.pipe { display: flex; flex-direction: column; gap: 14px; }
+.phase { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; }
+.band {
+  background: var(--c); color: var(--on-band); border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-weight: 700;
+  font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 12px 0; white-space: nowrap;
+}
+.steps { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.step { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; position: relative; }
+.rail { position: relative; display: flex; justify-content: center; }
+.rail::before { content: ""; position: absolute; top: 0; bottom: -14px; left: 50%; width: 2px; margin-left: -1px; background: var(--rule-strong); }
+.rail::after {
+  content: ""; position: absolute; bottom: -10px; left: 50%; margin-left: -5px;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid var(--rule-strong);
+}
+.pipe > .phase:last-of-type .step:last-child .rail::before, .pipe > .phase:last-of-type .step:last-child .rail::after { display: none; }
+.num {
+  position: relative; z-index: 1; margin-top: 18px; width: 36px; height: 36px; border-radius: 50%; background: var(--c);
+  color: var(--on-band); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.card {
+  background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--c); border-radius: 12px;
+  padding: 16px; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 18px; position: relative;
+}
+.card.noimg { grid-template-columns: minmax(0, 1fr); }
+.thumbs { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.thumb {
+  display: block; padding: 6px; background: var(--plate); border: 1px solid var(--rule); border-radius: 8px; cursor: zoom-in;
+  width: 100%; font: inherit;
+}
+.thumb img { display: block; width: 100%; height: auto; border-radius: 4px; }
+.thumb:hover { border-color: var(--c); }
+.body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.title { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.title .id { font-family: var(--f-mono); font-size: 12px; color: var(--c); font-weight: 500; }
+.endpoint {
+  font-family: var(--f-mono); font-size: 12px; background: var(--chip); border-radius: 6px; padding: 6px 8px;
+  overflow-x: auto; white-space: nowrap; color: var(--ink-2);
+}
+.formula {
+  font-family: var(--f-mono); font-size: 13px; background: var(--chip); border-radius: 6px; padding: 8px 10px;
+  color: var(--ink); overflow-x: auto; white-space: pre;
+}
+dl { margin: 0; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 6px 12px; font-size: 14px; }
+dt { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; color: var(--muted); padding-top: 3px; }
+dd { margin: 0; color: var(--ink-2); min-width: 0; }
+dd.val { color: var(--ink); font-weight: 500; }
+dd.val b { font-family: var(--f-display); font-size: 16px; color: var(--c); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; background: var(--chip); color: var(--ink-2); border-radius: 999px; padding: 2px 10px; }
+.chip.warn { background: var(--amber-tint); color: var(--amber); }
+.tag {
+  position: absolute; top: -10px; right: 14px; background: var(--ink); color: var(--bg); font-family: var(--f-display);
+  font-weight: 700; font-size: 11px; letter-spacing: .12em; padding: 2px 10px; border-radius: 4px;
+}
+.tag.out { background: var(--primary); color: var(--on-band); }
+.note { font-size: 13px; color: var(--amber); background: var(--amber-tint); border-radius: 8px; padding: 8px 10px; }
+
+/* report summary card */
+.recs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.recs li { display: grid; grid-template-columns: 26px 44px minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 14px; }
+.recs .n { font-family: var(--f-display); font-weight: 800; color: var(--c); }
+.recs .rid { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.recs .urgent { color: var(--red); font-weight: 600; }
+.status { display: inline-flex; gap: 8px; align-items: center; background: var(--red-tint); color: var(--red); font-weight: 700;
+  border-radius: 999px; padding: 3px 12px; font-family: var(--f-display); }
+
+table.mini { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.mini th, table.mini td { padding: 3px 8px; text-align: center; border-bottom: 1px solid var(--rule); }
+table.mini th:first-child, table.mini td:first-child { text-align: left; color: var(--muted); }
+.scroll { overflow-x: auto; }
+
+footer { color: var(--muted); font-size: 13px; max-width: 76ch; display: flex; flex-direction: column; gap: 6px; }
+
+dialog { border: none; padding: 0; background: transparent; max-width: min(1100px, 96vw); }
+dialog::backdrop { background: rgba(10, 14, 11, .72); }
+dialog img { display: block; max-width: 100%; max-height: 86vh; background: #fff; border-radius: 8px; padding: 10px; }
+dialog button { margin-top: 8px; font: inherit; background: var(--paper); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+
+@media (max-width: 760px) {
+  .card { grid-template-columns: minmax(0, 1fr); }
+  .phase { grid-template-columns: 24px minmax(0, 1fr); gap: 8px; }
+  .band { font-size: 11px; border-radius: 6px; }
+  .step { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; }
+  .num { width: 28px; height: 28px; font-size: 13px; }
+  dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  dd { margin-bottom: 6px; }
+}
+@media (prefers-reduced-motion: no-preference) { .thumb { transition: border-color .15s; } }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Asystent Wodny · jak działa analiza</span>
+  <h1>Od numeru działki do zalecenia „podlej 20 mm”</h1>
+  <p class="lead">Dwa schematy tej samej analizy. Pierwszy pokazuje, co pobieramy z publicznych usług i po co. Drugi pokazuje, co z tych danych liczymy, jakim wzorem i co wynika dla rolnika. Wszystkie wykresy i liczby pochodzą z jednej prawdziwej działki, policzonej tymi samymi funkcjami backendu, których używa API (notebook <code>notebooks/pipeline_dzialka.ipynb</code>).</p>
+  <div class="flow" aria-label="Przebieg analizy">
+    <span>DANE (API)</span><i>→</i><span>FAKTY F0–F21</span><i>→</i><span>DIAGNOZA + przyczyny C1–C6</span><i>→</i><span>REGUŁY R1–R9</span><i>→</i><span>RAPORT</span>
+  </div>
+  <div class="example">
+    <div><small>Działka (ULDK)</small><b>041005_5.0028.47/15</b></div>
+    <div><small>Miejsce</small><b>Stanisławka, gm. Szubin</b></div>
+    <div><small>Powierzchnia</small><b>10,06 ha</b></div>
+    <div><small>Uprawa (ARiMR 2025)</small><b>kukurydza na ziarno</b></div>
+    <div><small>Data analizy D</small><b>15.07.2025</b></div>
+  </div>
+  <nav class="tabs" aria-label="Schematy">
+    <a href="#pobieranie">1. Pobieranie danych <span>· 12 źródeł</span></a>
+    <a href="#obliczenia">2. Obliczenia <span>· 12 kroków</span></a>
+  </nav>
+</header>
+
+<!-- ======================================================= PIPELINE 1 -->
+<section id="pobieranie" class="pipe">
+  <div class="pipe-head">
+    <span class="eyebrow">Schemat 1</span>
+    <h2>Pobieranie: co ściągamy i po co</h2>
+    <p>Jedno wejście: identyfikator działki i data. Z geometrii działki liczymy centroid, prostokąt i bufor, a potem pytamy usługi równolegle. Każde źródło zwraca dane albo jawny powód braku. Gdy czegoś brakuje, reguła, która tego potrzebuje, się nie uruchamia, a raport mówi, czego nie sprawdziliśmy.</p>
+  </div>
+
+  <div class="phase" style="--c: var(--ink)">
+    <div class="band">Gdzie?</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">1</span></div>
+        <article class="card"><span class="tag">WEJŚCIE</span>
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a1_uldk.png"><img src="fig/a1_uldk.png" alt="Obrys działki 47/15 z zaznaczonym centroidem"></button></div>
+          <div class="body">
+            <div class="title"><h3>Granica działki</h3><span class="id">ULDK · GUGiK</span></div>
+            <div class="endpoint">uldk.gugik.gov.pl/?request=GetParcelById&amp;id={ID}&amp;result=geom_wkt,teryt,…&amp;srid=4326</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Poligon WKT w EPSG:4326, TERYT, województwo, powiat, gminę, obręb i numer. Dla kliknięcia na mapie <code>GetParcelByXY</code>, dla obrębu i numeru <code>GetParcelByIdOrNr</code>.</dd>
+              <dt>Po co</dt><dd>Wszystko dalej liczymy dla tej geometrii: centroid do zapytań punktowych, prostokąt do wycinków rastrów, punkty wewnątrz do odczytów gleby i upraw, TERYT do wyboru paczki BDOT10k.</dd>
+              <dt>Tu</dt><dd class="val"><b>10,06 ha</b>, 16 wierzchołków, centroid 53,0448° N 17,7619° E, powiat nakielski</dd>
+            </dl>
+            <div class="chips"><span class="chip">&lt; 1 s</span><span class="chip">stan obecny ewidencji</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--blue)">
+    <div class="band">Pogoda</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">2</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a2_meteo.png"><img src="fig/a2_meteo.png" alt="Dobowy opad i ET0 od 1 kwietnia do 15 lipca 2025"></button></div>
+          <div class="body">
+            <div class="title"><h3>Pogoda dobowa z 31 lat</h3><span class="id">Open‑Meteo Archive · ERA5‑Land</span></div>
+            <div class="endpoint">archive-api.open-meteo.com/v1/archive?latitude=…&amp;longitude=…&amp;start_date=1994-01-01&amp;end_date=D&amp;daily=precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,…</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Dzień po dniu: opad, ET0 FAO‑56 (parowanie wzorcowe), Tmax, Tmin i wilgotność gleby w 3 warstwach. Jedno zapytanie, siatka zaokrąglona do 0,05° dla cache.</dd>
+              <dt>Po co</dt><dd>Opad − ET0 daje bilans KBW i próg suszy IUNG. Seria dobowa napędza bilans wody w glebie i scenariusze. 30 lat wstecz daje normę opadu dla tych samych dni roku i klimatologię zamiast prognozy dla dat archiwalnych.</dd>
+              <dt>Tu</dt><dd class="val"><b>11 519 dni</b> (1.01.1994 → 15.07.2025); od 1.04.2025 spadło 199 mm, a ET0 wyniosło 386 mm</dd>
+            </dl>
+            <div class="chips"><span class="chip">~1–2,5 s</span><span class="chip">zapas: stacje IMGW</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">3</span></div>
+        <article class="card noimg">
+          <div class="body">
+            <div class="title"><h3>Prognoza 16 dni</h3><span class="id">Open‑Meteo Forecast</span></div>
+            <div class="endpoint">api.open-meteo.com/v1/forecast?latitude=…&amp;longitude=…&amp;forecast_days=16&amp;daily=precipitation_sum,et0_fao_evapotranspiration</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Opad i ET0 na 16 dni naprzód.</dd>
+              <dt>Po co</dt><dd>Pierwsze dni scenariuszy i „deszcz w 7 dni”. To decyduje, czy kazać podlewać (R7), czy deszcz wystarczy (R7‑).</dd>
+              <dt>Tu</dt><dd class="val">Nieużyta: działa tylko, gdy D = dziś. Dla 15.07.2025 bierzemy średni opad z 10 lat dla 16–22.07 (<b>22,8 mm</b>).</dd>
+            </dl>
+            <div class="chips"><span class="chip">0,3 s</span><span class="chip">bez cache</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--brown)">
+    <div class="band">Gleba</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">4</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a4_iung.png"><img src="fig/a4_iung.png" alt="Siedem punktów odczytu IUNG w działce, wszystkie kategorii I"></button></div>
+          <div class="body">
+            <div class="title"><h3>Kategoria podatności gleby na suszę</h3><span class="id">IUNG‑PIB · WMS</span></div>
+            <div class="endpoint">sgeo.iung.pl/geoserver/Susza/wms?REQUEST=GetFeatureInfo&amp;LAYERS=Susza:katgl_landuse2024&amp;…</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Kod w do 7 punktach wewnątrz działki, potem dominanta. 1–4 to kategorie I–IV (I = piaski), 5 to gleby organiczne, 11–14 to las, woda, zabudowa, drogi.</dd>
+              <dt>Po co</dt><dd>Kategoria wybiera wiersz progu suszy, wielkość „zbiornika” na wodę (TAW) i podatność na odpływ (CN). Kody ≥ 11 dają raport „poza zakresem”, kod 5 uruchamia R4 (nie odwadniać).</dd>
+              <dt>Tu</dt><dd class="val">7 z 7 punktów: <b>kategoria I</b>, najbardziej podatna (piaski)</dd>
+            </dl>
+            <div class="chips"><span class="chip">0,4–0,7 s</span><span class="chip">zapas: SoilGrids</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">5</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a5_soilgrids.png"><img src="fig/a5_soilgrids.png" alt="Skład gleby: 71 procent piasku, 19 pyłu, 10 iłu"></button></div>
+          <div class="body">
+            <div class="title"><h3>Skład gleby</h3><span class="id">ISRIC SoilGrids 250 m</span></div>
+            <div class="endpoint">rest.isric.org/soilgrids/v2.0/properties/query?lon=…&amp;lat=…&amp;property=sand&amp;property=clay&amp;property=soc&amp;property=wv0033&amp;property=wv1500&amp;depth=5-15cm&amp;depth=30-60cm</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Piasek, ił, węgiel organiczny (SOC), wilgotność przy polowej pojemności i przy więdnięciu. Tylko 2 głębokości, bo pełne zapytanie trwa 10–14 s.</dd>
+              <dt>Po co</dt><dd>SOC poniżej 1,5% uruchamia R5 (międzyplon, resztki), skład trafia do uzasadnienia. Do bilansu wody nie bierzemy TAW z SoilGrids, bo dla piasków bywa zawyżona.</dd>
+              <dt>Tu</dt><dd class="val">piasek <b>71%</b>, ił 10%, SOC 1,7%; θFC 0,32, θWP 0,09 (dałoby 235 mm/m, IUNG daje 110 mm/m)</dd>
+            </dl>
+            <div class="chips"><span class="chip">2–14 s</span><span class="chip">cache na stałe</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">6</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a6_progi.png"><img src="fig/a6_progi.png" alt="Progi KBW IUNG dla kukurydzy w 14 okresach i 4 kategoriach gleby"></button></div>
+          <div class="body">
+            <div class="title"><h3>Progi suszy rolniczej</h3><span class="id">IUNG · plik CSV</span></div>
+            <div class="endpoint">dane/kbw_progi_iung.csv  (źródło: susza.iung.pulawy.pl, Rozp. MRiRW 2019)</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Próg klimatycznego bilansu wodnego w mm dla każdej uprawy, kategorii gleby i 14 okresów 60‑dniowych (21.03–20.05 … 1.08–30.09).</dd>
+              <dt>Po co</dt><dd>Urzędowe kryterium suszy rolniczej: KBW poniżej progu. Liczymy je teraz i w każdym z 10 poprzednich sezonów.</dd>
+              <dt>Tu</dt><dd class="val">kukurydza, kat. I: od −168 do −152 mm; dla okresu 11.05–10.07 próg <b>−156 mm</b></dd>
+            </dl>
+            <div class="chips"><span class="chip">lokalnie</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--amber)">
+    <div class="band">Uprawa</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">7</span></div>
+        <article class="card noimg">
+          <div class="body">
+            <div class="title"><h3>Co rośnie w tym roku</h3><span class="id">ARiMR GSA · WFS 2025–2026</span></div>
+            <div class="endpoint">geoportal-w2.arimr.gov.pl/geoserver/gsa_public/uprawy_2025/wfs?REQUEST=GetFeature&amp;TYPENAMES=gsa_public:uprawy_rolne_2025&amp;BBOX=…</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Pola z wniosków o dopłaty przecinające działkę: roślina, grupa, powierzchnia. Udział liczymy na siatce 14 × 14 punktów w działce.</dd>
+              <dt>Po co</dt><dd>Uprawa ustawia cały model: wiersz progów, współczynniki Kc w fazach, próg stresu p, głębokość korzeni i okno wrażliwości. W aplikacji to podpowiedź, rolnik może ją zmienić.</dd>
+              <dt>Tu</dt><dd class="val"><b>kukurydza na ziarno</b> na 97% punktów działki (reszta: pszenica jara, pszenżyto jare)</dd>
+            </dl>
+            <div class="chips"><span class="chip">0,2 s</span><span class="chip">zapas: mapa Copernicus albo wybór rolnika</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">8</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a8_uprawy.png"><img src="fig/a8_uprawy.png" alt="Uprawy w latach 2015–2025: zboża w 2017–2018, kukurydza 2019–2023, jęczmień 2024, kukurydza 2025"></button></div>
+          <div class="body">
+            <div class="title"><h3>Co rosło w poprzednich latach</h3><span class="id">Copernicus CLMS Crop Types · CDSE</span></div>
+            <div class="endpoint">thumbnails.dataspace.copernicus.eu/wms?LAYERS=…crop-types…&amp;CRS=EPSG:3035&amp;BBOX=(2,5 × 2,5 km)&amp;sld=oficjalna paleta</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Obrazek mapy typów upraw 10 m dla każdego roku 2017–2024. Kolor piksela zamieniamy na klasę uprawy, liczymy dominantę w działce.</dd>
+              <dt>Po co</dt><dd>Historię suszy oceniamy dla uprawy, która wtedy rosła, bo próg dla zbóż i kukurydzy jest inny. Rok bierzemy tylko przy co najmniej 50% pikseli, inaczej przyjmujemy bieżącą uprawę.</dd>
+              <dt>Tu</dt><dd class="val">pewne: 2017 zboża, 2021–2023 kukurydza, 2024 jęczmień; 2018–2020 poniżej 50% pikseli</dd>
+            </dl>
+            <div class="chips"><span class="chip">~6 s, potem cache</span><span class="chip warn">2015–2016: brak mapy</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--blue-dark)">
+    <div class="band">Teren i woda</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">9</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a9_dem.png"><img src="fig/a9_dem.png" alt="Model wysokości Copernicus DEM wokół działki"></button></div>
+          <div class="body">
+            <div class="title"><h3>Model terenu</h3><span class="id">Copernicus DEM 30 m · NMT 1 m GUGiK w tle</span></div>
+            <div class="endpoint">earth-search.aws.element84.com/v1/search  {"collections":["cop-dem-glo-30"],"bbox":działka + 400 m}  → odczyt COG przez HTTP Range</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Wycinek siatki wysokości tylko dla działki z buforem, bez pobierania całego kafla. NMT 1 m z GUGiK (WCS) odpowiada 60–117 s, więc pobiera się w tle i zastępuje DEM przy kolejnym raporcie.</dd>
+              <dt>Po co</dt><dd>Spadki, kierunki spływu i miejsce, którym woda ucieka z pola, oraz zagłębienia, w których można zatrzymać wodę.</dd>
+              <dt>Tu</dt><dd class="val">siatka 54 × 36 komórek; działka na <b>81–90 m n.p.m.</b></dd>
+            </dl>
+            <div class="chips"><span class="chip">1,5–5 s</span><span class="chip warn">DEM 30 m to model powierzchni: drzewa zawyżają spadki</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">10</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a10_bdot.png"><img src="fig/a10_bdot.png" alt="Rowy i cieki wokół działki, rów melioracyjny 3 metry od granicy"></button></div>
+          <div class="body">
+            <div class="title"><h3>Rowy, rzeki, zbiorniki</h3><span class="id">BDOT10k · paczka powiatu</span></div>
+            <div class="endpoint">opendata.geoportal.gov.pl/bdot10k/schemat2021/04/0410_GML.zip  → tylko OT_SWRM_L, OT_SWRS_L, OT_SWKN_L, OT_PTWP_A</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Z ZIP-a powiatu (~50 MB) przez HTTP Range pobieramy tylko 4 pliki hydrografii (~2 MB): rowy melioracyjne, rzeki, kanały i wody powierzchniowe.</dd>
+              <dt>Po co</dt><dd>Odległość od granicy działki do najbliższego rowu: przyczyna C5 „rów odprowadza wodę” i zalecenie R1 „zastawka na rowie”.</dd>
+              <dt>Tu</dt><dd class="val">rów melioracyjny <b>3 m</b> od granicy; woda stojąca 183 m; ciek 267 m</dd>
+            </dl>
+            <div class="chips"><span class="chip">1–2 s, potem cache powiatu</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--primary)">
+    <div class="band">Z satelity</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">11</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/a11_ndmi.png"><img src="fig/a11_ndmi.png" alt="Mapa NDMI Sentinel-2 działki, 15 lipca 2025"></button></div>
+          <div class="body">
+            <div class="title"><h3>Wilgotność roślin (NDMI)</h3><span class="id">Sentinel‑2 L2A · Sentinel Hub</span></div>
+            <div class="endpoint">sh.dataspace.copernicus.eu/api/v1/process  bands B8A, B11, SCL · mosaickingOrder leastCC · ostatnie 20 dni ≤ D</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Kompozyt najczystszych przelotów z ostatnich 20 dni, piksel 20 m, z maską chmur. Te same 20 dni ściągamy z każdego roku od 2016, żeby mieć tło. Zapas: Planetary Computer (bez konta) i Landsat dla lat sprzed 2016.</dd>
+              <dt>Po co</dt><dd>NDMI = (B8A − B11)/(B8A + B11) mówi, ile wody jest w liściach. Sama wartość nic nie znaczy; liczy się porównanie z tymi samymi tygodniami w innych latach (krok 6 obliczeń).</dd>
+              <dt>Tu</dt><dd class="val">26.06–15.07.2025, <b>250 z 250</b> pikseli działki bez chmur, NDMI mediana 0,15</dd>
+            </dl>
+            <div class="chips"><span class="chip">3–15 s, potem cache</span><span class="chip">konto CDSE w backend/.env</span></div>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">12</span></div>
+        <article class="card noimg"><span class="tag out">DO OBLICZEŃ</span>
+          <div class="body">
+            <div class="title"><h3>Tło suszy w Europie</h3><span class="id">EDO · Combined Drought Indicator</span></div>
+            <div class="endpoint">drought.emergency.copernicus.eu/api/wms?REQUEST=GetMap&amp;LAYERS=cdiad&amp;TIME=dekada ≤ D&amp;WIDTH=9&amp;HEIGHT=9</div>
+            <dl>
+              <dt>Co dostajemy</dt><dd>Obrazek 9 × 9 pikseli wokół działki. WMS nie ma GetFeatureInfo, więc klasę odczytujemy z koloru środkowego piksela: obserwacja, ostrzeżenie albo alarm.</dd>
+              <dt>Po co</dt><dd>Niezależne zdanie w skali ok. 5 km: czwarty sygnał pewności diagnozy. Nie uruchamia żadnej reguły.</dd>
+              <dt>Tu</dt><dd class="val">dekada od 11.07.2025: <b>brak suszy</b></dd>
+            </dl>
+            <div class="chips"><span class="chip">0,6–2 s</span><span class="chip">CDI od 2012</span></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= PIPELINE 2 -->
+<section id="obliczenia" class="pipe">
+  <div class="pipe-head">
+    <span class="eyebrow">Schemat 2</span>
+    <h2>Obliczenia: co liczymy, dlaczego i co z tego wynika</h2>
+    <p>Z danych powstają fakty (F), z faktów diagnoza i przyczyny (C), z nich zalecenia (R). Zalecenia nie są generowane przez AI. Stała jest tylko lista reguł „jeśli… to…”. To, czy zalecenie się pojawi oraz gdzie, kiedy i ile, wynika z liczb policzonych dla tej działki i tej daty.</p>
+  </div>
+
+  <div class="phase" style="--c: var(--blue)">
+    <div class="band">Stan dziś</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">1</span></div>
+        <article class="card noimg"><span class="tag">Z DANYCH 1–12</span>
+          <div class="body">
+            <div class="title"><h3>Parametry modelu</h3><span class="id">F0 uprawa · F6 gleba · F6b TAW · CN</span></div>
+            <div class="formula">TAW = WOD(kategoria IUNG) × głębokość korzeni      I: 110 · II: 150 · III: 185 · IV: 220 mm/m
+RAW = p × TAW                                       (woda, którą roślina zużyje bez stresu)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>TAW to wielkość „zbiornika” na wodę w strefie korzeni. Na piasku mieści się dwa razy mniej niż na glebie kat. IV, więc ta sama pogoda szybciej kończy się stresem. Parametry uprawy pochodzą z tabel FAO‑56.</dd>
+              <dt>Tu</dt><dd class="val">kukurydza: Kc 0,30 / 1,20 / 0,50, p = 0,55, korzenie 1 m, okno wrażliwe lipiec–sierpień · <b>TAW 110 mm</b>, RAW 60,5 mm, CN 67</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">2</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b2_kbw.png"><img src="fig/b2_kbw.png" alt="Skumulowany bilans opad minus ET0 od 11 maja do 10 lipca, kończy na minus 127 mm, próg minus 156 mm"></button></div>
+          <div class="body">
+            <div class="title"><h3>Klimatyczny bilans wodny i próg IUNG</h3><span class="id">F1 · F2 · F3</span></div>
+            <div class="formula">KBW = Σ opad − Σ ET0   w ostatnim pełnym okresie 60 dni ≤ D
+susza rolnicza  ⇔  KBW &lt; próg(uprawa, kategoria gleby, okres)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Tą metodą państwowy system monitoringu suszy (SMSR) ogłasza suszę rolniczą. Daje ocenę zgodną z urzędową.</dd>
+              <dt>Tu</dt><dd class="val">11.05–10.07.2025: 121 − 249 = <b>−127 mm</b> wobec progu −156 mm → kryterium IUNG <b>nie</b> jest spełnione</dd>
+              <dt>Co daje</dt><dd>Uzasadnienie w raporcie i 1. z 4 sygnałów pewności. KBW nie widzi gleby, dlatego obok liczymy bilans glebowy.</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">3</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b3_bilans.png"><img src="fig/b3_bilans.png" alt="Zapas wody w glebie w 2025: spada z prawie 100 procent w czerwcu do 15 procent na początku lipca, 15 lipca 41 procent, próg stresu 45 procent"></button></div>
+          <div class="body">
+            <div class="title"><h3>Zapas wody w glebie</h3><span class="id">F4 · F4p · bilans dobowy FAO‑56</span></div>
+            <div class="formula">Q   = odpływ z ulewy (SCS‑CN, λ = 0,05)
+ETc = Ks · Kc(faza) · ET0          Ks = 1 gdy Dr ≤ RAW, potem maleje do 0
+Dr  = Dr − (opad − Q) + ETc        ograniczone do [0, TAW], dzień po dniu od 1994
+zapas F4 = 1 − Dr/TAW              próg stresu F4p = 1 − p</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Odpowiada na pytanie rolnika „ile wody ma teraz moje pole”, z uwzględnieniem gleby i fazy uprawy (Kc). To ten sam silnik, który potem liczy scenariusze i efekt każdego działania.</dd>
+              <dt>Tu</dt><dd class="val">Dr = 65 mm z 110 → zapas <b>41%</b> przy progu <b>45%</b>; Kc 1,20 (pełnia) → kukurydza jest w stresie</dd>
+              <dt>Co daje</dt><dd>2. sygnał pewności, warunek R7 „podlej teraz” i dawkę (Dr minus deszcz w 7 dni).</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">4</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b5_norma.png"><img src="fig/b5_norma.png" alt="Opad 60 dni 147 mm wobec normy 133 mm, ET0 245 wobec 230 mm"></button></div>
+          <div class="body">
+            <div class="title"><h3>Pogoda względem normy</h3><span class="id">F14 · F15</span></div>
+            <div class="formula">F14 = opad 60 dni / średnia tych samych dni z 30 lat     C1 „mało deszczu” gdy &lt; 70%
+F15 = dni z Tmax &gt; 30°C w 30 dniach; ET0 60 dni / norma   C2 „upał” od 5 dni lub &gt; 115%</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Oddziela przyczyny pogodowe, na które rolnik nie ma wpływu, od cech działki, na które działają zalecenia.</dd>
+              <dt>Tu</dt><dd class="val">opad <b>111%</b> normy, ET0 106%, 1 dzień upału → C1 i C2 się nie uruchamiają. Problemem nie jest pogoda, tylko piasek.</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">5</span></div>
+        <article class="card noimg">
+          <div class="body">
+            <div class="title"><h3>Deszcz w najbliższych 7 dniach</h3><span class="id">F11</span></div>
+            <div class="formula">F11 = Σ opad prognozy na 7 dni            gdy D = dziś
+F11 = średnia z 10 lat dla tych samych 7 dni   gdy D jest archiwalna</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Nie każemy podlewać, jeśli deszcz i tak uzupełni brak. Dawka R7 to brak wody minus ten deszcz.</dd>
+              <dt>Tu</dt><dd class="val">16–22.07 w latach 2015–2024: 20, 12, 7, 41, 30, 3, 75, 17, 1, 22 mm → <b>22,8 mm</b></dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">6</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b8_ndmi_z.png"><img src="fig/b8_ndmi_z.png" alt="Mapa z-score NDMI działki, większość pikseli bliska zeru lub dodatnia"></button></div>
+          <div class="body">
+            <div class="title"><h3>Gdzie rośliny są suchsze niż zwykle</h3><span class="id">F10 · F10b · anomalia NDMI</span></div>
+            <div class="formula">z = (NDMI_teraz − średnia NDMI z lat poprzednich) / odchylenie    dla każdego piksela 20 m
+najsuchsza strefa = piksele z z &lt; −1                         (min. 3 lata, ten sam sensor)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Satelita mówi, gdzie w działce kierować wodę. Zamiast „podlej całe 10 ha” można powiedzieć „podlej tę strefę”.</dd>
+              <dt>Tu</dt><dd class="val">8 lat odniesienia (2016–2024 bez 2020), mediana <b>z = +0,3</b>, 0% działki z z &lt; −1 → liście jeszcze nie pokazują stresu, nawadniamy całą działkę</dd>
+              <dt>Co daje</dt><dd>3. sygnał pewności i miejsce dla R7 i R8.</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--brown)">
+    <div class="band">Historia</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">7</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b4_historia.png"><img src="fig/b4_historia.png" alt="KBW do progu w latach 2015–2024, próg przekroczony w 6 sezonach"></button></div>
+          <div class="body">
+            <div class="title"><h3>Susza w poprzednich 10 sezonach</h3><span class="id">F5 · F0h</span></div>
+            <div class="formula">dla każdego roku 2015–2024 i każdego z 14 okresów:  KBW vs próg(uprawa z tego roku)
+najgorszy okres → stopień: lekka / umiark. / silna / skrajna</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Zadanie wymaga oceny historycznej podatności, a reguły retencji pytają „czy brakowało wody w ostatnich latach”. Każdy rok oceniamy dla uprawy, która wtedy rosła.</dd>
+              <dt>Tu</dt><dd class="val">susza w <b>6 z 10</b> sezonów: 2015, 2018, 2019, 2022, 2023, 2024; najczęściej w czerwcu i lipcu</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--primary)">
+    <div class="band">Cechy działki</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">8</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b7_teren.png"><img src="fig/b7_teren.png" alt="Mapa spadków z punktem wypływu wody na południowej granicy działki i rowem"></button></div>
+          <div class="body">
+            <div class="title"><h3>Spadki, spływ, zagłębienia, rów</h3><span class="id">F7 · F7b · F8 · F9</span></div>
+            <div class="formula">spadek    = |∇ DEM| w %
+spływ D8  = kierunek do najniższego sąsiada na DEM z wypełnionymi zagłębieniami → akumulacja
+wypływ    = komórka na granicy, przez którą odpływa najwięcej wody z działki
+F7b       = Σ odpływ SCS‑CN z ulew &gt; 10 mm / Σ ich opad     (10 lat)
+F8        = DEM wypełniony − DEM &gt; 0,1 m  (min. 30% w działce)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>To cechy, na które rolnik może działać: zatrzymać wodę w zagłębieniu, posadzić pas trawy przy wypływie, spiętrzyć rów.</dd>
+              <dt>Tu</dt><dd class="val">średni spadek 3,0%, 25% działki ponad 3%; <b>53% działki</b> odpływa jednym miejscem; w ulewach spływa 1,9% opadu; zagłębień w działce brak; <b>rów 3 m</b></dd>
+              <dt>Co daje</dt><dd>Przyczyny C4 (1/3) i C5 (2/3), zalecenia R1 i R3 z punktem na mapie.</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--plan)">
+    <div class="band">Przyszłość</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">9</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b9_scenariusze.png"><img src="fig/b9_scenariusze.png" alt="Dziesięć przebiegów zapasu wody przez 42 dni, bez działań i po podlaniu 20 mm"></button></div>
+          <div class="body">
+            <div class="title"><h3>10 scenariuszy na kolejne tygodnie</h3><span class="id">F17 · F18 · F19 · Ensemble Streamflow Prediction</span></div>
+            <div class="formula">dla k = 1…10:  bilans FAO‑56 (krok 3) od dzisiejszego zapasu
+               przez pogodę roku D−k (te same dni roku)
+F18 = w ilu z 10 przebiegów zapas &lt; próg stresu w danym tygodniu
+F19 = Σ (ETc − ETa) w oknie wrażliwym → mediana i 80. percentyl</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Nie znamy pogody na 6 tygodni, ale znamy 10 poprzednich sezonów w tym miejscu. W pierwszym miesiącu o wyniku decyduje głównie zapas startowy, więc to rozsądna prognoza „jak bywało”.</dd>
+              <dt>Tu</dt><dd class="val">stres w najbliższych 14 dniach w <b>10 z 10</b> przebiegów; w oknie wrażliwym brakuje ok. <b>82 mm</b> (w suchym roku 113 mm)</dd>
+              <dt>Co daje</dt><dd>Status w nagłówku raportu: od 70% przebiegów „Susza”, 30–69% „Zagrożenie”, poniżej 30% „Spokojnie”.</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">10</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b9_ryzyko.png"><img src="fig/b9_ryzyko.png" alt="Liczba scenariuszy ze stresem w kolejnych tygodniach bez działań i z planem"></button></div>
+          <div class="body">
+            <div class="title"><h3>Co zyskasz z planem</h3><span class="id">F20 · F21</span></div>
+            <div class="formula">te same 10 przebiegów, ale z parametrem zmienionym przez działanie:
+  podlanie teraz     → dawka dodana w 1. dniu
+  resztki / mulcz    → parowanie z gleby −25%
+  pas buforowy       → CN − 5 (mniej odpływu z ulew)</div>
+            <dl>
+              <dt>Dlaczego</dt><dd>Każda karta zalecenia pokazuje „co zyskasz” w liczbach z tej działki, a nie ogólnik.</dd>
+              <dt>Tu</dt><dd class="val">podlanie 20 mm: stres w 14 dni <b>10/10 → 6/10</b>; tydzień do 22.07: 9/10 → 4/10</dd>
+            </dl>
+            <div class="scroll"><table class="mini">
+              <thead><tr><th>tydzień</th><th>do 22.07</th><th>29.07</th><th>05.08</th><th>12.08</th><th>19.08</th><th>26.08</th></tr></thead>
+              <tbody><tr><td>bez działań</td><td>9</td><td>8</td><td>9</td><td>10</td><td>10</td><td>10</td></tr>
+              <tr><td>z planem</td><td>4</td><td>6</td><td>9</td><td>8</td><td>9</td><td>9</td></tr></tbody>
+            </table></div>
+          </div>
+        </article></div>
+    </div>
+  </div>
+
+  <div class="phase" style="--c: var(--red)">
+    <div class="band">Decyzja</div>
+    <div class="steps">
+      <div class="step"><div class="rail"><span class="num">11</span></div>
+        <article class="card">
+          <div class="thumbs"><button class="thumb" type="button" data-full="fig/b10_przyczyny.png"><img src="fig/b10_przyczyny.png" alt="Przyczyny ryzyka: lekka gleba 3, niedobór w krytycznej fazie 2, rów 2, spływ 1"></button></div>
+          <div class="body">
+            <div class="title"><h3>Diagnoza i przyczyny</h3><span class="id">5.1 stan · pewność · C1–C6</span></div>
+            <div class="formula">pewność = ile z 4 sygnałów się zgadza: KBW/opad · zapas w glebie · satelita · EDO
+przyczyny C1–C6 = ocena 0–3 z progów w backend/app/config.py</div>
+            <dl>
+              <dt>Tu</dt><dd class="val"><span class="status">Susza</span> „Kukurydza już cierpi — zapas wody poniżej progu stresu”</dd>
+              <dt>Sygnały</dt><dd>bilans glebowy: tak; KBW, satelita, EDO: nie → pewność średnia</dd>
+              <dt>Przyczyny</dt><dd>C3 lekka gleba <b>3/3</b> · C6 niedobór w krytycznej fazie 2/3 · C5 rów 2/3 · C4 spływ 1/3</dd>
+            </dl>
+          </div>
+        </article></div>
+      <div class="step"><div class="rail"><span class="num">12</span></div>
+        <article class="card noimg"><span class="tag out">WYJŚCIE</span>
+          <div class="body">
+            <div class="title"><h3>Zalecenia w raporcie</h3><span class="id">R1–R9 · kolejność: retencja → pole → nawadnianie</span></div>
+            <ol class="recs">
+              <li><span class="n">1</span><span class="rid">R1</span><span>Zastawka na rowie jesienią, po zbiorze, bo rów biegnie 3 m od działki, a susza była w 6 z 10 sezonów</span></li>
+              <li><span class="n">2</span><span class="rid">R3</span><span>Pas trawy lub drzew 6–10 m w miejscu wypływu, którym odpływa woda z 53% działki</span></li>
+              <li><span class="n">3</span><span class="rid">R5</span><span>Międzyplon i resztki po zbiorze (ok. 2.10), bo gleba kat. I</span></li>
+              <li><span class="n">4</span><span class="rid">R9</span><span>Rozważ inną uprawę, bo kukurydza przekraczała próg suszy w 6 z 10 sezonów</span></li>
+              <li><span class="n">5</span><span class="rid">R7</span><span class="urgent">PILNE: podlej 20 mm w ciągu 3 dni (zapas 41% przy progu 45%, kukurydza w oknie wrażliwym; stres 10/10 → 6/10)</span></li>
+            </ol>
+            <p class="note">R9 podpowiada burak cukrowy z wynikiem „0/10 sezonów z suszą”. Dla buraka na glebie kat. I tabela IUNG nie ma progu, więc 0/10 oznacza brak danych, a nie brak suszy. Ta reguła wymaga poprawki w backendzie.</p>
+            <dl>
+              <dt>Czego nie sprawdziliśmy</dt><dd>prognozy z dnia analizy (data archiwalna, użyto średnich z 10 lat); NMT 1 m (teren z DEM 30 m); wód gruntowych, drenowania, odmiany i terminu siewu</dd>
+            </dl>
+          </div>
+        </article></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Liczby z uruchomienia notebooka <code>notebooks/pipeline_dzialka.ipynb</code> na kodzie backendu z 21.11.2026; każdy krok obliczeń jest w nim porównany z wynikiem <code>analizuj()</code>. Progi oznaczone w <code>pipeline_plan.md</code> jako ⚙️ to wartości startowe do kalibracji.</p>
+  <p>Kliknij wykres, żeby go powiększyć.</p>
+</footer>
+</div>
+
+<dialog id="zoom" aria-label="Powiększony wykres">
+  <img id="zoom-img" src="" alt="">
+  <button type="button" id="zoom-close">Zamknij</button>
+</dialog>
+<script>
+(function () {
+  var dlg = document.getElementById('zoom'), img = document.getElementById('zoom-img');
+  document.querySelectorAll('.thumb').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var src = b.querySelector('img');
+      img.src = b.getAttribute('data-full'); img.alt = src ? src.alt : '';
+      if (dlg.showModal) dlg.showModal();
+    });
+  });
+  document.getElementById('zoom-close').addEventListener('click', function () { dlg.close(); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+})();
+</script>

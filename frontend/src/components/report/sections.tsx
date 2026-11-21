@@ -77,6 +77,21 @@ export function ActionList({ actions, pin, onPick }: { actions: Zalecenie[]; pin
                   </button>
                   {open && (
                     <div className="flex flex-col gap-3 border-t border-rule-soft px-3.5 pb-4 pt-3 text-[13px]">
+                      {a.kroki?.length > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                          <h4 className="text-xs font-bold uppercase tracking-[0.06em] text-heading">Co zrobić</h4>
+                          <ol className="flex flex-col gap-1.5">
+                            {a.kroki.map((k, i) => (
+                              <li key={i} className="flex items-start gap-2.5 text-ink">
+                                <span className="mt-px inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-chip text-[11px] font-bold text-heading">
+                                  {i + 1}
+                                </span>
+                                <span className="leading-snug">{k}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
                       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
                         <dt className="text-muted">Gdzie</dt>
                         <dd className="text-ink">{a.gdzie}</dd>
@@ -208,7 +223,18 @@ export function Risk({ report }: { report: Report }) {
   return (
     <Card className="print-break-avoid flex min-w-0 flex-[1_1_380px] flex-col gap-3 p-5 max-sm:p-4">
       <h2 className="text-lg font-extrabold">{risk.head}</h2>
-      <span className="text-[15px] font-semibold leading-snug">{risk.say}</span>
+      {/* First sentence = the risk without action (bold); the rest explains what the plan changes. */}
+      <p className="text-[15px] leading-snug">
+        {(() => {
+          const [lead, ...rest] = risk.say.split(/(?<=\.)\s+(?=[A-ZŻŹĆŁŚÓ])/);
+          return (
+            <>
+              <span className="font-semibold">{lead}</span>
+              {rest.length > 0 && <span className="text-ink-2"> {rest.join(" ")}</span>}
+            </>
+          );
+        })()}
+      </p>
       <table className="w-full table-fixed border-separate border-spacing-1">
         <caption className="sr-only">W ilu z {N} scenariuszy uprawa będzie w stresie wodnym: bez działań i z planem</caption>
         <colgroup>
@@ -234,7 +260,48 @@ export function Risk({ report }: { report: Report }) {
   );
 }
 
-/** Collapsed justification (pipeline_plan.md §8 pt 7): IUNG criterion now + 10-year history. */
+/**
+ * 10-year vulnerability (task 3.3 pt 4), shown right after the state on day D (TODO_LUKI L4):
+ * how often the parcel ran short of water, season by season, each judged for the crop grown that year.
+ */
+export function Vulnerability({ report }: { report: Report }) {
+  const v = report.vulnerability;
+  const history = report.justification?.history ?? [];
+  if (!v || history.length === 0) return null;
+  const assumed = history.filter((h) => h.cropKnown === false).length;
+  return (
+    <Card className="print-break-avoid flex min-w-0 flex-[1_1_380px] flex-col gap-3 p-5 max-sm:p-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-xl font-bold">Jak często brakowało wody</h2>
+        <p className="text-[13px] text-ink-3">
+          {report.yearsLabel && `${report.yearsLabel} · `}każdy sezon oceniony dla uprawy, która wtedy rosła
+        </p>
+      </div>
+      <ul className="grid grid-cols-5 gap-1.5" aria-label={`Susza w ${v.drought} z ${v.seasons} sezonów`}>
+        {history.map((h) => (
+          <li
+            key={h.year}
+            title={h.note || `${h.crop} — ${h.tag === "brak" ? "bez suszy" : `susza: ${h.tag}`}`}
+            className={`flex flex-col items-center gap-px rounded-lg px-1 py-1.5 ${TAG[h.tag]}`}
+          >
+            <b className="text-[13px]">{h.year}</b>
+            <span className="text-center text-[11px] leading-tight">
+              {h.crop}
+              {h.cropKnown === false && <span aria-label="uprawa przyjęta">*</span>}
+            </span>
+            <span className="text-center text-[11px] font-bold leading-tight">{h.tag === "brak" ? "bez suszy" : h.tag}</span>
+          </li>
+        ))}
+      </ul>
+      <span className="text-xs text-muted">
+        {report.justification?.historyNote}
+        {assumed > 0 && ` * w ${assumed} ${assumed === 1 ? "sezonie" : "sezonach"} nie wiemy, co rosło — przyjęto bieżącą uprawę.`}
+      </span>
+    </Card>
+  );
+}
+
+/** Collapsed justification (pipeline_plan.md §8 pt 7): IUNG criterion on day D. The 10-year history is in Vulnerability. */
 export function Justification({ report }: { report: Report }) {
   const j = report.justification;
   if (!j) return null;
@@ -243,24 +310,14 @@ export function Justification({ report }: { report: Report }) {
       <details className="group">
         <summary className="flex min-h-8 list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
           <Icon d={ICON.chevronRight} size={18} className="text-heading transition-transform duration-200 group-open:rotate-90" />
-          <h2 className="text-xl font-bold">Uzasadnienie: kryterium suszy IUNG i 10 ostatnich sezonów</h2>
+          <h2 className="text-xl font-bold">Uzasadnienie: kryterium suszy IUNG w dniu analizy</h2>
         </summary>
         <div className="flex flex-col gap-3 pt-3 text-[13px] text-ink-2">
           <p className="text-sm text-ink">{j.iungNow}</p>
-          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-10">
-            {j.history.map((h) => (
-              <span
-                key={h.year}
-                title={`${h.crop} — ${h.tag === "brak" ? "bez suszy" : `susza: ${h.tag}`}`}
-                className={`flex flex-col items-center gap-px rounded-lg px-1 py-1.5 ${TAG[h.tag]}`}
-              >
-                <b className="text-[13px]">{h.year}</b>
-                <span className="text-center text-[11px] leading-tight">{h.crop}</span>
-                <span className="text-[11px] font-bold">{h.tag}</span>
-              </span>
-            ))}
-          </div>
-          <span className="text-xs text-muted">{j.historyNote}</span>
+          <span className="text-xs text-muted">
+            Próg suszy rolniczej IUNG‑PIB (Rozporządzenie MRiRW 2019) dla uprawy i kategorii gleby. Liczby i metody: „Skąd wiemy” →
+            „Szczegóły dla doradcy”.
+          </span>
         </div>
       </details>
     </Card>

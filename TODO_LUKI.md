@@ -16,6 +16,8 @@ Nakład: S < 1 h, M 2–4 h, L > 4 h. Stan na 21.11.2026.
 | L4 | Raport: stan → podatność → scenariusze, bez pozornej precyzji | M | L2 (zmienią się liczby historii) |
 | L5 | README: punkty 4.2 i 5.5 | M | wszystkie (opisuje stan końcowy) |
 
+**Stan realizacji (21.11.2026, wieczór):** L1–L5 zrobione w kodzie i dokumentacji; testy `backend/tests/test_luki.py`. Niezweryfikowane: czas analizy bez cache po zmianach (dzienny limit Open‑Meteo wyczerpany przy testach) i potwierdzenia ⚙️ od mentorów.
+
 L1, L2 i L3 można robić równolegle. Po L1 i L3 obowiązkowo zmierzyć czas analizy bez cache (cel < 30 s, dziś 23,5 s).
 
 Wspólna zasada dla wszystkich zadań: brak danych komunikujemy wprost w `braki` (wymóg 3.3 pkt 5), niczego nie zgadujemy.

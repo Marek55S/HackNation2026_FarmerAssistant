@@ -77,7 +77,7 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 - [ ] ~~T3.10 P2 osobno~~ → wchodzi w T3.1.
 - [ ] ~~T3.11 IUNG GAEC2~~ → niepotrzebne, gleby organiczne to kod 5 w T3.3.
 - [x] **T3.12** P12 EDO WMS – tylko porównanie (GetMap zwraca obrazek, wartość z koloru legendy) → [A11](#a11-edo--tło-suszy-p12-opcjonalnie). — _EDO CDI z koloru piksela GetMap (legenda: obserwacja / ostrzeżenie / alarm), dekada ≤ D_
-- [ ] **T3.13** P13 IMGW hydro – stan rzek jako kontekst (tylko `D` = dziś) → [A12](#a12-imgw--rzeki-i-stacje-p13-opcjonalnie).
+- [~] **T3.13** P13 IMGW hydro – stan rzek jako kontekst (tylko `D` = dziś) → [A12](#a12-imgw--rzeki-i-stacje-p13-opcjonalnie). — _częściowo: bieżący wodowskaz i ostrzeżenia o suszy hydrologicznej (backend/app/hydro.py); archiwum dobowe – nie_
 
 ## 4. Etap 3 – fakty rdzeniowe (meteo + gleba + uprawa)
 
@@ -147,7 +147,7 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 ## 10. Frontend (wg makiety)
 
-- [ ] **T10.1 [MVP]** Ekran Start (kolejność: najpierw data, potem działka – uprawa zależy od roku daty): pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`).
+- [x] **T10.1 [MVP]** Ekran Start (kolejność: najpierw data, potem działka – uprawa zależy od roku daty): pole identyfikatora działki + mapa z klikiem, data (domyślnie dziś, zakres 10 lat), uprawa: podpowiedź z ARiMR + „Zmień” albo kafelki, gdy brak podpowiedzi (T4.10; makieta `Main.dc.html`).
 - [x] **T10.2 [MVP]** Ekran postępu analizy (kroki pobierania, czas, błędy źródeł). *(UI gotowe na mocku w `frontend/`)*
 - [x] **T10.3 [MVP]** Raport: „Co Cię czeka”, „Pilne”, „Co zrobić i gdzie” (karty z „bo…”), „Co zwiększa ryzyko”, „Skąd wiemy” (źródła, daty, ograniczenia). *(UI gotowe na mocku w `frontend/`)*
 - [ ] **T10.4 [+]** Mapa działki z widokami: plan (numery zaleceń) / gdzie sucho / teren i spływ / gleba; podkład ortofoto lub OSM.
@@ -196,12 +196,12 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 
 - [ ] **T15.1 [MVP]** Nazwa zespołu i tytuł rozwiązania.
 - [ ] **T15.2 [MVP]** Zwięzły opis: problem, główne funkcje, wykorzystanie danych, korzyści dla rolnika.
-- [ ] **T15.3 [MVP]** README z 9 punktami z 4.2:
+- [x] **T15.3 [MVP]** README z 9 punktami z 4.2 (21.11, TODO_LUKI L5):
   1. instrukcja uruchomienia; 2. funkcjonalności; 3. architektura (diagram); 4. źródła i zakresy danych;
   5. co pobierane na bieżąco, co wcześniej (CSV progów IUNG, cache) + daty pobrania; 6. biblioteki, usługi, narzędzia AI;
   7. licencje (sekcja 8 ZRODLA_DANYCH.md); 8. znane ograniczenia; 9. sposób weryfikacji (testy, backtest).
-- [ ] **T15.4 [MVP]** Opis roli AI (rozdz. 5.1, METODY.md §8): diagnoza i reguły deterministyczne; ML1 (i ewentualnie ML2–ML5) dostarcza faktów wejściowych – dane treningowe, walidacja, licencje; LLM tylko do redakcji tekstu (jeśli użyty); AI przy tworzeniu kodu.
-- [ ] **T15.5 [MVP]** Sekcja skalowalności (5.5): cache, limity API, aktualizacja danych, koszty infrastruktury; płatne usługi i alternatywy (5.4).
+- [x] **T15.4 [MVP]** Opis roli AI (rozdz. 5.1, METODY.md §8): diagnoza i reguły deterministyczne; ML1 (i ewentualnie ML2–ML5) dostarcza faktów wejściowych – dane treningowe, walidacja, licencje; LLM tylko do redakcji tekstu (jeśli użyty); AI przy tworzeniu kodu.
+- [x] **T15.5 [MVP]** Sekcja skalowalności (5.5): cache, limity API, aktualizacja danych, koszty infrastruktury; płatne usługi i alternatywy (5.4).
 - [ ] **T15.6 [MVP]** Bibliografia naukowa (z METODY.md) w README.
 - [ ] **T15.7 [MVP]** Wygenerowane raporty PDF dla 2–3 działek przykładowych (sezon + poza sezonem) w repo.
 - [ ] **T15.8 [MVP]** Prezentacja PDF ≤ 10 slajdów: problem → rozwiązanie → dane → metoda (KBW, FAO‑56, scenariusze) → demo (zrzuty) → walidacja → ograniczenia → rozwój.

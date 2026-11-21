@@ -42,6 +42,16 @@ UPRAWY: dict[str, Uprawa] = {u.key: u for u in [
 ]}
 
 
+# Grupy łanu do porównań satelitarnych (L1, decyzja 21.11.2026; ⚙️ do potwierdzenia z dr. Gozdowskim):
+# NDMI porównujemy tylko z latami, w których rosła roślina o podobnym łanie. „inna” nie ma grupy → brak porównania.
+GRUPA: dict[str, str | None] = {"pszenica": "zboża", "jare": "zboża", "kukurydza": "kukurydza", "rzepak": "rzepak",
+                                "ziemniak": "okopowe", "burak": "okopowe", "laka": "użytki zielone", "inna": None}
+
+
+def grupa(u: "Uprawa | None") -> str | None:
+    return GRUPA.get(u.key) if u else None
+
+
 def kc_dnia(u: Uprawa, d: date, kc_poza: float) -> tuple[float, str]:
     """Kc i nazwa fazy w danym dniu (krzywa FAO‑56 z liniowym rozwojem i dojrzewaniem)."""
     s = date(d.year, *u.start)

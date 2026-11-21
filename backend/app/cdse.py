@@ -20,6 +20,7 @@ import numpy as np
 
 from . import geo
 from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz
+from .satellite import surowe
 
 STAC = "https://stac.dataspace.copernicus.eu/v1/search"
 THUMB = "https://thumbnails.dataspace.copernicus.eu/wms"
@@ -248,23 +249,7 @@ async def ndmi_anomalia_sh(client, rings, D: date, okno: tuple[date, date]) -> W
                    if isinstance(x, dict) and x["inside"].sum() and (x["czyste"] & x["inside"]).sum() / x["inside"].sum() >= 0.5]
     except Exception as e:  # noqa: BLE001
         return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], czas_ms=int((time.perf_counter() - t0) * 1000))
-    ms = int((time.perf_counter() - t0) * 1000)
-    if len(refs_ok) < 3:
-        return Wynik(zr, None, powod=f"za mało czystych kompozytów z poprzednich lat ({len(refs_ok)} < 3)", czas_ms=ms)
-    stack = np.stack([np.where(x["czyste"], x["ndmi"], np.nan) for _, x in refs_ok])
-    mu, sd = np.nanmean(stack, 0), np.maximum(np.nanstd(stack, 0), 0.03)
-    z = (r["ndmi"] - mu) / sd
-    ok = r["inside"] & r["czyste"] & (np.isfinite(stack).sum(0) >= 3) & np.isfinite(z)
-    if ok.sum() < 2:
-        return Wynik(zr, None, powod="za mało porównywalnych pikseli", czas_ms=ms)
-    sucho = ok & (z < -1.0)
-    sl = [(float(r["lon"][i, j]), float(r["lat"][i, j])) for i, j in zip(*np.nonzero(sucho))]
-    return Wynik(zr, {
-        "data": koniec.isoformat(), "okres": f"{pocz:%d.%m}–{koniec:%d.%m.%Y}", "chmury": 0.0, "kafel": "kompozyt leastCC",
-        "lata_ref": sorted(y for y, _ in refs_ok), "n_ref": len(refs_ok), "z_med": float(np.median(z[ok])),
-        "ndmi_med": float(np.nanmedian(r["ndmi"][ok])), "sucho_ha": float(sucho.sum() * 0.04),
-        "sucho_udzial": float(sucho.sum() / ok.sum()),
-        "sucho_srodek": (float(np.mean([p[0] for p in sl])), float(np.mean([p[1] for p in sl]))) if sl else None,
-        "piksele": [(float(r["lon"][i, j]), float(r["lat"][i, j]), round(float(z[i, j]), 2)) for i, j in zip(*np.nonzero(ok))],
-        "piksel_m": 20, "sensor": "Sentinel‑2 (Sentinel Hub, kompozyt)",
-    }, url="https://dataspace.copernicus.eu", czas_ms=ms)
+    meta = {"data": koniec.isoformat(), "okres": f"{pocz:%d.%m}–{koniec:%d.%m.%Y}", "chmury": 0.0, "kafel": "kompozyt leastCC",
+            "piksel_m": 20, "sensor": "Sentinel‑2 (Sentinel Hub, kompozyt)"}
+    return surowe(zr, r, refs_ok, meta, min_px=2, px_ha=0.04, url="https://dataspace.copernicus.eu",
+                  czas_ms=int((time.perf_counter() - t0) * 1000))

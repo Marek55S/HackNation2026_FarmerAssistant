@@ -82,6 +82,50 @@ def _udzial_czystych(r: dict) -> float:
     return float((r["czyste"] & r["inside"]).sum() / n) if n else 0.0
 
 
+MIN_LAT_REF = 3
+
+
+def surowe(zr: str, r: dict, refs: list[tuple[int, dict]], meta: dict, *, min_px: int, px_ha: float,
+           url: str | None, czas_ms: int) -> Wynik:
+    """Wynik pobrania: scena docelowa + sceny odniesienia z rokiem. Anomalię liczy `anomalia` – dopiero gdy wiadomo,
+    co rosło w latach odniesienia (pobieranie idzie równolegle z historią upraw)."""
+    if len(refs) < MIN_LAT_REF:
+        return Wynik(zr, None, powod=f"za mało czystych zdjęć z poprzednich lat do porównania ({len(refs)} < {MIN_LAT_REF})",
+                     url=url, czas_ms=czas_ms)
+    return Wynik(zr, {"r": r, "refs": refs, "meta": meta, "min_px": min_px, "px_ha": px_ha}, url=url, czas_ms=czas_ms)
+
+
+def anomalia(w: Wynik, lata_ok: set[int] | None = None, powod_braku_lat: str | None = None) -> Wynik:
+    """z‑score NDMI per piksel względem scen odniesienia; `lata_ok` – tylko lata z tą samą grupą łanu (L1).
+    Przy < 3 latach nie liczymy (bez pozornej precyzji) i mówimy dlaczego."""
+    if not w.ok:
+        return w
+    s = w.dane
+    r, meta = s["r"], s["meta"]
+    refs = [(y, x) for y, x in s["refs"] if lata_ok is None or y in lata_ok]
+    if len(refs) < MIN_LAT_REF:
+        powod = powod_braku_lat or (f"za mało sezonów z tą samą grupą upraw do porównania ({len(refs)} < {MIN_LAT_REF}; "
+                                    f"zdjęcia z lat {', '.join(str(y) for y, _ in sorted(s['refs']))})")
+        return Wynik(w.zrodlo, None, powod=powod, url=w.url, czas_ms=w.czas_ms, pobrano=w.pobrano)
+    stack = np.stack([np.where(x["czyste"], x["ndmi"], np.nan) for _, x in refs])
+    mu, sd = np.nanmean(stack, 0), np.maximum(np.nanstd(stack, 0), 0.03)
+    with np.errstate(invalid="ignore"):
+        z = (r["ndmi"] - mu) / sd
+    ok = r["inside"] & r["czyste"] & (np.isfinite(stack).sum(0) >= MIN_LAT_REF) & np.isfinite(z)
+    if ok.sum() < s["min_px"]:
+        return Wynik(w.zrodlo, None, powod="za mało porównywalnych pikseli w działce", url=w.url, czas_ms=w.czas_ms,
+                     pobrano=w.pobrano)
+    sucho = ok & (z < Z_SUCHO)
+    sl = [(float(r["lon"][i, j]), float(r["lat"][i, j])) for i, j in zip(*np.nonzero(sucho))]
+    return Wynik(w.zrodlo, meta | {
+        "lata_ref": sorted(y for y, _ in refs), "n_ref": len(refs), "z_med": float(np.median(z[ok])),
+        "ndmi_med": float(np.nanmedian(r["ndmi"][ok])), "sucho_ha": float(sucho.sum() * s["px_ha"]),
+        "sucho_udzial": float(sucho.sum() / ok.sum()),
+        "sucho_srodek": (float(np.mean([p[0] for p in sl])), float(np.mean([p[1] for p in sl]))) if sl else None,
+        "piksele": [(float(r["lon"][i, j]), float(r["lat"][i, j]), round(float(z[i, j]), 2)) for i, j in zip(*np.nonzero(ok))],
+    }, url=w.url, czas_ms=w.czas_ms, pobrano=w.pobrano)
+
+
 async def ndmi_anomalia(client: httpx.AsyncClient, rings, D: date, okno: tuple[date, date] | None) -> Wynik:
     """`okno` = (od, do) okresu, z którego bierzemy scenę docelową (≤ D)."""
     t0 = time.perf_counter()
@@ -114,35 +158,16 @@ async def ndmi_anomalia(client: httpx.AsyncClient, rings, D: date, okno: tuple[d
                         date(y, dsc.month, dsc.day) + timedelta(days=12), limit=4, tile=tile) for y in lata]
         wyniki = await asyncio.gather(*szuk, return_exceptions=True)
         kand = [sorted(w, key=lambda f: f["properties"]["eo:cloud_cover"])[0] for w in wyniki if isinstance(w, list) and w]
-        refs = await asyncio.gather(*[asyncio.to_thread(_czytaj, k, tok, rings) for k in kand], return_exceptions=True)
-        refs = [x for x in refs if isinstance(x, dict) and x["ndmi"].shape == r["ndmi"].shape and _udzial_czystych(x) >= 0.5]
+        wyn = await asyncio.gather(*[asyncio.to_thread(_czytaj, k, tok, rings) for k in kand], return_exceptions=True)
+        refs = [(int(k["properties"]["datetime"][:4]), x) for k, x in zip(kand, wyn)
+                if isinstance(x, dict) and x["ndmi"].shape == r["ndmi"].shape and _udzial_czystych(x) >= 0.5]
     except Exception as e:  # noqa: BLE001
         return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], url=STAC, czas_ms=int((time.perf_counter() - t0) * 1000))
-    ms = int((time.perf_counter() - t0) * 1000)
-    if len(refs) < 3:
-        return Wynik(zr, None, powod=f"za mało czystych zdjęć z poprzednich lat do porównania ({len(refs)} < 3)", czas_ms=ms)
-    stack = np.stack([np.where(x["czyste"], x["ndmi"], np.nan) for x in refs])
-    mu = np.nanmean(stack, 0)
-    sd = np.maximum(np.nanstd(stack, 0), 0.03)
-    cnt = np.isfinite(stack).sum(0)
-    z = (r["ndmi"] - mu) / sd
-    ok = r["inside"] & r["czyste"] & (cnt >= 3) & np.isfinite(z)
-    if ok.sum() < 3:
-        return Wynik(zr, None, powod="za mało porównywalnych pikseli w działce", czas_ms=ms)
-    zin = z[ok]
-    px_ha = 0.04  # piksel 20 m × 20 m
-    sucho = ok & (z < Z_SUCHO)
-    piksele = [(float(r["lon"][i, j]), float(r["lat"][i, j]), round(float(z[i, j]), 2))
-               for i, j in zip(*np.nonzero(ok))]
-    sl = [(float(r["lon"][i, j]), float(r["lat"][i, j])) for i, j in zip(*np.nonzero(sucho))]
-    return Wynik(zr, {
-        "data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": tile,
-        "lata_ref": sorted(int(k["properties"]["datetime"][:4]) for k in kand),
-        "n_ref": len(refs), "z_med": float(np.median(zin)), "ndmi_med": float(np.nanmedian(r["ndmi"][ok])),
-        "sucho_ha": float(sucho.sum() * px_ha), "sucho_udzial": float(sucho.sum() / ok.sum()),
-        "sucho_srodek": (float(np.mean([p[0] for p in sl])), float(np.mean([p[1] for p in sl]))) if sl else None,
-        "piksele": piksele,
-    }, url="https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a", czas_ms=ms)
+    meta = {"data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": tile,
+            "piksel_m": 20, "sensor": "Sentinel‑2 (Planetary Computer)"}
+    return surowe(zr, r, refs, meta, min_px=3, px_ha=0.04,
+                  url="https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a",
+                  czas_ms=int((time.perf_counter() - t0) * 1000))
 
 
 # ---------------------------------------------------------------- Landsat 5/7/8/9 (lata < 2016 i zapas dla S2)
@@ -232,32 +257,16 @@ async def ndmi_landsat(client: httpx.AsyncClient, rings, D: date, okno: tuple[da
         kand = [k for grp in kand for k in grp]
         refs = await asyncio.gather(*[asyncio.to_thread(_czytaj_ls, k, tok, rings) for k in kand], return_exceptions=True)
         para = [(k, x) for k, x in zip(kand, refs) if isinstance(x, dict) and _udzial_czystych(x) >= 0.5]
-        lata_ok, refs = {}, []
+        widziane, refs = set(), []
         for k, x in para:                     # najwyżej jedna scena na rok
             y = int(k["properties"]["datetime"][:4])
-            if y not in lata_ok:
-                lata_ok[y] = True
-                refs.append(x)
+            if y not in widziane:
+                widziane.add(y)
+                refs.append((y, x))
     except Exception as e:  # noqa: BLE001
         return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], czas_ms=int((time.perf_counter() - t0) * 1000))
-    ms = int((time.perf_counter() - t0) * 1000)
-    if len(refs) < 3:
-        return Wynik(zr, None, powod=f"za mało czystych zdjęć Landsat z poprzednich lat ({len(refs)} < 3)", czas_ms=ms)
-    stack = np.stack([np.where(x["czyste"], x["ndmi"], np.nan) for x in refs])
-    mu, sd = np.nanmean(stack, 0), np.maximum(np.nanstd(stack, 0), 0.03)
-    z = (r["ndmi"] - mu) / sd
-    ok = r["inside"] & r["czyste"] & (np.isfinite(stack).sum(0) >= 3) & np.isfinite(z)
-    if ok.sum() < 2:
-        return Wynik(zr, None, powod="za mało porównywalnych pikseli Landsat w działce", czas_ms=ms)
-    sucho = ok & (z < Z_SUCHO)
-    px_ha = 0.09
-    sl = [(float(r["lon"][i, j]), float(r["lat"][i, j])) for i, j in zip(*np.nonzero(sucho))]
-    return Wynik(zr, {
-        "data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": it["properties"]["platform"],
-        "lata_ref": sorted(lata_ok), "n_ref": len(refs), "z_med": float(np.median(z[ok])),
-        "ndmi_med": float(np.nanmedian(r["ndmi"][ok])), "sucho_ha": float(sucho.sum() * px_ha),
-        "sucho_udzial": float(sucho.sum() / ok.sum()),
-        "sucho_srodek": (float(np.mean([p[0] for p in sl])), float(np.mean([p[1] for p in sl]))) if sl else None,
-        "piksele": [(float(r["lon"][i, j]), float(r["lat"][i, j]), round(float(z[i, j]), 2)) for i, j in zip(*np.nonzero(ok))],
-        "piksel_m": 30, "sensor": "Landsat " + ("8/9 (OLI)" if oli else "5/7 (TM/ETM+)"),
-    }, url="https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2", czas_ms=ms)
+    meta = {"data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": it["properties"]["platform"],
+            "piksel_m": 30, "sensor": "Landsat " + ("8/9 (OLI)" if oli else "5/7 (TM/ETM+)")}
+    return surowe(zr, r, refs, meta, min_px=2, px_ha=0.09,
+                  url="https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2",
+                  czas_ms=int((time.perf_counter() - t0) * 1000))

@@ -16,3 +16,8 @@ Pliki `.dc.html` wymagają środowiska płótna (`support.js`), więc otwarte be
 Służą jako specyfikacja UI: układ, teksty, kolory i interakcje (stan, kliknięcia) są w kodzie każdego pliku.
 
 Logika, którą makieta ilustruje: [../pipeline_plan.md](../pipeline_plan.md).
+
+**Celowa różnica względem `Raport.dc.html` (decyzja 21.11.2026, [../TODO_LUKI.md](../TODO_LUKI.md) L4):** kolejność sekcji
+raportu w aplikacji idzie za strukturą zadania KOWR (3.3 pkt 4–5): stan na dzień D → jak często brakowało wody w 10 sezonach
+i przyczyny → plan na działce → scenariusze „jak bywało” → uzasadnienie. Nagłówek opisuje stan w dniu analizy, a nie scenariusz
+na przyszły sezon. Komponenty i wygląd są jak w makiecie. Nie przywracać kolejności z makiety.
