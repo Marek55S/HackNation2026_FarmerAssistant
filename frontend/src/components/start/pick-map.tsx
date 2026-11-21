@@ -1,6 +1,6 @@
 "use client";
 
-// "Kliknij na mapie": demo parcels on the orthophoto; clicking one selects it (stand-in for ULDK GetParcelByXY).
+// "Kliknij na mapie": crop fields (ARiMR) on the orthophoto; clicking one picks the cadastral parcel under it (ULDK via backend).
 // Real parcel boundaries for the visible area come as raster tiles from GUGiK KIEG (WMS), like OSM tiles:
 // only the tiles in view, only from zoom 17 (the service draws nothing below that), cached by the browser,
 // and requests for tiles that left the view are cancelled by MapLibre.
@@ -8,7 +8,6 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
-import { demoParcels } from "@/lib/mock/parcels";
 import { BaseSwitch } from "../map/base-switch";
 import { createMap, setBase, watchOrtho, type BaseLayer } from "../map/base-map";
 
@@ -27,17 +26,17 @@ const POLA_TIMEOUT_MS = 500; // slower answer = skip (map stays responsive), nex
 const POLA_DEBOUNCE_MS = 200;
 const POLA_GRID = 0.004; // view rounded outward to this grid (deg) so small pans hit the cache
 const POLA_KOLOR = "#F07A1A"; // one highlight colour for all fields (no colour per crop)
-const WYBOR_KOLOR = "#F2B53A"; // same as the selected demo parcel
+const WYBOR_KOLOR = "#F2B53A"; // selected parcel (as in the report map)
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 type PolaStan = "zoom" | "ok" | "wolno" | "blad";
 
 export default function PickMap({
-  selected,
   onPick,
   rok,
   selectedGeometry,
 }: {
-  selected: string | null;
+  /** Current pick (kept for the picker API; the highlight comes from `selectedGeometry`). */
+  selected?: string | null;
   onPick: (nr: string) => void;
   rok?: number;
   /** Boundary of the real cadastral parcel picked by clicking a crop field (from ULDK). */
@@ -58,6 +57,10 @@ export default function PickMap({
     rokRef.current = rok;
     reloadPola.current();
   }, [rok]);
+  const selectedRef = useRef(selectedGeometry);
+  useEffect(() => {
+    selectedRef.current = selectedGeometry;
+  }, [selectedGeometry]);
   const onPickRef = useRef(onPick);
   useEffect(() => {
     onPickRef.current = onPick;
@@ -65,10 +68,10 @@ export default function PickMap({
 
   useEffect(() => {
     if (!box.current) return;
-    const parcels = demoParcels();
-    const all = parcels.flatMap((p) => p.geometry);
-    const lons = all.map((p) => p[0]);
-    const lats = all.map((p) => p[1]);
+    // Start on the picked parcel (if any), otherwise on the whole of Poland.
+    const g = selectedRef.current;
+    const lons = g?.length ? g.map((p) => p[0]) : [14.12, 24.15];
+    const lats = g?.length ? g.map((p) => p[1]) : [49.0, 54.84];
     const map = createMap(
       box.current,
       [
@@ -83,7 +86,7 @@ export default function PickMap({
       setNotice("Ortofotomapa nie odpowiada — pokazuję mapę OpenStreetMap.");
     });
     map.on("load", () => {
-      // Real parcel boundaries (under the demo parcels so these stay clickable on top).
+      // Cadastral parcel boundaries + numbers (raster tiles, from zoom 17).
       map.addSource("ewidencja", {
         type: "raster",
         tiles: [EWID_TILES],
@@ -180,9 +183,8 @@ export default function PickMap({
         deb = setTimeout(loadPola, POLA_DEBOUNCE_MS);
       });
       loadPola();
-      // Click on a crop field = pick the cadastral parcel under that point (like clicking a demo parcel).
+      // Click on a crop field = pick the cadastral parcel under that point.
       map.on("click", "pola-fill", (e) => {
-        if (map.queryRenderedFeatures(e.point, { layers: ["dzialki-fill"] }).length) return; // demo parcel on top wins
         const roslina = String(e.features?.[0]?.properties?.roslina ?? "");
         const { lng, lat } = e.lngLat;
         onPickRef.current(`xy:${lng.toFixed(6)},${lat.toFixed(6)};${roslina};${rokRef.current ?? ""}`);
@@ -190,42 +192,6 @@ export default function PickMap({
       map.on("mouseenter", "pola-fill", () => (map.getCanvas().style.cursor = "pointer"));
       map.on("mouseleave", "pola-fill", () => (map.getCanvas().style.cursor = ""));
 
-      map.addSource("dzialki", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: parcels.map((p) => ({
-            type: "Feature",
-            properties: { nr: p.number },
-            geometry: { type: "Polygon", coordinates: [p.geometry] },
-          })),
-        },
-      });
-      map.addLayer({ id: "dzialki-fill", type: "fill", source: "dzialki", paint: { "fill-color": "#FFFFFF", "fill-opacity": 0.15 } });
-      map.addLayer({ id: "dzialki-obwodka", type: "line", source: "dzialki", paint: { "line-color": "#FFFFFF", "line-width": 4, "line-opacity": 0.9 } });
-      map.addLayer({ id: "dzialki-linia", type: "line", source: "dzialki", paint: { "line-color": "#1E5B3A", "line-width": 2 } });
-      map.on("click", "dzialki-fill", (e) => {
-        const nr = e.features?.[0]?.properties?.nr;
-        if (typeof nr === "string") onPickRef.current(nr);
-      });
-      map.on("mouseenter", "dzialki-fill", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "dzialki-fill", () => (map.getCanvas().style.cursor = ""));
-      // Keyboard alternative: a button per parcel at its centre.
-      parcels.forEach((p) => {
-        const pts = p.geometry.slice(0, -1);
-        const c: [number, number] = [pts.reduce((s, q) => s + q[0], 0) / pts.length, pts.reduce((s, q) => s + q[1], 0) / pts.length];
-        const el = document.createElement("button");
-        el.type = "button";
-        el.dataset.nr = p.number;
-        el.textContent = p.number;
-        el.setAttribute("aria-label", `Wybierz działkę ${p.number}, obręb ${p.obreb}`);
-        el.className = "rounded-md bg-white/95 px-2 py-1 text-xs font-bold text-[#1A1C19] shadow-sm";
-        el.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          onPickRef.current(p.number);
-        });
-        new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(c).addTo(map);
-      });
       setReady(true);
     });
     return () => {
@@ -246,17 +212,6 @@ export default function PickMap({
     );
   }, [selectedGeometry, ready]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-    map.setPaintProperty("dzialki-linia", "line-color", ["case", ["==", ["get", "nr"], selected ?? ""], "#F2B53A", "#1E5B3A"]);
-    map.setPaintProperty("dzialki-linia", "line-width", ["case", ["==", ["get", "nr"], selected ?? ""], 4, 2]);
-    map.getContainer().querySelectorAll<HTMLButtonElement>("button[data-nr]").forEach((b) => {
-      const sel = b.dataset.nr === selected;
-      b.setAttribute("aria-pressed", String(sel));
-      b.className = `rounded-md px-2 py-1 text-xs font-bold shadow-sm ${sel ? "bg-[#1E5B3A] text-white" : "bg-white/95 text-[#1A1C19]"}`;
-    });
-  }, [selected, ready]);
 
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-[#DDE7D5] sm:aspect-[16/9]">

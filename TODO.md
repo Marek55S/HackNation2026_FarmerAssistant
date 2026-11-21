@@ -156,7 +156,7 @@ Wyniki testów wszystkich źródeł: [TEST_API.md](TEST_API.md).
 - [x] **T10.7 [+]** Wersja mobilna (makieta `Mobile.dc.html`) – działa w przeglądarce telefonu. *(UI gotowe na mocku w `frontend/`)*
 - [x] **T10.8 [MVP]** Stany: ładowanie, błąd ULDK, brak danych źródła, działka poza zakresem. *(UI gotowe na mocku w `frontend/`)*
 - [x] **T10.9 [opc]** Panel gospodarstwa: kilka działek zapisanych lokalnie (bez danych osobowych). *(UI gotowe na mocku w `frontend/`)*
-- [ ] **T10.10 [MVP]** Podpiąć frontend Next.js do backendu: `POST /api/dzialka` (działka + podpowiedź uprawy dla roku daty), `GET /api/szukaj` (gmina/obręb/numer), `POST /api/analiza` (raport: `status`, `akcje`, `przyczyny`, `ryzyko`, `historia`, warstwy mapy `teren` i `sucho`, `zrodla`, `braki`) zamiast `frontend/src/lib/mock`.
+- [x] **T10.10 [MVP]** Podpiąć frontend Next.js do backendu: `POST /api/dzialka` (działka + podpowiedź uprawy dla roku daty), `GET /api/szukaj` (gmina/obręb/numer), `POST /api/analiza` (raport: `status`, `akcje`, `przyczyny`, `ryzyko`, `historia`, warstwy mapy `teren` i `sucho`, `zrodla`, `braki`) zamiast `frontend/src/lib/mock`. — _zrobione: front bez mocka; backend `/api/raport` zwraca `Report`; mapa wyboru z polami ARiMR (klik = działka z ULDK)_
 
 ## 11. Zapis raportu (wymóg 3.3 pkt 6)
 

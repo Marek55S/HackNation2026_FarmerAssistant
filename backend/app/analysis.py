@@ -55,7 +55,12 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         d = w.dane
         if not terrain.nmt_gotowy(d["rings"]):
             asyncio.get_running_loop().run_in_executor(None, terrain.pobierz_nmt, d["rings"])
-        a, cl = await asyncio.gather(sources.arimr_uprawa(client, d["rings"], D.year), cdse.uprawy_clms(client, d["rings"]))
+        a, cl, wi = await asyncio.gather(sources.arimr_uprawa(client, d["rings"], D.year), cdse.uprawy_clms(client, d["rings"]),
+                                         sources.iung_kategoria(client, d["rings"]))
+    zadeklarowana = a.ok and a.dane["udzial"] >= 0.1      # pole uprawne ARiMR na działce = grunt rolny, nawet gdy IUNG widzi las
+    kod = wi.dane["nierolnicza_kod"] if wi.ok and wi.dane["nierolnicza"] and not zadeklarowana else None
+    pokrycie = {11: "las", 12: "woda", 13: "zabudowa", 14: "drogi"}.get(kod, "drogi") if kod else (
+        "organiczna" if wi.ok and wi.dane["kategoria"] == 5 else "rolny")
     sug = None
     if a.ok and a.dane["udzial"] >= 0.3:
         key = z_arimr(a.dane["roslina"])
@@ -67,15 +72,19 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         if c:
             sug = {"key": c["key"], "nazwa": UPRAWY[c["key"]].nazwa, "roslina": c["nazwa"], "rok": D.year, "udzial": c["udzial"],
                    "zrodlo": f"wg mapy upraw Copernicus {D.year}: {c['nazwa']}"}
-    return {"ok": True, "dzialka": _dzialka_out(d), "podpowiedz": sug,
+    return {"ok": True, "dzialka": _dzialka_out(d) | {"pokrycie": pokrycie,
+                                                       "kategoria": wi.dane["kategoria"] if wi.ok else None},
+            "podpowiedz": None if kod else sug,
             "arimr_powod": None if sug else (a.powod or "deklaracja obejmuje mniej niż 30% działki")
             + ("" if D.year in range(2017, 2025) else "; mapa upraw Copernicus obejmuje 2017–2024"),
-            "zrodla": [w.opis(), a.opis()]}
+            "zrodla": [w.opis(), a.opis(), cl.opis(), wi.opis()]}
 
 
 def _dzialka_out(d: dict) -> dict:
+    ring = max(d["rings"], key=len)
     return {k: d[k] for k in ("id", "teryt", "wojewodztwo", "powiat", "gmina", "obreb", "numer", "lon", "lat")} | {
-        "pow_ha": round(d["pow_ha"], 2), "svg": svg_ksztalt(d["rings"])}
+        "pow_ha": round(d["pow_ha"], 2), "svg": svg_ksztalt(d["rings"]),
+        "geometria": [[round(x, 6), round(y, 6)] for x, y in ring]}
 
 
 def _clms_rok(cl, rok: int) -> dict | None:
@@ -218,9 +227,10 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
                  "uprawa": {"key": u.key, "nazwa": u.nazwa, "zrodlo": zrodlo_uprawy, "okno": u.okno_opis}}
 
     # --- gleba (F6)
-    if wi.ok and wi.dane["nierolnicza"]:
+    if wi.ok and wi.dane["nierolnicza"] and not (wa.ok and wa.dane["udzial"] >= 0.1):
         out.update(poza_zakresem(NIEROLNE.get(wi.dane["nierolnicza_kod"], "teren nierolniczy")))
         out["zrodla"] = zrodla
+        out["surowe"] = {"rings": d["rings"], "pokrycie_kod": wi.dane["nierolnicza_kod"], "pow_ha": d["pow_ha"]}
         return out
     if wi.ok and wi.dane["kategoria"]:
         kat = wi.dane["kategoria"]
@@ -578,10 +588,11 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     for i, a in enumerate(akcje):
         a["n"] = i + 1
         ll = a.pop("lonlat", None)
-        if ll:
-            p = pin_pct(tr_map, *ll)
-        else:
-            p = pins[(i * 3 + 1) % len(pins)] if pins else {"x": 50, "y": 50}
+        if not ll:                        # działanie dla całej działki – punkt wewnątrz działki (rozłożone, by się nie nakładały)
+            gp = geo.grid_points(d["rings"], 5)
+            ll = gp[(i * 3 + 1) % len(gp)] if gp else geo.centroid(d["rings"])
+        a["punkt"] = [round(float(ll[0]), 6), round(float(ll[1]), 6)]
+        p = pin_pct(tr_map, *ll)
         a["x"], a["y"] = p["x"], p["y"]
     real = [a for a in akcje if not a.get("mock") and a["id"] != "R7-"]
     pilne = next((a for a in real if a["id"] == "R7"), None) or next((a for a in real if "teraz" in a["when"]), None) \
@@ -705,6 +716,8 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
         {"t": "skład gleby — SoilGrids", "ok": bool(sg)},
         {"t": f"tło suszy — EDO ({edo['klasa']})" if edo else "tło suszy — EDO", "ok": bool(edo)},
     ]
+    out["surowe"] = {"rings": d["rings"], "ter": ter if ter.get("dostepny") else None, "sat": sat, "hyd": hyd,
+                     "F8": F8, "wyp": wyp, "kat": kat, "nmt": nmt, "pow_ha": d["pow_ha"]}
     out.update({
         "teren": svg_teren(d["rings"], ter, hyd) if ter.get("dostepny") else None,
         "sucho": svg_sucho(d["rings"], sat) if sat else None,

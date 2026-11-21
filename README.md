@@ -4,8 +4,8 @@
 Aplikacja webowa: rolnik wskazuje dzień i działkę ewidencyjną, a narzędzie liczy sytuację wodną działki z danych
 publicznych (bieżących i z 10 lat) i daje zalecenia w kolejności KOWR: **zatrzymaj wodę → na polu → nawadnianie**.
 
-> Stan: prototyp w budowie. Backend (`backend/`) liczy analizę z danych publicznych; frontend PWA (`frontend/`, Next.js)
-> działa na razie na danych przykładowych (`frontend/src/lib/mock`) – podpięcie do API backendu: TODO T10.10.
+> Stan: prototyp. Backend (`backend/`, FastAPI) liczy analizę z danych publicznych; frontend PWA (`frontend/`, Next.js)
+> pobiera z niego działki i raporty dla dowolnej działki w Polsce (bez danych przykładowych).
 > Postęp prac: [TODO.md](TODO.md) (`[x]` zrobione, `[~]` częściowo).
 
 ## Uruchomienie
@@ -31,7 +31,18 @@ Przykład: `POST /api/analiza` z `{"id": "041005_5.0008.57/11", "data": "2018-07
 
 ### Frontend (PWA)
 
-Next.js + TypeScript w katalogu [`frontend/`](frontend/README.md) — makieta UI z danymi przykładowymi, mock API, gotowe pod Cloud Run.
+Next.js + TypeScript w katalogu [`frontend/`](frontend/README.md). Wymaga działającego backendu
+(zmienna `BACKEND_URL`, domyślnie `http://127.0.0.1:8000`):
+
+```bash
+cd frontend
+corepack pnpm install
+corepack pnpm dev        # http://localhost:3000
+```
+
+Trasy API frontu przekazują zapytania do backendu: `/api/parcel` → `/api/dzialka` i `/api/szukaj`,
+`/api/analyze` i strona `/raport` → `/api/raport` (raport w kształcie `Report` z `frontend/src/lib/types.ts`),
+`/api/pola` → pola uprawne ARiMR w widoku mapy (pośrednik, bo serwer ARiMR odrzuca zapytania z przeglądarki).
 
 ## Co liczy backend (z danych), a co jest jeszcze MOCK
 

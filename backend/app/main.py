@@ -9,11 +9,12 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .analysis import analizuj, znajdz_dzialke
+from .raport_front import do_raportu
 from .crops import UPRAWY
 
 # Statyczny podgląd HTML (opcjonalny): katalog z index.html wskazany przez AW_STATIC_DIR.
@@ -31,6 +32,7 @@ class Zapytanie(BaseModel):
     lat: float | None = None
     data: date | None = None
     uprawa: str | None = None
+    od: date | None = None
 
 
 def _waliduj(q: Zapytanie) -> date:
@@ -81,7 +83,23 @@ async def dzialka(q: Zapytanie):
 @app.post("/api/analiza")
 async def analiza(q: Zapytanie):
     d = _waliduj(q)
-    return await analizuj(q.id, q.lon, q.lat, d, q.uprawa)
+    out = await analizuj(q.id, q.lon, q.lat, d, q.uprawa)
+    out.pop("surowe", None)
+    return out
+
+
+@app.post("/api/raport")
+async def raport(q: Zapytanie):
+    """Raport w kształcie `Report` frontendu Next.js (frontend/src/lib/types.ts)."""
+    d = _waliduj(q)
+    out = await analizuj(q.id, q.lon, q.lat, d, q.uprawa)
+    if not out.get("ok"):
+        if out.get("potrzebna_uprawa"):
+            return JSONResponse({"error": out["powod"], "potrzebna_uprawa": True}, status_code=422)
+        status = 404 if "ewidencji" in (out.get("powod") or "") else 502
+        return JSONResponse({"error": out.get("powod") or "Analiza nie powiodła się."}, status_code=status)
+    od = q.od.isoformat() if q.od and q.od < d else None
+    return {"report": do_raportu(out, date.today().isoformat(), od)}
 
 
 if (FRONT / "index.html").exists():

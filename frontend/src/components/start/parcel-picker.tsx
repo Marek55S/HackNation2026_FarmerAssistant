@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { CROPS } from "@/lib/mock/parcels";
+import { CROPS } from "@/lib/crops";
 import type { CropId, LngLat, ParcelLookup } from "@/lib/types";
 import { ICON, Icon } from "../ui";
 
@@ -12,13 +12,6 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "id", label: "Numer działki" },
   { id: "name", label: "Gmina, obręb, numer" },
   { id: "map", label: "Kliknij na mapie" },
-];
-
-/** Demo parcels available in the prototype (mock data). */
-const DEMO_IDS = [
-  { id: "041005_5.0011.22/15", label: "Kołaczkowo 22/15 · pole" },
-  { id: "041005_5.0021.662/11", label: "Rynarzewo 662/11 · pole" },
-  { id: "041005_5.0029.3225/6", label: "Szkocja 3225/6 · las" },
 ];
 
 const PickMap = dynamic(() => import("./pick-map"), {
@@ -48,13 +41,13 @@ export function ParcelPicker({
 }) {
   const [mode, setMode] = useState<Mode>("id");
   const [id, setId] = useState(initialId);
-  const [name, setName] = useState({ gmina: "Szubin", obreb: "Kołaczkowo", nr: "22/15" });
+  const [name, setName] = useState({ gmina: "", obreb: "", nr: "" });
   const [mapPick, setMapPick] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cropEdit, setCropEdit] = useState(false);
 
-  // Look the parcel up as the user types (mock of ULDK + ARiMR crop hint for the chosen date).
+  // Look the parcel up as the user types (backend: ULDK + crop hint for the year of the chosen date + IUNG land cover).
   useEffect(() => {
     const q =
       mode === "id"
@@ -69,7 +62,7 @@ export function ParcelPicker({
               })()
             : new URLSearchParams({ mapa: mapPick ?? "" });
     q.set("data", date);
-    const empty = mode === "id" ? !id.trim() : mode === "name" ? !name.gmina || !name.obreb || !name.nr : !mapPick;
+    const empty = mode === "id" ? !id.trim() : mode === "name" ? !name.obreb || !name.nr : !mapPick;
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       if (empty) {
@@ -149,22 +142,6 @@ export function ParcelPicker({
           <span id="dzialka-hint" className="text-[13px] text-muted">
             Jest w wypisie z rejestru gruntów i na geoportal.gov.pl. Format: <b className="font-semibold">141201_1.0001.123/4</b>
           </span>
-          <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-warn-bg px-3 py-2 text-[13px] text-warn-ink">
-            <span className="inline-flex items-center gap-1.5">
-              <Icon d={ICON.info} size={14} />
-              Prototyp na danych przykładowych — działki do wypróbowania:
-            </span>
-            {DEMO_IDS.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setId(d.id)}
-                aria-pressed={id.trim() === d.id}
-                className={`min-h-8 rounded-full border px-2.5 text-xs font-semibold ${id.trim() === d.id ? "border-primary bg-primary-tint text-primary" : "border-rule-strong bg-paper text-ink"}`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
         </div>
       )}
 

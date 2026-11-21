@@ -100,7 +100,6 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
         </div>
 
         <p className="text-center text-xs text-muted">
-          Prototyp — dane przykładowe, nie wynik analizy prawdziwej działki.
           <span className="print-only">Raport: {url}</span>
         </p>
       </main>
