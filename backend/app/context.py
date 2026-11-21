@@ -11,7 +11,7 @@ from datetime import date, timedelta
 
 import httpx
 
-from .net import Wynik, get
+from .net import Wynik, cache_czytaj, cache_zapisz, get
 
 EDO = "https://drought.emergency.copernicus.eu/api/wms"
 CDI_KLASY = [((240, 228, 66), "obserwacja", "spadek opadów (SPI)"),
@@ -35,6 +35,10 @@ async def edo_cdi(client: httpx.AsyncClient, lon: float, lat: float, D: date) ->
     zr = "EDO – Combined Drought Indicator"
     if D < date(2012, 1, 11):
         return Wynik(zr, None, powod="CDI EDO jest dostępny od 2012 r.")
+    klucz = [round(lon, 2), round(lat, 2), D.isoformat()]
+    c = cache_czytaj("edo", klucz)
+    if c:
+        return Wynik(zr, c, url=EDO, z_cache=True)
     for dek in _dekady(D):
         params = {"SERVICE": "WMS", "VERSION": "1.3.0", "REQUEST": "GetMap", "LAYERS": "cdiad", "STYLES": "",
                   "CRS": "EPSG:4326", "BBOX": f"{lat - 0.05},{lon - 0.05},{lat + 0.05},{lon + 0.05}",
@@ -51,6 +55,8 @@ async def edo_cdi(client: httpx.AsyncClient, lon: float, lat: float, D: date) ->
             best = min(CDI_KLASY, key=lambda k: sum((a - b) ** 2 for a, b in zip(k[0], px[:3])))
             if sum((a - b) ** 2 for a, b in zip(best[0], px[:3])) < 900:
                 klasa, opis = best[1], best[2]
+        if D < date.today() - timedelta(days=30):      # starsze dekady są już ostateczne
+            cache_zapisz("edo", klucz, {"klasa": klasa, "opis": opis, "dekada": dek.isoformat()})
         return Wynik(zr, {"klasa": klasa, "opis": opis, "dekada": dek.isoformat()}, url=EDO,
                      czas_ms=int((time.perf_counter() - t0) * 1000))
     return Wynik(zr, None, powod="EDO nie zwrócił mapy dla tej dekady", url=EDO,

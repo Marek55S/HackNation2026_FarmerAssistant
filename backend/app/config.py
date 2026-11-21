@@ -31,3 +31,8 @@ MULCZ_KC_GRANICA = 0.7        # dni z Kc poniżej tej wartości = parowanie z gl
 
 # Stopnie suszy w historii (KBW / próg)
 STOPNIE = [(1.30, "skrajna"), (1.15, "silna"), (1.05, "umiark."), (1.0, "lekka")]
+
+# Budżet czasu źródeł podpowiedzi uprawy / kategorii gleby przy wyszukaniu działki (s); proxy frontu czeka 20 s.
+BUDZET_KARTY_S = 7.0
+# Budżet czasu źródeł kontekstowych analizy (EDO, SoilGrids, mapa upraw, prognoza) – wolna usługa nie trzyma raportu (s).
+BUDZET_KONTEKST_S = 8.0

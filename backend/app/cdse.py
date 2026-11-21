@@ -19,7 +19,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import CACHE_DIR, Wynik
+from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz
 
 STAC = "https://stac.dataspace.copernicus.eu/v1/search"
 THUMB = "https://thumbnails.dataspace.copernicus.eu/wms"
@@ -113,6 +113,14 @@ async def uprawy_clms(client: httpx.AsyncClient, rings, tylko_rok: int | None = 
     t0 = time.perf_counter()
     zr = "CLMS Crop Types 2017–2024 (CDSE)"
     x0, y0, x1, y1 = geo.bbox(rings)
+    klucz = [round(v, 5) for v in (x0, y0, x1, y1)]
+    url_clms = "https://land.copernicus.eu/en/products/high-resolution-layer-croplands"
+    for k in ([klucz, None], [klucz, tylko_rok]) if tylko_rok is not None else ([klucz, None],):
+        c = cache_czytaj("clms", k)       # mapy 2017–2024 się nie zmieniają – raz odczytane z CDSE wystarczą
+        if c:
+            dane = {int(r): v for r, v in c.items() if tylko_rok is None or int(r) == tylko_rok}
+            if dane:
+                return Wynik(zr, dane, url=url_clms, z_cache=True)
     try:
         s = await client.post(STAC, json={"collections": ["clms_vlcc_crop-types_europe_10m_yearly_v1"],
                                           "bbox": [x0, y0, x1, y1], "limit": 20}, timeout=20)
@@ -135,8 +143,8 @@ async def uprawy_clms(client: httpx.AsyncClient, rings, tylko_rok: int | None = 
     dane = {rok: v for rok, v in wyn if v}
     if not dane:
         return Wynik(zr, None, powod="nie udało się odczytać mapy upraw", czas_ms=int((time.perf_counter() - t0) * 1000))
-    return Wynik(zr, dane, url="https://land.copernicus.eu/en/products/high-resolution-layer-croplands",
-                 czas_ms=int((time.perf_counter() - t0) * 1000))
+    cache_zapisz("clms", [klucz, tylko_rok], {str(r): v for r, v in dane.items()})
+    return Wynik(zr, dane, url=url_clms, czas_ms=int((time.perf_counter() - t0) * 1000))
 
 
 # ---------------------------------------------------------------- 2. Sentinel Hub – NDMI S2 L2A (od 07.2015)

@@ -54,7 +54,10 @@ async def pobierz_dem(client: httpx.AsyncClient, rings) -> Wynik:
         urls = [_https(f["assets"]["data"]["href"]) for f in r.json()["features"]]
         if not urls:
             return Wynik("Copernicus DEM 30 m", None, powod="brak kafla DEM dla tego miejsca")
-        arr, tr = await asyncio.to_thread(_read_window, urls, b)
+        try:
+            arr, tr = await asyncio.to_thread(_read_window, urls, b)
+        except Exception:  # noqa: BLE001 – chwilowy błąd S3/sieci: jedno ponowienie
+            arr, tr = await asyncio.to_thread(_read_window, urls, b)
     except Exception as e:  # noqa: BLE001
         return Wynik("Copernicus DEM 30 m", None, powod=f"{type(e).__name__}: {e}"[:200], url=STAC,
                      czas_ms=int((time.perf_counter() - t0) * 1000))

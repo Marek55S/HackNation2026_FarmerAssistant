@@ -63,6 +63,8 @@ export function StartScreen({
   }, []);
 
   const cropMissing = !!lookup && !lookup.outOfScope && !lookup.cropHint && !crop;
+  // Uprawa do analizy = to, co rolnik widzi na karcie działki: własny wybór albo podpowiedź (kliknięte pole ARiMR / mapa upraw).
+  const chosenCrop = crop ?? lookup?.cropHint?.crop ?? null;
   const canStart = !!lookup && !cropMissing && dateValid && !running;
 
   function saveToFarm(report: Report, url: string) {
@@ -90,7 +92,7 @@ export function StartScreen({
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, od: from ?? undefined, uprawa: crop ?? undefined }),
+        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, od: from ?? undefined, uprawa: chosenCrop ?? undefined }),
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) {
@@ -136,7 +138,7 @@ export function StartScreen({
     const { parcel } = lookup;
     const q = new URLSearchParams({ dzialka: parcel.id, data: date });
     if (from) q.set("od", from);
-    if (crop) q.set("uprawa", crop);
+    if (chosenCrop) q.set("uprawa", chosenCrop);
     upsert({
       parcelId: parcel.id,
       name: parcel.number,

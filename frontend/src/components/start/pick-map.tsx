@@ -22,7 +22,7 @@ const SLOW_MS = 500;
 
 /** Crop fields (ARiMR declarations) – vector, fetched for the view after the map stops moving. */
 const POLA_MIN_ZOOM = 13.5; // measured: ~30 km² view, ~700 fields, ARiMR ~0.4 s
-const POLA_TIMEOUT_MS = 500; // slower answer = skip (map stays responsive), next move tries again
+const POLA_TIMEOUT_MS = 500; // slower answer: show a loading note, fields appear when ARiMR answers (a new move cancels it)
 const POLA_DEBOUNCE_MS = 200;
 const POLA_GRID = 0.004; // view rounded outward to this grid (deg) so small pans hit the cache
 const POLA_KOLOR = "#F07A1A"; // one highlight colour for all fields (no colour per crop)
@@ -142,6 +142,7 @@ export default function PickMap({
       const loadPola = () => {
         if (map.getZoom() < POLA_MIN_ZOOM) {
           ctrl?.abort();
+          ctrl = null;
           src().setData(EMPTY);
           setPolaStan("zoom");
           setPolaInfo(null);
@@ -153,6 +154,8 @@ export default function PickMap({
         const key = `${rokRef.current}|${bbox.join(",")}`;
         const hit = cache.get(key);
         if (hit) {
+          ctrl?.abort(); // an older, still pending view must not overwrite this one
+          ctrl = null;
           src().setData(hit);
           setPolaStan("ok");
           setPolaInfo({ n: hit.features.length, rok: hit.rok ?? null });
@@ -161,7 +164,7 @@ export default function PickMap({
         ctrl?.abort();
         const c = new AbortController();
         ctrl = c;
-        const timer = setTimeout(() => c.abort("timeout"), POLA_TIMEOUT_MS);
+        const timer = setTimeout(() => ctrl === c && setPolaStan("wolno"), POLA_TIMEOUT_MS);
         fetch(`/api/pola?bbox=${bbox.join(",")}&rok=${rokRef.current ?? ""}`, { signal: c.signal })
           .then(async (r) => {
             if (r.status === 413) return setPolaStan("zoom");
@@ -174,7 +177,7 @@ export default function PickMap({
             setPolaInfo({ n: fc.features.length, rok: fc.rok ?? null });
           })
           .catch(() => {
-            if (c.signal.reason === "timeout") setPolaStan("wolno"); // too slow – skip, keep the previous fields
+            if (ctrl === c) setPolaStan("blad"); // aborted by a newer view = ignore
           })
           .finally(() => clearTimeout(timer));
       };
@@ -238,7 +241,7 @@ export default function PickMap({
           {polaStan === "ok" && polaInfo
             ? `Pola uprawne ARiMR ${polaInfo.rok ?? ""}: ${polaInfo.n} · kliknij pole, aby wybrać działkę`
             : polaStan === "wolno"
-              ? "ARiMR odpowiada wolno — przesuń mapę, spróbujemy ponownie"
+              ? "Wczytuję pola uprawne ARiMR…"
               : "Pola uprawne chwilowo niedostępne"}
         </span>
       )}

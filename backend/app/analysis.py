@@ -16,6 +16,7 @@ import numpy as np
 
 from . import config as C
 from . import bdot, cdse, context, geo, satellite, sources, terrain
+from .net import Wynik
 from .crops import UPRAWY, Uprawa, kc_dnia, koniec_wegetacji, w_oknie, z_arimr
 from .facts import (MIES, Meteo, Plan, bilans, ocena_kbw_teraz, odplyw, s_cn, scenariusze, sezon_kbw, _shift)
 
@@ -56,9 +57,11 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         if not terrain.nmt_gotowy(d["rings"]):
             asyncio.get_running_loop().run_in_executor(None, terrain.pobierz_nmt, d["rings"])
         punkt = (lon, lat) if lon is not None and lat is not None else None
-        a, cl, wi = await asyncio.gather(sources.arimr_uprawa(client, d["rings"], D.year, punkt),
-                                         cdse.uprawy_clms(client, d["rings"], D.year),   # tylko rok daty – szybko
-                                         sources.iung_kategoria(client, d["rings"]))
+        # podpowiedź uprawy i kategoria gleby mają stały budżet czasu: wolna usługa nie może zablokować karty działki
+        a, cl, wi = await asyncio.gather(
+            _w_czasie(sources.arimr_uprawa(client, d["rings"], D.year, punkt), f"ARiMR – deklaracje upraw {D.year}"),
+            _w_czasie(cdse.uprawy_clms(client, d["rings"], D.year), "CLMS Crop Types 2017–2024 (CDSE)"),  # tylko rok daty
+            _w_czasie(sources.iung_kategoria(client, d["rings"]), "IUNG‑PIB – kategorie gleb"))
     zadeklarowana = a.ok and a.dane["udzial"] >= 0.1      # pole uprawne ARiMR na działce = grunt rolny, nawet gdy IUNG widzi las
     kod = wi.dane["nierolnicza_kod"] if wi.ok and wi.dane["nierolnicza"] and not zadeklarowana else None
     pokrycie = {11: "las", 12: "woda", 13: "zabudowa", 14: "drogi"}.get(kod, "drogi") if kod else (
@@ -81,6 +84,14 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
             "arimr_powod": None if sug else (a.powod or "deklaracja obejmuje mniej niż 30% działki")
             + ("" if D.year in range(2017, 2025) else "; mapa upraw Copernicus obejmuje 2017–2024"),
             "zrodla": [w.opis(), a.opis(), cl.opis(), wi.opis()]}
+
+
+async def _w_czasie(coro, zrodlo: str, s: float = C.BUDZET_KARTY_S):
+    """Wynik źródła albo pusty Wynik, gdy nie zdąży w `s` sekund (karta działki ma się pokazać szybko)."""
+    try:
+        return await asyncio.wait_for(coro, s)
+    except asyncio.TimeoutError:
+        return Wynik(zrodlo, None, powod=f"nie odpowiedziało w {s:.0f} s")
 
 
 def _dzialka_out(d: dict) -> dict:
@@ -164,6 +175,33 @@ def svg_sucho(rings, sat: dict) -> dict:
 
 
 # ---------------------------------------------------------------- analiza
+async def _satelita(rings, D: date, u) -> tuple:
+    """NDMI z satelity (P10): Sentinel Hub → Planetary Computer → Landsat. Okno sceny zależy od uprawy –
+    w wegetacji ostatnie 25 dni, poza nią okno wrażliwe minionego sezonu. Zwraca (wynik, opisy źródeł)."""
+    z: list = []
+    _, faza_d = kc_dnia(u, D, C.KC_POZA)
+    if faza_d != "poza wegetacją":
+        okno_sat = (D - timedelta(days=25), D)
+    else:
+        y_s = D.year if D > date(D.year, *u.okno[1]) else D.year - 1
+        okno_sat = (date(y_s, *u.okno[0]), date(y_s, *u.okno[1]))
+    async with httpx.AsyncClient() as client:
+        wsh = await cdse.ndmi_anomalia_sh(client, rings, D, okno_sat)
+        wsat = wsh if wsh.ok else await satellite.ndmi_anomalia(client, rings, D, okno_sat)
+        if not wsh.ok:
+            z.append(wsh.opis())
+            if not wsat.ok:
+                wsat.powod = f"Sentinel Hub: {wsh.powod}; Planetary Computer: {wsat.powod}"
+        if not wsat.ok:                     # zapas: Landsat (lata < 2016 albo za mało lat Sentinel‑2 do porównania)
+            z.append(wsat.opis())
+            wls = await satellite.ndmi_landsat(client, rings, D, okno_sat)
+            if not wls.ok:
+                wls.powod = f"Sentinel‑2: {wsat.powod}; Landsat: {wls.powod}"
+            wsat = wls
+    z.append(wsat.opis())
+    return wsat, z
+
+
 async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: date, uprawa: str | None) -> dict:
     t0 = time.perf_counter()
     dzis = date.today()
@@ -177,11 +215,13 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
                  sources.arimr_uprawa(client, d["rings"], D.year),
                  terrain.pobierz_dem(client, d["rings"]),
                  bdot.hydrografia(d["rings"], d.get("teryt") or d.get("id") or ""),
-                 context.edo_cdi(client, d["lon"], d["lat"], D),
-                 context.soilgrids(client, d["lon"], d["lat"]),
-                 cdse.uprawy_clms(client, d["rings"])]
+                 _w_czasie(context.edo_cdi(client, d["lon"], d["lat"], D), "EDO – Combined Drought Indicator", C.BUDZET_KONTEKST_S),
+                 _w_czasie(context.soilgrids(client, d["lon"], d["lat"]), "SoilGrids (ISRIC)", C.BUDZET_KONTEKST_S),
+                 _w_czasie(cdse.uprawy_clms(client, d["rings"]), "CLMS Crop Types 2017–2024 (CDSE)", C.BUDZET_KONTEKST_S)]
         if D >= dzis - timedelta(days=1):
-            tasks.append(sources.meteo_prognoza(client, d["lat"], d["lon"]))
+            tasks.append(_w_czasie(sources.meteo_prognoza(client, d["lat"], d["lon"]), "Open‑Meteo (prognoza 16 dni)", C.BUDZET_KONTEKST_S))
+        uprawa_0 = uprawa
+        sat_task = asyncio.create_task(_satelita(d["rings"], D, UPRAWY[uprawa])) if uprawa in UPRAWY else None
         res = await asyncio.gather(*tasks)
     wm, wi, wa, wdem, wh, wedo, wsg, wcl = res[:8]
     wp = res[8] if len(res) > 8 else None
@@ -192,7 +232,16 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
 
     # --- F0 uprawa
     zrodlo_uprawy = "wybrane przez rolnika"
-    if not uprawa:
+    if uprawa:
+        # podpowiedź z karty działki wraca jako wybrana uprawa – nazwij źródło, jeśli to uprawa z deklaracji / mapy upraw
+        zadekl = [wa.dane["roslina"], *wa.dane.get("inne", [])] if wa.ok else []
+        r = next((x for x in zadekl if z_arimr(x) == uprawa), None)
+        c = _clms_rok(wcl, D.year)
+        if r:
+            zrodlo_uprawy = f"deklaracja ARiMR {D.year}: {r}"
+        elif c and c["key"] == uprawa:
+            zrodlo_uprawy = f"mapa upraw Copernicus {D.year}: {c['nazwa']}"
+    else:
         if wa.ok and wa.dane["udzial"] >= 0.3 and z_arimr(wa.dane["roslina"]):
             uprawa = z_arimr(wa.dane["roslina"])
             zrodlo_uprawy = f"deklaracja ARiMR {D.year}: {wa.dane['roslina']}"
@@ -206,27 +255,9 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
                     "zrodla": zrodla}
     u = UPRAWY.get(uprawa) or UPRAWY["inna"]
 
-    # --- satelita (P10): okno sceny zależne od uprawy – w wegetacji ostatnie 25 dni, poza nią okno wrażliwe minionego sezonu
-    _, faza_d = kc_dnia(u, D, C.KC_POZA)
-    if faza_d != "poza wegetacją":
-        okno_sat = (D - timedelta(days=25), D)
-    else:
-        y_s = D.year if D > date(D.year, *u.okno[1]) else D.year - 1
-        okno_sat = (date(y_s, *u.okno[0]), date(y_s, *u.okno[1]))
-    async with httpx.AsyncClient() as client:
-        wsh = await cdse.ndmi_anomalia_sh(client, d["rings"], D, okno_sat)
-        wsat = wsh if wsh.ok else await satellite.ndmi_anomalia(client, d["rings"], D, okno_sat)
-        if not wsh.ok:
-            zrodla.append(wsh.opis())
-            if not wsat.ok:
-                wsat.powod = f"Sentinel Hub: {wsh.powod}; Planetary Computer: {wsat.powod}"
-        if not wsat.ok:                     # zapas: Landsat (lata < 2016 albo za mało lat Sentinel‑2 do porównania)
-            zrodla.append(wsat.opis())
-            wls = await satellite.ndmi_landsat(client, d["rings"], D, okno_sat)
-            if not wls.ok:
-                wls.powod = f"Sentinel‑2: {wsat.powod}; Landsat: {wls.powod}"
-            wsat = wls
-    zrodla.append(wsat.opis())
+    # --- satelita (P10): gdy uprawa była znana od początku, zdjęcie pobierało się równolegle z resztą źródeł
+    wsat, z_sat = await (sat_task if sat_task and uprawa == uprawa_0 else _satelita(d["rings"], D, u))
+    zrodla += z_sat
 
     out: dict = {"ok": True, "data": D.isoformat(), "dzialka": _dzialka_out(d),
                  "uprawa": {"key": u.key, "nazwa": u.nazwa, "zrodlo": zrodlo_uprawy, "okno": u.okno_opis}}
