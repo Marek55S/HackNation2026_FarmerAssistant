@@ -31,3 +31,13 @@ MULCZ_KC_GRANICA = 0.7        # dni z Kc poniżej tej wartości = parowanie z gl
 
 # Stopnie suszy w historii (KBW / próg)
 STOPNIE = [(1.30, "skrajna"), (1.15, "silna"), (1.05, "umiark."), (1.0, "lekka")]
+
+# Budżet czasu źródeł podpowiedzi uprawy / kategorii gleby przy wyszukaniu działki (s); proxy frontu czeka 20 s.
+BUDZET_KARTY_S = 7.0
+# Hydrologia (L3): powyżej tej powierzchni zlewni elementarnej MPHP piętrzenie dotyczy cieku zarządzanego przez
+# Wody Polskie, a nie rowu spółki wodnej – zalecenie R1 kieruje wtedy do zarządcy. ⚙️ wartość robocza, do T. Bolewskiego.
+ZLEWNIA_DUZA_KM2 = 10.0
+BUDZET_MPHP_S = 12.0          # usługa Wód Polskich bywa wolna (zmierzone 2,6–11,7 s); wynik w cache bez terminu
+
+# Budżet czasu źródeł kontekstowych analizy (EDO, SoilGrids, mapa upraw, prognoza) – wolna usługa nie trzyma raportu (s).
+BUDZET_KONTEKST_S = 8.0

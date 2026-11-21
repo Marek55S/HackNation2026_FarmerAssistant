@@ -86,6 +86,8 @@ export interface Zalecenie {
   /** Longer explanation shown when the card is opened */
   dlaczego: string;
   tagi: string[];
+  /** Concrete steps ("Co zrobić"), in order; empty when the rule has none */
+  kroki: string[];
 }
 
 export type CauseLevel = "główna" | "duża" | "mała";
@@ -108,6 +110,20 @@ export interface SeasonHistory {
   year: number;
   crop: string;
   tag: DroughtTag;
+  /** Where the crop of that year comes from + KBW vs threshold and stress days (tooltip) */
+  note?: string;
+  /** false = crop of that year unknown, the current crop was assumed */
+  cropKnown?: boolean;
+}
+
+/** 10-year vulnerability (task 3.3 pt 4): how often the parcel ran short of water, shown right after the state on day D */
+export interface Vulnerability {
+  /** Seasons with drought (IUNG threshold, or stress days for crops without one) */
+  drought: number;
+  seasons: number;
+  /** Most frequent months, Polish locative ("lipcu") */
+  months: string[];
+  text: string;
 }
 
 export interface SourceStatus {
@@ -217,6 +233,7 @@ export interface Report {
   mapInfo: Record<MapLayer, { say: string; src: string }>;
   causes: Cause[];
   risk: { head: string; say: string; note: string; cols: string[]; noAction: number[]; withPlan: number[] } | null;
+  vulnerability: Vulnerability | null;
   /** Collapsed justification (§8 pt 7): IUNG criterion now (F3) + 10-year history (F5, F0h) */
   justification: { iungNow: string; history: SeasonHistory[]; historyNote: string } | null;
   sources: SourceStatus[];

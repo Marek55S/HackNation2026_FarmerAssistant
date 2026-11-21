@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
 
   let data: { features?: Feature[] };
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(4000), cache: "no-store" });
+    const r = await fetch(url, { signal: AbortSignal.timeout(10000), cache: "no-store" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     data = await r.json();
   } catch (e) {

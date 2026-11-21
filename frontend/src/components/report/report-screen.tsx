@@ -10,7 +10,7 @@ import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, StatusPill } from "../ui";
 import { CAT, LAYERS, LEGEND } from "./map-style";
-import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, Sources } from "./sections";
+import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, Sources, Vulnerability } from "./sections";
 
 // MapLibre needs the browser (WebGL), so the map is loaded on the client only.
 const ParcelMap = dynamic(() => import("./parcel-map"), {
@@ -170,16 +170,21 @@ function MapSummary({ report }: { report: Report }) {
   );
 }
 
-/** Key numbers for the feature card — all straight from the report. */
+/**
+ * Key numbers for the feature card — the state on day D and the 10-year vulnerability (task 3.3 pt 4).
+ * Scenario numbers ("jak bywało") live in the Risk section further down, so they are not read as today's state.
+ */
 function stateCells(r: Report) {
   const cells: { label: string; value: string; note: string }[] = [];
-  if (r.soilWaterPct !== null) cells.push({ label: "Woda w glebie", value: `${r.soilWaterPct}%`, note: "zapas w strefie korzeni" });
+  if (r.soilWaterPct !== null) cells.push({ label: "Woda w glebie", value: `${r.soilWaterPct}%`, note: `zapas w strefie korzeni, ${shortDate(r.date)}` });
   if (r.stressThresholdPct !== null) cells.push({ label: "Próg stresu", value: `${r.stressThresholdPct}%`, note: r.crop ? `dla: ${r.crop.name.toLowerCase()}` : "" });
-  if (r.risk) {
-    const max = Math.max(...r.risk.noAction);
-    const i = r.risk.noAction.indexOf(max);
-    cells.push({ label: "Ryzyko bez działań", value: `${max}/${r.scenarios}`, note: `scenariuszy · ${r.risk.cols[i]}` });
-    cells.push({ label: "Z planem", value: `${r.risk.withPlan[i]}/${r.scenarios}`, note: `scenariuszy · ${r.risk.cols[i]}` });
+  if (r.vulnerability && r.vulnerability.seasons > 0) {
+    const v = r.vulnerability;
+    cells.push({
+      label: "Sezony z suszą",
+      value: `${v.drought} z ${v.seasons}`,
+      note: v.months.length ? `najczęściej w ${v.months.join(" i ")}` : r.yearsLabel,
+    });
   }
   return cells;
 }
@@ -236,7 +241,7 @@ function AgriReport({ report }: { report: Report }) {
             <StatusPill tone={report.status.tone} label={report.status.label} onDark />
             <span className="text-[13px] text-feature-muted">
               pewność <b className="font-semibold text-feature-ink">{report.confidence.level}</b> · {report.confidence.agreeing} z{" "}
-              {report.confidence.total} wskaźników zgodne
+              {report.confidence.total} wskaźników zgodne · stan na {shortDate(report.date)}
               {report.confidence.note && <> · {report.confidence.note}</>}
             </span>
           </div>
@@ -244,9 +249,12 @@ function AgriReport({ report }: { report: Report }) {
             <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-feature-ink max-sm:text-[22px]">{report.headline}</h2>
             <p className="max-w-[68ch] text-[15px] leading-relaxed text-feature-muted">{report.summary}</p>
           </div>
-          <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            {stateCells(report).map((c) => (
-              <div key={c.label} className="flex flex-col gap-1 rounded-2xl bg-feature-cell px-4 py-3">
+          <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {stateCells(report).map((c, i, all) => (
+              <div
+                key={c.label}
+                className={`flex flex-col gap-1 rounded-2xl bg-feature-cell px-4 py-3 ${all.length % 2 === 1 && i === all.length - 1 ? "max-sm:col-span-2" : ""}`}
+              >
                 <dt className="text-xs text-feature-muted">{c.label}</dt>
                 <dd className="tabular font-[family-name:var(--font-display)] text-2xl font-semibold leading-none">{c.value}</dd>
                 <dd className="text-[11px] text-feature-muted">{c.note}</dd>
@@ -281,6 +289,13 @@ function AgriReport({ report }: { report: Report }) {
       </section>
 
       <PeriodSummaryCard report={report} />
+
+      {/* Order follows the KOWR task (3.3 pt 4–5), not the mock-up: state on day D (above) → 10-year vulnerability and
+          causes → plan → scenarios. See makieta-ui/README.md. */}
+      <section className="flex flex-wrap items-stretch gap-5 max-sm:gap-4" aria-label="Podatność i przyczyny">
+        <Vulnerability report={report} />
+        <Causes report={report} onShow={showLayer} />
+      </section>
 
       {/* Map with layers + action list */}
       <section className="flex flex-wrap items-start gap-5" aria-label="Plan na działce">
@@ -326,8 +341,7 @@ function AgriReport({ report }: { report: Report }) {
         </aside>
       </section>
 
-      <section className="flex flex-wrap items-stretch gap-5 max-sm:gap-4" aria-label="Ryzyko i przyczyny">
-        <Causes report={report} onShow={showLayer} />
+      <section className="flex flex-wrap items-stretch gap-5 max-sm:gap-4" aria-label="Co może się wydarzyć">
         <Risk report={report} />
       </section>
 

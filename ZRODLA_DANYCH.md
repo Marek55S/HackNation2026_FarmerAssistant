@@ -176,9 +176,10 @@ Uwaga do jednostek SoilGrids: `wv0033` i `wv1500` mają `d_factor=10` (wartość
 
 | Źródło | Co daje | Endpoint | Dostęp | Test | Priorytet |
 |---|---|---|---|---|---|
-| **IMGW‑PIB hydro (bieżące)** | stany wód na wodowskazach z `lat/lon`, stany ostrzegawcze i alarmowe → najbliższy ciek, „czy rzeka jest niżówkowa” | `https://danepubliczne.imgw.pl/api/data/hydro/` | bez klucza | ✅ | SHOULD |
+| **IMGW‑PIB hydro (bieżące)** | stany wód na wodowskazach z `lat/lon`, stany ostrzegawcze i alarmowe → najbliższy ciek, „czy rzeka jest niżówkowa” | `https://danepubliczne.imgw.pl/api/data/hydro/` | bez klucza | ✅ w użyciu: `backend/app/hydro.py` (najbliższy wodowskaz ≤ 30 km) | SHOULD |
+| **IMGW‑PIB ostrzeżenia hydrologiczne** | „Susza hydrologiczna” (przepływy poniżej SNQ) z kodami zlewni prognostycznych i województwami → R7/R8 | `https://danepubliczne.imgw.pl/api/data/warningshydro` | bez klucza | ✅ w użyciu; dopasowanie po województwie (nie znaleźliśmy publicznej warstwy zlewni prognostycznych) | SHOULD |
 | IMGW‑PIB hydro archiwum | dobowe stany i przepływy (do niżówek w 10 latach) | `https://danepubliczne.imgw.pl/data/dane_pomiarowo_obserwacyjne/dane_hydrologiczne/` | jw. | ✅ katalog | NICE |
-| **Hydroportal ISOK / KZGW (Wody Polskie)** | MPHP10k – sieć hydrograficzna, zlewnie; mapy zagrożeń | `https://isok.gov.pl/hydroportal.html`; usługi pod `https://wody.isok.gov.pl/wss/…` (np. INSPIRE WORP). Listę usług daje wtyczka QGIS „Wody Polskie – Baza WMS” | bezpłatne | ⚠️ zgadywany adres MPHP zwrócił 401 – **prawidłowy URL do ustalenia** (wtyczka QGIS lub mentor T. Rychlicki) | SHOULD |
+| **MPHP10k – zlewnie (Wody Polskie)** | zlewnia elementarna cieku przy działce (nazwa, poligon → powierzchnia) → R1 | `https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_HY_10k_2019_WMS` – GetFeatureInfo, warstwa `HY.PhysicalWaters.Catchments`, `INFO_FORMAT=application/json` (EPSG:4326, lon/lat). WFS GetFeature przekierowuje na logowanie | bezpłatne | ✅ 21.11.2026 (2,6–11,7 s), w użyciu: `backend/app/hydro.py` | **MUST** |
 | BDOT10k (hydrografia) | rowy melioracyjne (`SWRM`), kanały (`SWKN`), cieki (`SWRS`), zbiorniki (`PTWP`) | zob. §1 | bezpłatne | ✅ | **MUST** |
 | PIG‑PIB – GZWP (WMS) | główne zbiorniki wód podziemnych | `http://epsh.pgi.gov.pl/gzwp-wms/service.svc/get` | bezpłatne | ❓ | NICE |
 | PIG‑PIB – CBDH (WMS) | otwory hydrogeologiczne (głębokość zwierciadła wody) → potencjalne źródło wody do nawadniania | `https://cbdgmapa.pgi.gov.pl/arcgis/services/hydrogeologia/cbdh_otwory/MapServer/WMSServer` | bezpłatne | ❓ | NICE |

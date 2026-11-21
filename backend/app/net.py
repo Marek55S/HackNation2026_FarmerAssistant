@@ -43,11 +43,31 @@ def _key(url: str, params: dict | None) -> Path:
     return CACHE_DIR / (hashlib.sha1(raw.encode()).hexdigest() + ".json")
 
 
+def cache_czytaj(nazwa: str, klucz) -> object | None:
+    """Wynik przetworzony wcześniej (np. uprawy CLMS działki) – dane, które się nie zmieniają."""
+    f = _key(nazwa, {"k": klucz})
+    try:
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
+    except (OSError, ValueError):
+        return None
+
+
+def cache_zapisz(nazwa: str, klucz, dane) -> None:
+    try:
+        _key(nazwa, {"k": klucz}).write_text(json.dumps(dane, ensure_ascii=False, default=lambda o: o.item() if hasattr(o, "item") else str(o)), encoding="utf-8")
+    except OSError:
+        pass
+
+
 async def get(client: httpx.AsyncClient, zrodlo: str, url: str, params: dict | None = None, *,
-              fmt: str = "json", timeout: float = 20.0, cache: bool = True, retries: int = 1) -> Wynik:
-    """GET z cache. `fmt` = 'json' albo 'text'. Nigdy nie rzuca wyjątku."""
+              fmt: str = "json", timeout: float = 20.0, cache: bool = True, retries: int = 1,
+              ttl_s: float | None = None) -> Wynik:
+    """GET z cache. `fmt` = 'json' albo 'text'. `ttl_s` – ważność cache dla danych bieżących (np. stany rzek);
+    bez niego cache nie wygasa (dane archiwalne). Nigdy nie rzuca wyjątku."""
     path = _key(url, params)
     t0 = time.perf_counter()
+    if cache and path.exists() and ttl_s is not None and time.time() - path.stat().st_mtime > ttl_s:
+        path.unlink(missing_ok=True)
     if cache and path.exists():
         try:
             stored = json.loads(path.read_text(encoding="utf-8"))
@@ -59,6 +79,10 @@ async def get(client: httpx.AsyncClient, zrodlo: str, url: str, params: dict | N
     for _ in range(retries + 1):
         try:
             r = await client.get(url, params=params, timeout=timeout, headers=UA)
+            if r.status_code == 429:
+                # limit zapytań: natychmiastowe ponowienie tylko zużywa limit dalej
+                last = "HTTP 429 — wyczerpany limit zapytań źródła, spróbuj za kilka minut"
+                break
             if r.status_code != 200:
                 last = f"HTTP {r.status_code}"
                 continue

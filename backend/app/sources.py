@@ -83,16 +83,30 @@ METEO_DAILY = ("precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,
 
 
 async def meteo_archiwum(client, lat: float, lon: float, d: date, lata: int = 31) -> Wynik:
-    """30 lat przed `D` (+ rok zapasu na rozruch bilansu) jednym zapytaniem; siatka zaokrąglona do 0,05° (cache)."""
+    """30 lat przed `D` (+ rok zapasu na rozruch bilansu); siatka zaokrąglona do 0,05° (cache).
+
+    Open‑Meteo liczy zapytanie o długi okres jako wiele wywołań (każde 2 tygodnie ≈ 1 wywołanie), a darmowy limit
+    to 600/min i 10 000/dobę — 31 lat naraz to ok. 800 wywołań. Dlatego pobieramy osobno pełne minione lata
+    (cache bez wygasania, ten sam dla każdej daty D w danej komórce siatki) i bieżący rok do D (mały koszt)."""
     end = min(d, date.today() - timedelta(days=1))
-    params = {"latitude": round(lat * 20) / 20, "longitude": round(lon * 20) / 20,
-              "start_date": date(end.year - lata, 1, 1).isoformat(), "end_date": end.isoformat(),
-              "daily": METEO_DAILY, "timezone": "Europe/Warsaw"}
-    w = await get(client, "Open‑Meteo (ERA5‑Land)", "https://archive-api.open-meteo.com/v1/archive", params,
-                  timeout=30)
-    if w.ok and "daily" not in w.dane:
-        w.powod, w.dane = "odpowiedź bez danych dobowych", None
-    return w
+    url = "https://archive-api.open-meteo.com/v1/archive"
+    zr = "Open‑Meteo (ERA5‑Land)"
+    base = {"latitude": round(lat * 20) / 20, "longitude": round(lon * 20) / 20,
+            "daily": METEO_DAILY, "timezone": "Europe/Warsaw"}
+    hist = await get(client, zr, url, {**base, "start_date": date(end.year - lata, 1, 1).isoformat(),
+                                       "end_date": date(end.year - 1, 12, 31).isoformat()}, timeout=30)
+    if not hist.ok:
+        return hist
+    biez = await get(client, zr, url, {**base, "start_date": date(end.year, 1, 1).isoformat(),
+                                       "end_date": end.isoformat()}, timeout=20)
+    if not biez.ok:
+        return biez
+    if "daily" not in hist.dane or "daily" not in biez.dane:
+        return Wynik(zr, None, powod="odpowiedź bez danych dobowych", url=url)
+    h, b = hist.dane["daily"], biez.dane["daily"]
+    daily = {k: list(h.get(k, [])) + list(b.get(k, [])) for k in h}
+    return Wynik(zr, {**hist.dane, "daily": daily}, url=url, czas_ms=hist.czas_ms + biez.czas_ms,
+                 z_cache=hist.z_cache and biez.z_cache, pobrano=biez.pobrano)
 
 
 async def meteo_prognoza(client, lat: float, lon: float) -> Wynik:

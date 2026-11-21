@@ -228,11 +228,14 @@ def _map_info(out: dict, sur: dict) -> dict:
         say = (f"Suszej niż zwykle jest ok. {sat['sucho_ha']:.1f} ha działki — tam w pierwszej kolejności woda."
                if sat["sucho_ha"] >= 0.2 else "Cała działka jest suszsza niż zwykle." if sat["z_med"] < -1
                else "Rośliny mają wilgotność typową dla tej pory roku.")
+        ref = ", ".join(f"{yy} ({c})" for yy, c in (sat.get("uprawy_ref") or {}).items()) \
+            or ", ".join(map(str, sat["lata_ref"]))
         info["sucho"] = {"say": say, "src": f"Wilgotność roślin (NDMI) z {sat.get('sensor', 'Sentinel‑2')}, {d}.{m}.{y}, "
-                                            f"w porównaniu z tymi samymi dniami w latach {sat['lata_ref'][0]}–{sat['lata_ref'][-1]}"}
+                                            f"w porównaniu z tymi samymi dniami w sezonach z tą samą grupą upraw: {ref}"}
     else:
         powod = next((b for b in out.get("braki", []) if b.startswith("stan roślin")), "brak bezchmurnego zdjęcia")
-        info["sucho"] = {"say": powod[0].upper() + powod[1:] + ".", "src": "Sentinel‑2 / Landsat"}
+        info["sucho"] = {"say": "Brak porównania satelitarnego — " + powod.removeprefix("stan roślin z satelity niedostępny: ") + ".",
+                         "src": "Sentinel‑2 / Landsat · porównujemy tylko sezony z tą samą grupą upraw"}
     return info
 
 
@@ -283,7 +286,8 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
                 "soilWaterPct": None, "stressThresholdPct": None,
                 "status": {"label": "Poza zakresem", "tone": "poza-zakresem"}, "headline": out["status"]["head"],
                 "summary": out["status"]["sub"], "confidence": {"level": "niska", "agreeing": 0, "total": 0, "note": None},
-                "urgent": None, "actions": [], "mapInfo": info, "causes": [], "risk": None, "justification": None,
+                "urgent": None, "actions": [], "mapInfo": info, "causes": [], "risk": None, "vulnerability": None,
+                "justification": None,
                 "sources": _sources(out, today), "notChecked": [], "advisorDetails": []}
 
     st = out["status"]
@@ -322,7 +326,7 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
         "status": {"label": st["label"], "tone": tone},
         "headline": st["head"], "summary": st["sub"],
         "confidence": {"level": st["pewnosc"] if st["pewnosc"] in ("wysoka", "średnia", "niska") else "niska",
-                       "agreeing": zgod, "total": len(syg), "note": ("brak: " + ", ".join(brak)) if brak else None},
+                       "agreeing": zgod, "total": len(dost), "note": ("brak: " + ", ".join(brak)) if brak else None},
         "urgent": {"n": pil["n"], "label": "PILNE TERAZ" if pil["id"] == "R7" else "NAJLEPIEJ TERAZ",
                    "title": pil["title"], "sub": pil["when"]} if pil else None,
         "actions": [{
@@ -330,15 +334,19 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
             "ile": next((c for c in a.get("chips", []) if re.search(r"\d", c) and ("mm" in c or "m³" in c)), None),
             "bo": [a["cause"]], "co_zyskasz": a["gain"], "fakty": FAKTY.get(a["id"], []), "n": a["n"],
             "kategoria": a["cat"], "punkt": a["punkt"], "warstwa": a["layer"] if a["layer"] in ("plan", "sucho", "teren", "gleba") else "plan",
-            "dlaczego": a["why"], "tagi": a.get("chips", []),
+            "dlaczego": a["why"], "tagi": a.get("chips", []), "kroki": a.get("steps", []),
         } for a in akcje],
         "mapInfo": _map_info(out, sur),
         "causes": [{"id": c["id"], "name": c["name"], "evidence": c["ev"], "level": c["lvl"], "icon": c["icon"],
                     "color": c["color"], "layer": c.get("map")} for c in out.get("przyczyny", [])],
         "risk": {"head": r["head"], "say": r["say"], "note": r["note"], "cols": r["kolumny"],
                  "noAction": r["bez"], "withPlan": r["plan"]} if r else None,
+        # podatność z 10 lat (3.3 pkt 4) – widoczna sekcja zaraz po stanie na dzień D (L4)
+        "vulnerability": {"drought": hist.get("F5", 0), "seasons": hist.get("n", 0), "months": hist.get("miesiace", []),
+                          "text": hist.get("podatnosc", "")} if hist else None,
         "justification": {"iungNow": iung,
-                          "history": [{"year": int(y["y"]), "crop": y["crop"], "tag": y["tag"] if y["tag"] in TAGI else "brak"}
+                          "history": [{"year": int(y["y"]), "crop": y["crop"], "tag": y["tag"] if y["tag"] in TAGI else "brak",
+                                       "note": y.get("tip", ""), "cropKnown": bool(y.get("znana"))}
                                       for y in hist.get("lata", [])],
                           "historyNote": hist.get("opis", "")} if hist else None,
         "sources": _sources(out, today),
