@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Raport PDF – strona 1</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 794px; height: 1123px; box-sizing: border-box; padding: 44px 48px; background: #FFFFFF; font-family: Inter, system-ui, sans-serif; color: #1A1C19; display: flex; flex-direction: column; gap: 18px">
+  <div style="display: flex; align-items: flex-start; gap: 16px; border-bottom: 2px solid #1E5B3A; padding-bottom: 14px">
+    <div style="display: flex; flex-direction: column; gap: 4px; flex: 1">
+      <span style="font-size: 12px; font-weight: 700; color: #1E5B3A; letter-spacing: 0.06em">RAPORT WODNY DZIAŁKI</span>
+      <span style="font-size: 24px; font-weight: 800">Działka 040410_2.0012.245/3 · kukurydza</span>
+      <span style="font-size: 13px; color: #4A4D47">stan na 15.07.2026 · porównanie z sezonami 2016–2025 · 4,82 ha · woj. kujawsko-pomorskie</span>
+    </div>
+    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: #d03b3b; color: #FFFFFF; font-weight: 700; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4"></path></svg>Susza</span>
+  </div>
+
+  <div style="display: flex; gap: 20px">
+    <div style="position: relative; width: 420px; height: 280px; border-radius: 12px; overflow: hidden; background: #DDE7D5; flex: none">
+      <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-template-rows: repeat(16, minmax(0, 1fr))">
+        <sc-for list="{{dry}}" as="c" hint-placeholder-count="384"><span style="{{c}}"></span></sc-for>
+      </div>
+      <svg viewBox="0 0 300 200" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Mapa działki z zaznaczonymi działaniami">
+        <polygon points="19.9,33.1 175.7,15.5 268.1,26.1 260.2,173.9 117.6,184.5 27.8,163.4" fill="none" stroke="#1A1C19" stroke-width="2" stroke-linejoin="round"></polygon>
+        <polygon points="186,70 265.6,64 260.2,173.9 184,180" fill="none" stroke="#2a78d6" stroke-width="2" stroke-dasharray="6 4"></polygon>
+        <path d="M150 3 C 220 6, 276 8, 288 46 L 296 200" fill="none" stroke="#2a78d6" stroke-width="4" stroke-linecap="round"></path>
+        <sc-for list="{{marks}}" as="m" hint-placeholder-count="5">
+          <circle cx="{{m.x}}" cy="{{m.y}}" r="9" fill="{{m.c}}" stroke="#FFFFFF" stroke-width="2"></circle>
+          <text x="{{m.x}}" y="{{m.ty}}" text-anchor="middle" font-size="10" font-weight="800" fill="#FFFFFF">{{m.n}}</text>
+        </sc-for>
+      </svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0">
+      <span style="font-size: 13px; font-weight: 800; letter-spacing: 0.05em; color: #4A4D47">CO ZROBIĆ I GDZIE</span>
+      <sc-for list="{{marks}}" as="m" hint-placeholder-count="5">
+        <div style="display: flex; gap: 10px; align-items: flex-start">
+          <span style="{{m.dot}}">{{m.n}}</span>
+          <span style="display: flex; flex-direction: column"><span style="font-size: 13px; font-weight: 700">{{m.what}}</span><span style="font-size: 11px; color: #4A4D47">{{m.when}}</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 14px">
+    <div style="flex: 1; display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid #E3E1D8; border-radius: 12px">
+      <div style="position: relative; width: 40px; height: 64px; border-radius: 8px; background: #EFE6D6; border: 2px solid #C9B48E; box-sizing: border-box; overflow: hidden; flex: none">
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 24%; background: #2a78d6"></div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 45%; border-top: 2px dashed #1A1C19"></div>
+      </div>
+      <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Gleba prawie sucha</b><span style="font-size: 12px; color: #3F423C">24% wody dla roślin; kukurydza cierpi poniżej 45%</span><span style="font-size: 12px; color: #3F423C">Kryterium suszy IUNG spełnione: bilans 60 dni −214 mm, próg −188 mm (kukurydza, gleba kat. II)</span></span>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid #E3E1D8; border-radius: 12px; font-size: 12px; line-height: 1.4">
+      <b style="font-size: 13px">Dlaczego brakuje wody</b>
+      <span><b>Mało deszczu</b> (główna) — od maja 74 mm zamiast ok. 140 mm</span>
+      <span><b>Lekka gleba</b> (duża) — kat. I–II IUNG, zwłaszcza na wschodzie</span>
+      <span><b>Upał</b> (duża) — 9 dni ponad 30°C</span>
+      <span><b>Spływ i rów</b> (mała) — stok do 7%, woda ucieka rowem R-3</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <b style="font-size: 13px">Ukształtowanie terenu</b>
+      <div style="position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden; background: #E2EADB">
+        <div style="position: absolute; left: 4%; top: 6%; width: 88%; height: 88%; clip-path: polygon(3% 12%, 62% 2%, 97% 8%, 94% 92%, 40% 98%, 6% 86%); display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-template-rows: repeat(12, minmax(0, 1fr))">
+          <sc-for list="{{terrain}}" as="c" hint-placeholder-count="216"><span style="{{c}}"></span></sc-for>
+        </div>
+        <svg viewBox="0 0 300 200" style="position: absolute; inset: 0; width: 100%; height: 100%" aria-hidden="true">
+          <path d="M60 150 L105 120 M98 117 L106 120 L102 127 M130 120 L175 88 M168 85 L176 88 L172 95 M190 80 L225 56 M218 53 L226 56 L222 63" fill="none" stroke="#184f95" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+          <polygon points="19.9,33.1 175.7,15.5 268.1,26.1 260.2,173.9 117.6,184.5 27.8,163.4" fill="none" stroke="#1A1C19" stroke-width="2" stroke-linejoin="round"></polygon>
+        </svg>
+      </div>
+      <span style="font-size: 11px; color: #3F423C">ciemniej = wyżej · strzałki = spływ wody</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <b style="font-size: 13px">Czy to tu wraca?</b>
+      <span style="font-size: 13px; font-weight: 600">Tak — susza w 5 z 10 sezonów, najczęściej w czerwcu i lipcu.</span>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px">
+        <sc-for list="{{years}}" as="y" hint-placeholder-count="10">
+          <span style="{{y.style}}"><b style="font-size: 12px">{{y.y}}</b><span style="font-size: 10px">{{y.tag}}</span></span>
+        </sc-for>
+      </div>
+      <span style="font-size: 11px; color: #3F423C">bilans wodny 60 dni vs próg suszy IUNG dla kukurydzy, osobno w każdym sezonie</span>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid #E3E1D8; font-size: 10.5px; line-height: 1.5; color: #3F423C">
+    <span><b>Źródła danych (okno 15.07.2016–15.07.2026):</b> ULDK GUGiK (granice, stan na 21.11.2026) · Open-Meteo ERA5-Land (opad, ET0 FAO-56, wilgotność gleby; 1996–15.07.2026) · prognoza Open-Meteo z 15.07.2026 · Sentinel-2 L2A 2017–2026 (ostatnie 11.07.2026) i Landsat 8 C2 L2 2016 · kategoria gleby IUNG-PIB, SoilGrids 2.0 · progi KBW IUNG (Rozp. MRiRW z 11.04.2019) · NMT GUGiK 1 m · BDOT10k · EDO Copernicus (CDI, SPI).</span>
+    <span><b>Metody:</b> klimatyczny bilans wodny vs progi IUNG; bilans wody w glebie FAO-56; SPEI; anomalie NDMI/VCI; spływ SCS-CN; działania z katalogu NWRM (UE).</span>
+    <span><b>Ograniczenia:</b> pogoda z siatki ok. 9 km; gleba z mapy 250 m (niepewność ±15 mm); 2016 z Landsat (30 m); granice, rowy i teren według stanu obecnego; w latach ubiegłych przyjęto tę samą uprawę; <b>brak danych o wodach gruntowych</b>; nie uwzględniono drenowania i odmiany. Rekomendacje nie zastępują porady doradcy ODR ani wymogów Prawa wodnego.</span>
+    <span style="color: #6B6E66">Wygenerowano 21.11.2026, 14:32 · pewność: wysoka (4/4 źródeł zgodne) · strona 1 z 2</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":794,"height":1123}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const grid = (cols, rows, fn) => { const o = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) o.push('background: ' + fn(i / (cols - 1), j / (rows - 1))); return o; };
+    const dryVal = (u, v) => 1.15 * (-0.4 - 1.7 * u + 2.6 * Math.exp(-(((u - 0.88) / 0.12) ** 2 + ((v - 0.16) / 0.14) ** 2))) + 0.22 * Math.sin(u * 26 + v * 32);
+    const col = a => a <= -2 ? '#b8322f' : a <= -1.25 ? '#d9625a' : a <= -0.5 ? '#eea69b' : a < 0.6 ? '#f0efec' : '#9ec5f4';
+    const terrain = grid(18, 12, (u, v) => {
+      const t = ((u - 0.05) * 0.85 + (v - 0.9) * (-0.8)) / (0.85 * 0.85 + 0.8 * 0.8);
+      const e = 112 - 6.5 * t + 0.6 * Math.sin(u * 9) * Math.cos(v * 7);
+      return e > 111 ? '#A8864F' : e > 109.5 ? '#C2A36F' : e > 108 ? '#D6BE93' : e > 106.6 ? '#E6D5B8' : '#F3EBDD';
+    });
+    const m = [
+      [280, 22, '#1E5B3A', 'Zastawka na rowie R-3', 'jesienią · bo rowem ucieka woda z wiosny'],
+      [236, 47, '#1E5B3A', 'Zatrzymaj wodę w zagłębieniu (NE)', 'po zbiorze · tu spływa deszcz z 70% pola'],
+      [256, 160, '#1E5B3A', 'Pas trawy lub drzew, wschodni skraj', 'od jesieni · bo stok do 7%'],
+      [100, 100, '#7A4E14', 'Międzyplon i resztki po zbiorze', 'wrzesień · bo lekka gleba, mało próchnicy'],
+      [224, 125, '#1f6fc9', 'Podlej 25 mm wschodnią część', 'do 17.07 · najsuchej, kukurydza kwitnie']
+    ];
+    const marks = m.map(([x, y, c, what, when], i) => ({ x, y, ty: y + 3.5, c, what, when, n: String(i + 1),
+      dot: 'width: 22px; height: 22px; border-radius: 11px; flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #FFFFFF; background: ' + c }));
+    const yk = [['2016', 'lekka'], ['2017', 'brak'], ['2018', 'skrajna'], ['2019', 'silna'], ['2020', 'brak'], ['2021', 'lekka'], ['2022', 'silna'], ['2023', 'umiark.'], ['2024', 'brak'], ['2025', 'umiark.']];
+    const tagS = { skrajna: ['#a8401a', '#FFFFFF'], silna: ['#e9784a', '#2A1206'], 'umiark.': ['#f6b48c', '#4A200C'], lekka: ['#fde4d6', '#5A2A12'], brak: ['#F1EFE8', '#3F423C'] };
+    const years = yk.map(([y, tag]) => ({ y, tag, style: 'display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-radius: 6px; background: ' + tagS[tag][0] + '; color: ' + tagS[tag][1] }));
+    return { dry: grid(24, 16, (u, v) => col(dryVal(u, v))), terrain, marks, years };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-21T14:00:00Z"},
+  "title": "Asystent Wodny – makiety UI",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 1240, "title": "1 · Start: działka i dzień (uprawa wykrywana sama)", "expand": "fill", "is_interactive": true},
+    "Raport.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 1900, "title": "2 · Wynik: co zrobić i gdzie (Tweaks: listopad / lipiec)", "expand": "fill", "is_interactive": true},
+    "Mobile.dc.html": {"x": 3040, "y": 0, "w": 390, "h": 844, "title": "3 · Telefon w polu (lipiec)"},
+    "Pdf.dc.html": {"x": 3510, "y": 0, "w": 794, "h": 1123, "title": "4 · Raport PDF (A4, str. 1, lipiec)"}
+  },
+  "order": ["Main.dc.html", "Raport.dc.html", "Mobile.dc.html", "Pdf.dc.html"],
+  "notes": {
+    "tytul": {"x": 0, "y": -320, "text": "Asystent Wodny — makiety interfejsu (dane przykładowe)", "kind": "title1", "maxW": 4300},
+    "n1": {"x": 0, "y": 1360, "w": 440, "size": "s", "fill": "purple", "text": "① START — wymagania 3.3 pkt 1–3\n• Trzy sposoby wskazania działki: pełny identyfikator (ULDK GetParcelById), gmina + obręb + numer (GetParcelByIdOrNr), kliknięcie na mapie (GetParcelByXY).\n• Od razu potwierdzenie: kształt, powierzchnia, użytek — jury widzi, że trafiło w dobrą działkę.\n• Uprawa NIE jest pytaniem: wykrywamy ją z deklaracji ARiMR (GSA) + krzywej wzrostu z Sentinel-2. Kafelki chowają się pod „Zmień”; pokazujemy je tylko, gdy danych brak.\n• Data analizy: domyślnie dziś; dowolny dzień od 21.11.2016. Szczegóły źródeł dla lat schowane w „Skąd dane dla tych lat?”.\n• Panel „Twoje gospodarstwo”: kilka działek ze statusem (3.1: „jedna lub więcej działek”)."},
+    "n2": {"x": 500, "y": 1360, "w": 440, "size": "s", "fill": "purple", "text": "② POSTĘP ANALIZY — dowód, że liczymy na żywo\n• Każde źródło z czasem pobrania; wszystko równolegle, cel poniżej 30 s (kryterium 5).\n• Źródła jak w ZRODLA_DANYCH.md: ULDK, ARiMR, Open-Meteo ERA5-Land, IUNG + SoilGrids, NMT, BDOT10k, Sentinel-2/Landsat, EDO.\n• Gdy źródło nie odpowie, analiza idzie dalej, a raport mówi wprost, czego zabrakło (3.3 pkt 5).\n• Bez konta i danych osobowych (5.6)."},
+    "n3": {"x": 1000, "y": 1360, "w": 440, "size": "s", "fill": "purple", "text": "③ WYNIK — GÓRNY PASEK, ZALEŻNY OD PORY ROKU\n• Jedno zdanie stanu + mały „zbiornik” z linią stresu (bilans FAO-56).\n• Lipiec (w sezonie): „Gleba prawie sucha — 24%”, PILNE TERAZ: podlej 25 mm.\n• Listopad (poza sezonem progów IUNG): „Sezon był suchy — teraz czas zatrzymać wodę”, NAJLEPIEJ TERAZ: zastawka; nawadnianie jako plan na 2027 z potrzebą w mm.\n• Przełącz w Tweaks raportu (termin)."},
+    "n4": {"x": 0, "y": 1980, "w": 440, "size": "s", "fill": "purple", "text": "④ MAPA Z WIDOKAMI — serce raportu\n• Przełącznik: Plan działań / Gdzie sucho (satelita) / Teren i spływ (NMT) / Gleba (IUNG).\n• Numery 1–5 widoczne w każdym widoku, kolor = rodzaj działania.\n• Pod mapą: legenda + jedno zdanie wniosku + źródło widoku."},
+    "n5": {"x": 500, "y": 1980, "w": 440, "size": "s", "fill": "purple", "text": "⑤ CO ZROBIĆ I GDZIE — lista obok mapy\n• Grupy w kolejności KOWR: zatrzymaj wodę → na polu → nawadnianie.\n• Każda karta: co, gdzie, kiedy i „bo …” (przyczyna).\n• Klik → zaznaczenie miejsca na mapie (żółta obwódka) i przełączenie mapy na widok, w którym widać przyczynę (np. zastawka → teren i spływ)."},
+    "n6": {"x": 1000, "y": 1980, "w": 440, "size": "s", "fill": "purple", "text": "⑥ DLACZEGO / CZY WRACA — bez wykresów\n• Przyczyny jako lista z wagą słowną (główna / duża / mała) i przyciskiem „Pokaż na mapie”.\n• Historia: 10 kafelków sezonów z uprawą, która wtedy rosła (ARiMR / Copernicus), i oceną suszy dla tej uprawy + jedno zdanie.\n• Usunięte: słupki miesięcy, pasek procentów przyczyn, 3 osobne mini-mapy, osobny ekran mapy."},
+    "n7": {"x": 0, "y": 2600, "w": 440, "size": "s", "fill": "purple", "text": "⑦ ASYSTENT (LLM) — opcjonalny\n• Przycisk „Zapytaj” w nagłówku; odpowiedzi tylko z danych raportu, ze źródłem pod spodem.\n• Bez LLM raport działa w całości."},
+    "n8": {"x": 500, "y": 2600, "w": 440, "size": "s", "fill": "purple", "text": "⑧ SKĄD WIEMY — przejrzystość bez ściany tekstu\n• Źródła (zielone), dane w stanie obecnym (żółte), brak danych (czerwone).\n• „Szczegóły dla doradcy”: KBW vs próg IUNG, FAO-56, SPEI, NDMI/VCI, CDI — dla jury i ODR.\n• PDF A4 = ta sama mapa z numerami, lista „co i gdzie”, przyczyny, historia, źródła i ograniczenia."},
+    "n9": {"x": 1000, "y": 2600, "w": 440, "size": "s", "fill": "green", "text": "⑨ MAPOWANIE NA KRYTERIA OCENY\n• Wartość praktyczna 25%: co, gdzie, kiedy, ile — od razu z przyczyną.\n• Dane i wiarygodność 25%: KBW + progi IUNG, FAO-56, SPEI, NWRM, uprawy z ARiMR; pewność, jawne braki.\n• Innowacyjność 20%: plan na mapie z NMT, widoki przyczyn.\n• Prostota 15%: jedna strona, mapa + lista, bez wykresów.\n• Prototyp 15%: poniżej 30 s, dowolna działka i data z 10 lat."},
+    "n10": {"x": 0, "y": 3220, "w": 940, "size": "s", "fill": "orange", "text": "⑩ „10 LAT WSTECZ” OD DOWOLNEJ DATY — jak to działa\n• Jury może podać datę z 2016 r. → potrzebne dane od 2006 r. Każde zapytanie ma koniec = data analizy; nic z przyszłości nie wchodzi do wyniku.\n• Pogoda i bilans: ERA5-Land od 1950 r. (pełne okno). SPEI: klimatologia z 30 lat przed datą.\n• Zdjęcia: Sentinel-2 nad Polską dopiero od 2016/2017 → wcześniejsze lata z Landsat 5/7/8 (30 m); anomalie liczone osobno dla każdego sensora.\n• Uprawy w latach ubiegłych: ARiMR GSA / Copernicus Crop Types 2017+ / JRC EU Crop Map 2018, 2022.\n• Prognoza: dla dat archiwalnych brak prognozy wydanej tego dnia → nawadnianie ze średnich z lat poprzednich, z komunikatem."}
+  },
+  "designSystems": []
+}
