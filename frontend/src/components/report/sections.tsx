@@ -76,7 +76,7 @@ export function CropParts({
  * Category colours on the dark green card: the saturated map colours (blue, dark green) clash with it or vanish,
  * so the badges use light, muted tints of the same hues with dark digits.
  */
-const ON_DARK: Record<keyof typeof CAT, string> = { ret: "#a6d4b4", agro: "#e3bb82", irr: "#8ec9c4" };
+const ON_DARK: Record<keyof typeof CAT, string> = { ret: "#a6d4b4", agro: "#e3bb82", irr: "#8ec9c4" /* --water-light */ };
 
 function CropPartCard({
   part,
@@ -131,7 +131,7 @@ function CropPartCard({
           </div>
           <div className={`relative h-2 rounded-full ${dark ? "bg-white/15" : "bg-chip"}`} aria-hidden="true">
             <span
-              className={`absolute inset-y-0 left-0 rounded-full ${below ? "bg-[#e9784a]" : dark ? "bg-[#8ec9c4]" : "bg-[#2a78d6]"}`}
+              className={`absolute inset-y-0 left-0 rounded-full ${below ? "bg-[#e9784a]" : dark ? "bg-water-light" : "bg-blue"}`}
               style={{ width: `${Math.min(100, part.soilWaterPct)}%` }}
             />
             <span className={`absolute -top-1 bottom-[-4px] w-0.5 ${dark ? "bg-white" : "bg-ink"}`} style={{ left: `${part.stressThresholdPct}%` }} />

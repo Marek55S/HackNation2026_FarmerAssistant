@@ -107,7 +107,7 @@ function styleSelected(el: HTMLElement, selected: boolean) {
 }
 
 // Labels sit on the photo, so they keep the same light chip in both looks.
-const LABEL_TONE = { ink: "text-[#1A1C19]", red: "text-[#8E1F1F]", blue: "text-[#123f78]", muted: "text-[#5F625B]" };
+const LABEL_TONE = { ink: "text-[#1A1C19]", red: "text-[#8E1F1F]", blue: "text-[#174a57]", muted: "text-[#5F625B]" };
 
 export default function ParcelMap({
   parcel,
@@ -208,8 +208,8 @@ export default function ParcelMap({
         });
       }
       // Irrigation zone: a light tint, not a blanket over the field (it is a hull around the driest pixels, often large).
-      map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2a78d6", "fill-opacity": 0.1 } });
-      map.addLayer({ id: "zaglebienie", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "fill-color": "#9ec5f4", "fill-opacity": 0.3 } });
+      map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2b7a8c", "fill-opacity": 0.12 } });
+      map.addLayer({ id: "zaglebienie", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "fill-color": "#8ec9c4", "fill-opacity": 0.3 } });
       map.addLayer({
         id: "wyroznienie",
         type: "line",
@@ -218,8 +218,8 @@ export default function ParcelMap({
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": HL, "line-width": 9, "line-opacity": 0.85, "line-blur": 1.5 },
       });
-      map.addLayer({ id: "strefa-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "line-color": "#1f6fc9", "line-width": 1.5, "line-opacity": 0.75, "line-dasharray": [2, 2] } });
-      map.addLayer({ id: "zaglebienie-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "line-color": "#123f78", "line-width": 1.5, "line-opacity": 0.7, "line-dasharray": [2, 1.5] } });
+      map.addLayer({ id: "strefa-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "line-color": "#2b7a8c", "line-width": 1.5, "line-opacity": 0.75, "line-dasharray": [2, 2] } });
+      map.addLayer({ id: "zaglebienie-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "line-color": "#174a57", "line-width": 1.5, "line-opacity": 0.7, "line-dasharray": [2, 1.5] } });
       map.addLayer({
         id: "pas",
         type: "line",
@@ -234,7 +234,7 @@ export default function ParcelMap({
         source: "obiekty",
         filter: ["==", ["get", "kind"], "row"],
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#1f6fc9", "line-width": 4 },
+        paint: { "line-color": "#2b7a8c", "line-width": 4 },
       });
       map.addLayer({
         id: "splyw",
@@ -242,7 +242,7 @@ export default function ParcelMap({
         source: "obiekty",
         filter: ["==", ["get", "kind"], "splyw"],
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#123f78", "line-width": 3 },
+        paint: { "line-color": "#174a57", "line-width": 3 },
       });
       map.addLayer({ id: "pole-obwodka", type: "line", source: "pole", paint: { "line-color": "#1A1C19", "line-width": 5, "line-opacity": 0.35 } });
       map.addLayer({ id: "pole", type: "line", source: "pole", layout: { "line-join": "round" }, paint: { "line-color": FIELD, "line-width": 2.5 } });

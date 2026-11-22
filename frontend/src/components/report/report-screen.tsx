@@ -174,7 +174,7 @@ function MapSummary({ report }: { report: Report }) {
               <dd className="relative h-1.5 rounded-full bg-[#E6E7DB]" aria-hidden="true">
                 <span
                   className="absolute inset-y-0 left-0 rounded-full"
-                  style={{ width: `${report.soilWaterPct}%`, background: "#2a78d6" }}
+                  style={{ width: `${report.soilWaterPct}%`, background: "#2b7a8c" }}
                 />
                 <span className="absolute -top-1 bottom-[-4px] w-0.5 bg-[#1D2B22]" style={{ left: `${report.stressThresholdPct}%` }} title="próg stresu" />
               </dd>
@@ -351,7 +351,7 @@ function SoilTank({ pct, threshold }: { pct: number; threshold: number }) {
       aria-label={`Zapas wody ${pct}%, próg stresu ${threshold}%`}
     >
       <span
-        className={`tank-fill absolute inset-x-0 bottom-0 ${below ? "bg-[#e9784a]" : "bg-[#5aa0f0]"}`}
+        className={`tank-fill absolute inset-x-0 bottom-0 ${below ? "bg-[#e9784a]" : "bg-water-light"}`}
         style={{ height: `${Math.max(0, Math.min(100, pct))}%` }}
       />
       <span className="absolute inset-x-0 border-t-2 border-dashed border-white/80" style={{ bottom: `${threshold}%` }} />
