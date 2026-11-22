@@ -467,6 +467,26 @@ html {
       height 260ms var(--ease-out);
   }
 
+  /* Analysis progress: the current step's pictogram breathes, each new sentence slides in, finished steps pop. */
+  .story-pulse {
+    animation: story-pulse 1.6s ease-in-out infinite;
+  }
+  .story-line {
+    animation: reveal-in 260ms var(--ease-out);
+  }
+  .pipe-step {
+    transition:
+      background-color 300ms ease,
+      color 300ms ease,
+      box-shadow 300ms ease;
+  }
+
+  /* Report: the soil-water tank fills up as the card appears. */
+  .tank-fill {
+    transform-origin: bottom;
+    animation: tank-fill 900ms var(--ease-out) 200ms both;
+  }
+
   /* Main action: the arrow leans forward on hover (mouse only). */
   .cta svg {
     transition: transform 200ms var(--ease-out);
@@ -479,6 +499,9 @@ html {
 }
 @media (prefers-reduced-motion: reduce) {
   /* Reduced motion: keep a gentle fade, drop the movement. */
+  .tank-fill {
+    animation: none;
+  }
   .rise,
   .rise-children > *,
   .reveal,
@@ -492,12 +515,24 @@ html {
     display: none;
   }
   /* Print shows the finished page, never a frame of an entrance. */
+  .tank-fill,
   .rise,
   .rise-children > *,
   .reveal,
   details[open] > :not(summary) {
     animation: none !important;
     transition: none !important;
+  }
+}
+@keyframes tank-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes story-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent);
   }
 }
 @keyframes reveal-in {

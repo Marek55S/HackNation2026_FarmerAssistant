@@ -174,12 +174,72 @@ function MapSummary({ report }: { report: Report }) {
 }
 
 /**
+ * Counts the first number in `value` up from zero once, when the card appears ("24%", "7 z 10").
+ * React always renders the final text (server, print, no-JS); only the browser's frames show the count,
+ * so a stalled frame loop (background tab) leaves the real value, never a half-counted one.
+ */
+function CountUp({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    const m = value.match(/\d+/);
+    if (!el || !m || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const target = Number(m[0]);
+    let id = 0;
+    let t0: number | null = null;
+    const tick = (t: number) => {
+      t0 ??= t;
+      const p = Math.min(1, (t - t0) / 800);
+      el.textContent = value.replace(m[0], String(Math.round(target * (1 - (1 - p) ** 3))));
+      if (p < 1) id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    const finish = () => (el.textContent = value);
+    addEventListener("beforeprint", finish);
+    return () => {
+      cancelAnimationFrame(id);
+      removeEventListener("beforeprint", finish);
+    };
+  }, [value]);
+  // Keyed by value: a new value gets a fresh element instead of fighting over the text node.
+  return (
+    <span key={value} ref={ref}>
+      {value}
+    </span>
+  );
+}
+
+/** Water in the root zone as a small tank, with the crop's stress threshold as a dashed line (dark card). */
+function SoilTank({ pct, threshold }: { pct: number; threshold: number }) {
+  const below = pct < threshold;
+  return (
+    <span
+      className="relative h-14 w-8 flex-none overflow-hidden rounded-lg border-2 border-white/35 bg-white/5"
+      role="img"
+      aria-label={`Zapas wody ${pct}%, próg stresu ${threshold}%`}
+    >
+      <span
+        className={`tank-fill absolute inset-x-0 bottom-0 ${below ? "bg-[#e9784a]" : "bg-[#5aa0f0]"}`}
+        style={{ height: `${Math.max(0, Math.min(100, pct))}%` }}
+      />
+      <span className="absolute inset-x-0 border-t-2 border-dashed border-white/80" style={{ bottom: `${threshold}%` }} />
+    </span>
+  );
+}
+
+/**
  * Key numbers for the feature card — the state on day D and the 10-year vulnerability (task 3.3 pt 4).
  * Scenario numbers ("jak bywało") live in the Risk section further down, so they are not read as today's state.
  */
 function stateCells(r: Report) {
-  const cells: { label: string; value: string; note: string }[] = [];
-  if (r.soilWaterPct !== null) cells.push({ label: "Woda w glebie", value: `${r.soilWaterPct}%`, note: `zapas w strefie korzeni, ${shortDate(r.date)}` });
+  const cells: { label: string; value: string; note: string; tank?: { pct: number; threshold: number } }[] = [];
+  if (r.soilWaterPct !== null)
+    cells.push({
+      label: "Woda w glebie",
+      value: `${r.soilWaterPct}%`,
+      note: `zapas w strefie korzeni, ${shortDate(r.date)}`,
+      tank: r.stressThresholdPct !== null ? { pct: r.soilWaterPct, threshold: r.stressThresholdPct } : undefined,
+    });
   if (r.stressThresholdPct !== null) cells.push({ label: "Próg stresu", value: `${r.stressThresholdPct}%`, note: r.crop ? `dla: ${r.crop.name.toLowerCase()}` : "" });
   if (r.vulnerability && r.vulnerability.seasons > 0) {
     const v = r.vulnerability;
@@ -256,11 +316,16 @@ function AgriReport({ report }: { report: Report }) {
             {stateCells(report).map((c, i, all) => (
               <div
                 key={c.label}
-                className={`flex flex-col gap-1 rounded-2xl bg-feature-cell px-4 py-3 ${all.length % 2 === 1 && i === all.length - 1 ? "max-sm:col-span-2" : ""}`}
+                className={`flex items-center gap-3 rounded-2xl bg-feature-cell px-4 py-3 ${all.length % 2 === 1 && i === all.length - 1 ? "max-sm:col-span-2" : ""}`}
               >
-                <dt className="text-xs text-feature-muted">{c.label}</dt>
-                <dd className="tabular font-[family-name:var(--font-display)] text-2xl font-semibold leading-none">{c.value}</dd>
-                <dd className="text-[11px] text-feature-muted">{c.note}</dd>
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <dt className="text-xs text-feature-muted">{c.label}</dt>
+                  <dd className="tabular font-[family-name:var(--font-display)] text-2xl font-semibold leading-none">
+                    <CountUp value={c.value} />
+                  </dd>
+                  <dd className="text-[11px] text-feature-muted">{c.note}</dd>
+                </div>
+                {c.tank && <SoilTank {...c.tank} />}
               </div>
             ))}
           </dl>

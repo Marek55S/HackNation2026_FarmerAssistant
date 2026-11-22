@@ -75,6 +75,22 @@ export function FarmPanel({
   );
 }
 
+/** What each analysis step is about, in the farmer's words, with its pictogram (matched by the step label). */
+const STORY: { match: RegExp; icon: string; say: string }[] = [
+  { match: /^Granice/, icon: ICON.fields, say: "Szukam granic działki i upraw" },
+  { match: /^Prognoza/, icon: ICON.calendar, say: "Sprawdzam prognozę na najbliższe dni" },
+  { match: /po tamtym dniu/, icon: ICON.calendar, say: "Uzupełniam pogodę po tamtym dniu" },
+  { match: /^Pogoda/, icon: ICON.rain, say: "Zbieram pogodę z 30 lat" },
+  { match: /^Gleba/, icon: ICON.sand, say: "Sprawdzam, jaka jest gleba" },
+  { match: /^Rzeźba/, icon: ICON.slope, say: "Czytam ukształtowanie terenu" },
+  { match: /^Rowy/, icon: ICON.ditch, say: "Szukam rowów i zbiorników w okolicy" },
+  { match: /satelit/i, icon: ICON.satellite, say: "Przeglądam zdjęcia satelitarne z 10 lat" },
+  { match: /suszy w Europie/, icon: ICON.sun, say: "Porównuję z suszą w Europie" },
+  { match: /^Bilans/, icon: ICON.drop, say: "Liczę bilans wody i progi suszy" },
+  { match: /^Przyczyny/, icon: ICON.sprout, say: "Układam zalecenia dla działki" },
+];
+const storyOf = (label: string) => STORY.find((s) => s.match.test(label)) ?? { icon: ICON.check, say: label };
+
 export interface ProgressState {
   elapsed: number;
   progress: number;
@@ -101,6 +117,47 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
       )}
       {status && (
         <>
+          {/* What is happening right now, in plain words — the long wait becomes a short story. */}
+          {(() => {
+            const now = status.steps.find((s) => s.state === "running");
+            const story = status.done ? { icon: ICON.check, say: "Gotowe — otwieram raport" } : now ? storyOf(now.label) : null;
+            if (!story) return null;
+            return (
+              <div className="flex items-center gap-3.5">
+                <span className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-primary-tint text-heading ${status.done ? "" : "story-pulse"}`}>
+                  <Icon d={story.icon} size={26} stroke={1.7} />
+                </span>
+                <span key={story.say} className="story-line flex min-w-0 flex-col">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">{status.done ? "Koniec" : "Teraz"}</span>
+                  <span className="text-[16px] font-semibold leading-snug text-heading">{story.say}…</span>
+                  {now && !status.done && <span className="truncate text-xs text-muted">{now.src}</span>}
+                </span>
+              </div>
+            );
+          })()}
+          {/* The whole pipeline at a glance: one pictogram per source. */}
+          <ol className="flex flex-wrap gap-1.5" aria-label="Kroki analizy">
+            {status.steps.map((s) => (
+              <li
+                key={s.label}
+                title={s.label}
+                className={`pipe-step inline-flex h-9 w-9 items-center justify-center rounded-xl ${
+                  s.state === "done"
+                    ? "bg-primary text-on-primary"
+                    : s.state === "running"
+                      ? "bg-primary-tint text-heading ring-2 ring-primary"
+                      : s.state === "failed"
+                        ? "bg-amber-tint text-amber-ink"
+                        : "bg-chip text-muted"
+                }`}
+              >
+                <Icon d={storyOf(s.label).icon} size={18} stroke={1.8} />
+                <span className="sr-only">
+                  {s.label}: {s.state === "done" ? "gotowe" : s.state === "running" ? "trwa" : s.state === "failed" ? "brak wyniku" : "czeka"}
+                </span>
+              </li>
+            ))}
+          </ol>
           <div
             className="h-2 overflow-hidden rounded bg-rule-soft"
             role="progressbar"
@@ -111,6 +168,11 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
           >
             <div className="h-2 rounded bg-primary transition-[width] duration-300" style={{ width: `${status.progress}%` }} />
           </div>
+          <details className="group text-sm">
+            <summary className="flex min-h-8 list-none items-center gap-1.5 font-semibold text-heading [&::-webkit-details-marker]:hidden">
+              <Icon d={ICON.chevronRight} size={15} className="transition-transform duration-200 group-open:rotate-90" />
+              Szczegóły: źródła i czasy
+            </summary>
           <ol className="flex flex-col gap-0.5">
             {status.steps.map((s) => (
               <li key={s.label} className="flex items-start gap-3 border-b border-chip py-2">
@@ -130,6 +192,7 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
               </li>
             ))}
           </ol>
+          </details>
           <p className="sr-only" aria-live="polite">
             {status.done ? "Analiza gotowa, otwieram raport." : `Postęp ${status.progress} procent.`}
           </p>

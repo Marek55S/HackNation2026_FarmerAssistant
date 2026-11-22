@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFarm } from "@/lib/farm";
+import { longDate, periodDays, shortDate } from "@/lib/dates";
 import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
 import { AppHeader } from "../app-header";
 import { Backdrop } from "../backdrop";
@@ -161,14 +162,17 @@ export function StartScreen({
 
       <main className="mx-auto flex max-w-[1376px] flex-wrap items-start gap-6 px-8 pb-12 pt-8 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
         <Card className="flex min-w-0 flex-[999_1_560px] flex-col gap-7 p-8 max-sm:gap-6 max-sm:p-4">
-          <h1 style={{ "--d": "0ms" } as React.CSSProperties} className="rise text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[27px]">
-            Sprawdź wodę <span className="accent-word">na swojej działce</span>
+          {/* The whole request as one sentence that follows the choices below (day, period, parcel). */}
+          <h1 style={{ "--d": "0ms" } as React.CSSProperties} className="rise text-[32px] font-semibold leading-[1.35] tracking-tight text-heading max-sm:text-[24px]">
+            Sprawdź wodę na <SentenceWord empty={!lookup}>{lookup ? `działce ${lookup.parcel.number}` : "swojej działce"}</SentenceWord> na{" "}
+            <SentenceWord invalid={!dateValid}>{date === today ? "dziś" : longDate(date)}</SentenceWord>, licząc z{" "}
+            <SentenceWord invalid={!dateValid}>{periodWords(from, date)}</SentenceWord>.
           </h1>
 
           {/* Najpierw data: od roku daty zależy, którą deklarację upraw (ARiMR / mapa upraw) sprawdzamy dla działki. */}
           <div style={{ "--d": "70ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
             <h2 className="text-[17px] font-semibold text-heading">Dzień</h2>
-            <DatePicker date={date} from={initialFrom} today={today} onChange={onDate} />
+            <DatePicker date={date} from={from} today={today} onChange={onDate} />
           </div>
 
           <div style={{ "--d": "130ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
@@ -210,5 +214,25 @@ export function StartScreen({
 
       <MobileNav active="dzialki" reportHref={farm.find((f) => f.tone)?.url ?? null} />
     </div>
+  );
+}
+
+/** The data period in words for the sentence ("ostatniego miesiąca"); a custom range shows its dates. */
+function periodWords(from: string | null, to: string): string {
+  if (!from) return "tego jednego dnia";
+  const words: Record<number, string> = { 7: "ostatniego tygodnia", 30: "ostatniego miesiąca", 90: "ostatnich 3 miesięcy", 365: "ostatniego roku" };
+  return words[periodDays(from, to)] ?? `dni ${shortDate(from)} – ${shortDate(to)}`;
+}
+
+/** A word in the sentence that reflects a choice made below; it changes as the farmer picks. */
+function SentenceWord({ children, empty = false, invalid = false }: { children: React.ReactNode; empty?: boolean; invalid?: boolean }) {
+  return (
+    <span
+      className={`sentence-word rounded-md underline decoration-2 underline-offset-[7px] [box-decoration-break:clone] ${
+        invalid ? "bg-warn-bg text-warn-ink decoration-warn-ink" : empty ? "text-muted decoration-dashed decoration-rule-strong" : "text-heading decoration-primary-border"
+      }`}
+    >
+      {children}
+    </span>
   );
 }
