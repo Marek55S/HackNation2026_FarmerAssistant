@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { FarmParcel } from "@/lib/farm";
+import { checkedAgo, recheckUrl, reportDate, type FarmParcel } from "@/lib/farm";
+import { shortDate, todayIso } from "@/lib/dates";
 import type { AnalysisStep, StatusTone } from "@/lib/types";
 import { Card, ICON, Icon } from "../ui";
 
@@ -37,31 +38,50 @@ export function FarmPanel({
       )}
       {farm.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {farm.map((f) => (
-            <li key={f.parcelId} className="flex items-stretch rounded-xl border border-rule-soft hover:border-rule-strong">
-              <Link
-                href={f.url}
-                prefetch={false}
-                className="flex min-w-0 flex-1 flex-wrap items-center gap-3 p-3 text-ink no-underline"
-              >
-                <span className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-bold ${f.tone ? FARM_PILL[f.tone] : "bg-chip text-ink-2"}`}>
-                  {f.status}
-                </span>
-                <span className="flex min-w-[140px] flex-1 flex-col">
-                  <span className="text-sm font-bold">{f.name}</span>
-                  <span className="text-xs text-muted">{f.meta}</span>
-                </span>
-                <Icon d={ICON.chevronRight} stroke={2.4} className="text-muted" />
-              </Link>
-              <button
-                onClick={() => onRemove(f.parcelId)}
-                aria-label={`Usuń działkę ${f.name} z listy`}
-                className="flex w-11 flex-none items-center justify-center border-l border-rule-soft text-muted hover:text-ink"
-              >
-                <Icon d={ICON.x} />
-              </button>
-            </li>
-          ))}
+          {farm.map((f) => {
+            const d = f.date ?? reportDate(f.url);
+            const today = todayIso();
+            // A checked parcel whose result is not for today: one click recomputes it for today.
+            const stale = !!f.tone && !!d && d !== today;
+            const when = [d && f.tone ? `stan na ${shortDate(d)}` : null, f.checkedAt ? checkedAgo(f.checkedAt) : null].filter(Boolean).join(" · ");
+            return (
+              <li key={f.parcelId} className="flex flex-col overflow-hidden rounded-xl border border-rule-soft hover:border-rule-strong">
+                <div className="flex items-stretch">
+                  <Link href={f.url} prefetch={false} className="flex min-w-0 flex-1 items-center gap-3 p-3 text-ink no-underline">
+                    <ParcelThumb shape={f.shape} tone={f.tone} />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-sm font-bold">{f.name}</span>
+                        <span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-bold ${f.tone ? FARM_PILL[f.tone] : "bg-chip text-ink-2"}`}>
+                          {f.status}
+                        </span>
+                      </span>
+                      <span className="text-xs text-ink-3">{f.meta}</span>
+                      {when && <span className="text-[11px] text-muted">{when}</span>}
+                    </span>
+                    <Icon d={ICON.chevronRight} stroke={2.4} className="flex-none text-muted" />
+                  </Link>
+                  <button
+                    onClick={() => onRemove(f.parcelId)}
+                    aria-label={`Usuń działkę ${f.name} z listy`}
+                    className="flex w-11 flex-none items-center justify-center border-l border-rule-soft text-muted hover:text-ink"
+                  >
+                    <Icon d={ICON.x} />
+                  </button>
+                </div>
+                {stale && (
+                  <Link
+                    href={recheckUrl(f.url, today)}
+                    prefetch={false}
+                    className="flex min-h-10 items-center gap-1.5 border-t border-rule-soft px-3 text-[13px] font-semibold text-heading no-underline hover:bg-primary-tint"
+                  >
+                    <Icon d={ICON.calendar} size={15} stroke={2} />
+                    Sprawdź na dziś ({shortDate(today)})
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
       <button
@@ -91,6 +111,44 @@ const STORY: { match: RegExp; icon: string; say: string }[] = [
 ];
 const storyOf = (label: string) => STORY.find((s) => s.match.test(label)) ?? { icon: ICON.check, say: label };
 
+const TONE_STROKE: Record<StatusTone, string> = {
+  susza: "var(--status-susza)",
+  zagrozenie: "var(--status-zagrozenie)",
+  spokojnie: "var(--status-spokojnie)",
+  plan: "var(--status-plan)",
+  "poza-zakresem": "var(--status-poza)",
+};
+
+/** The parcel's own outline as a small thumbnail, drawn in the colour of its last status. */
+function ParcelThumb({ shape, tone }: { shape?: [number, number][]; tone: StatusTone | null }) {
+  const box = "inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-chip";
+  if (!shape || shape.length < 3) {
+    return (
+      <span className={`${box} text-muted`} aria-hidden="true">
+        <Icon d={ICON.fields} size={20} stroke={1.7} />
+      </span>
+    );
+  }
+  // Longitude shrinks with latitude: scale x so the shape is not stretched.
+  const k = Math.cos((shape[0][1] * Math.PI) / 180);
+  const xs = shape.map((p) => p[0] * k);
+  const ys = shape.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const span = Math.max(x1 - x0, y1 - y0) || 1;
+  const S = 32;
+  const pts = shape
+    .map((p, i) => `${(((xs[i] - x0) / span) * S + (S - ((x1 - x0) / span) * S) / 2 + 6).toFixed(1)},${(((y1 - p[1]) / span) * S + (S - ((y1 - y0) / span) * S) / 2 + 6).toFixed(1)}`)
+    .join(" ");
+  const stroke = tone ? TONE_STROKE[tone] : "var(--muted)";
+  return (
+    <span className={box} aria-hidden="true">
+      <svg viewBox="0 0 44 44" width={44} height={44}>
+        <polygon points={pts} fill={stroke} fillOpacity={0.14} stroke={stroke} strokeWidth={1.8} strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
 export interface ProgressState {
   elapsed: number;
   progress: number;
@@ -104,7 +162,7 @@ export function ProgressPanel({ status, error }: { status: ProgressState | null;
     <Card className="flex flex-col gap-4 p-6 max-sm:p-4">
       <div className="flex items-center gap-2.5">
         <h2 className="text-[17px] font-bold">{status?.done ? "Analiza gotowa" : "Trwa analiza działki"}</h2>
-        {status && (
+        {status && status.elapsed > 0 && (
           <span className="tabular ml-auto text-sm font-bold text-primary">
             {status.elapsed.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s
           </span>

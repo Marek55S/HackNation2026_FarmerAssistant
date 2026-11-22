@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useFarm } from "@/lib/farm";
+import { farmEntry, OPENING_KEY, thumbShape, useFarm } from "@/lib/farm";
 import { longDate, periodDays, shortDate } from "@/lib/dates";
 import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
 import { AppHeader } from "../app-header";
@@ -13,14 +13,6 @@ import { Card, ICON, Icon } from "../ui";
 import { DatePicker, defaultFrom, type DateChoice } from "./date-picker";
 import { ParcelPicker } from "./parcel-picker";
 import { FarmPanel, ProgressPanel, type ProgressState } from "./side-panels";
-
-const FARM_STATUS: Record<Report["status"]["tone"], string> = {
-  susza: "Pilne",
-  zagrozenie: "Do obserwacji",
-  spokojnie: "W porządku",
-  plan: "Zrób przed sezonem",
-  "poza-zakresem": "Poza zakresem",
-};
 
 export function StartScreen({
   today,
@@ -68,17 +60,26 @@ export function StartScreen({
   const chosenCrop = crop ?? lookup?.cropHint?.crop ?? null;
   const canStart = !!lookup && !cropMissing && dateValid && !running;
 
+  // Enter in a parcel field starts the analysis. Pressed before the lookup answered (it waits 350 ms after typing),
+  // it is remembered for a few seconds and the analysis starts as soon as the parcel is found.
+  const enterAt = useRef(0);
+  function onParcelKey(e: React.KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.target instanceof HTMLInputElement)) return;
+    e.preventDefault();
+    if (canStart) start();
+    else enterAt.current = Date.now();
+  }
+  useEffect(() => {
+    if (!canStart || !enterAt.current) return;
+    const fresh = Date.now() - enterAt.current < 6000;
+    enterAt.current = 0;
+    if (fresh) start();
+    // `start` reads the current state when called; only the moment the parcel becomes ready matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canStart]);
+
   function saveToFarm(report: Report, url: string) {
-    const p = report.parcel;
-    upsert({
-      parcelId: p.id,
-      name: `${p.number}${report.crop ? ` · ${report.crop.name.toLowerCase()}` : ""}`,
-      meta: `${p.areaHa.toLocaleString("pl-PL")} ha · ${report.urgent ? report.urgent.title.toLowerCase() : report.status.label.toLowerCase()}`,
-      status: FARM_STATUS[report.status.tone],
-      tone: report.status.tone,
-      url,
-      checkedAt: new Date().toISOString(),
-    });
+    upsert(farmEntry(report, url));
   }
 
   async function start() {
@@ -117,6 +118,12 @@ export function StartScreen({
           else {
             setStatus((s) => (s ? { ...s, progress: 100, done: true } : s));
             saveToFarm(ev.report, ev.url);
+            // The report page loads on the server once more: tell its loading screen the analysis is already done.
+            try {
+              sessionStorage.setItem(OPENING_KEY, String(Date.now()));
+            } catch {
+              // storage blocked — the loading screen just shows the steps again
+            }
             router.push(ev.url);
             return;
           }
@@ -150,6 +157,7 @@ export function StartScreen({
       tone: null,
       url: cropMissing ? `/?dzialka=${encodeURIComponent(parcel.id)}` : `/raport?${q}`,
       checkedAt: "",
+      shape: thumbShape(parcel.geometry),
     });
   }
 
@@ -175,7 +183,7 @@ export function StartScreen({
             <DatePicker date={date} from={from} today={today} onChange={onDate} />
           </div>
 
-          <div style={{ "--d": "130ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
+          <div style={{ "--d": "130ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5" onKeyDown={onParcelKey}>
             <h2 className="text-[17px] font-semibold text-heading">Działka</h2>
             <ParcelPicker initialId={initialParcelId} date={date} lookup={lookup} onLookup={onLookup} crop={crop} onCrop={setCrop} />
           </div>

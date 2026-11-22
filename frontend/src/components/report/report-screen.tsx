@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { MapLayer, Report, Zalecenie } from "@/lib/types";
+import { farmEntry, OPENING_KEY, reportDate, useFarm } from "@/lib/farm";
 import { AppHeader } from "../app-header";
 import { Backdrop } from "../backdrop";
 import { MobileNav } from "../mobile-nav";
@@ -27,6 +28,27 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
   const startHref = `/?${new URLSearchParams({ dzialka: p.id, data: report.date, ...(report.period ? { od: report.period.from } : {}) })}`;
   const outOfScope = report.status.tone === "poza-zakresem";
 
+  // A parcel already in "Twoje gospodarstwo" gets this result, unless the stored one is for a later day
+  // (opening an old report from history must not overwrite a newer check).
+  const { farm, upsert } = useFarm();
+  useEffect(() => {
+    const e = farm.find((f) => f.parcelId === p.id);
+    if (!e) return;
+    const d = e.date ?? reportDate(e.url);
+    if (e.tone && d && report.date < d) return;
+    if (e.url === url && e.tone === report.status.tone && e.date === report.date) return;
+    upsert(farmEntry(report, url));
+  }, [farm, p.id, report, url, upsert]);
+
+  // The report is here: the "just analysed" hint for the loading screen is used up.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(OPENING_KEY);
+    } catch {
+      // storage blocked
+    }
+  }, []);
+
   // Print / "Save as PDF" shows collapsed sections too.
   useEffect(() => {
     const open = () => document.querySelectorAll("details").forEach((d) => d.setAttribute("open", ""));
@@ -39,6 +61,7 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
       <Backdrop />
       <AppHeader active="raport" reportHref={outOfScope ? null : url}>
         <ThemeToggle className="max-sm:hidden" />
+        <ShareButton url={url} title={`Działka ${p.number} · ${shortDate(report.date)}`} className="max-sm:hidden" />
         <button
           onClick={printLight}
           title="W oknie drukowania wybierz „Zapisz jako PDF”"
@@ -83,12 +106,15 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
           </Link>
         </div>
 
+        {!outOfScope && <JumpNav report={report} />}
+
         {outOfScope ? <OutOfScope report={report} startHref={startHref} /> : <AgriReport report={report} />}
 
         <Sources report={report} />
 
         <div className="no-print flex flex-wrap justify-center gap-2 sm:hidden">
           <ThemeToggle />
+          <ShareButton url={url} title={`Działka ${p.number} · ${shortDate(report.date)}`} />
           <button
             onClick={printLight}
             className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink"
@@ -170,6 +196,111 @@ function MapSummary({ report }: { report: Report }) {
         </dl>
       )}
     </div>
+  );
+}
+
+/**
+ * Short jumps to the report's sections, sticky while scrolling; the section being read is highlighted.
+ * Order is the report's own (KOWR 3.3: state → 10 years and causes → plan → what next → sources).
+ */
+function JumpNav({ report }: { report: Report }) {
+  const items = [
+    { id: "stan", label: "Stan" },
+    report.vulnerability && (report.justification?.history.length ?? 0) > 0 ? { id: "historia", label: "10 lat" } : null,
+    report.causes.length > 0 ? { id: "przyczyny", label: "Przyczyny" } : null,
+    { id: "mapa", label: "Plan" },
+    report.risk ? { id: "co-dalej", label: "Co dalej" } : null,
+    { id: "zrodla", label: "Źródła" },
+  ].filter((x): x is { id: string; label: string } => !!x);
+  const [active, setActive] = useState(items[0].id);
+  const ids = items.map((i) => i.id).join(",");
+
+  useEffect(() => {
+    const els = ids.split(",").map((id) => document.getElementById(id)).filter((e): e is HTMLElement => !!e);
+    // A section counts as "being read" when it crosses a band a third of the way down the screen.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (hit) setActive(hit.target.id);
+      },
+      { rootMargin: "-30% 0px -60% 0px" },
+    );
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, [ids]);
+
+  return (
+    <nav aria-label="Sekcje raportu" className="jump-nav no-print sticky z-20 -my-1 self-start max-sm:self-stretch">
+      <ul className="flex gap-1 overflow-x-auto rounded-full border border-rule bg-paper/90 p-1 shadow-sm backdrop-blur [scrollbar-width:none]">
+        {items.map((i) => (
+          <li key={i.id} className="flex-none">
+            <a
+              href={`#${i.id}`}
+              aria-current={active === i.id ? "location" : undefined}
+              onClick={(e) => {
+                // Smooth only here (not page-wide, which would also animate route changes); instant with reduced motion.
+                const el = document.getElementById(i.id);
+                if (!el) return;
+                e.preventDefault();
+                setActive(i.id);
+                el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+                history.replaceState(null, "", `#${i.id}`);
+              }}
+              className={`inline-flex min-h-9 items-center rounded-full px-3.5 text-[13px] no-underline transition-colors ${
+                active === i.id ? "bg-btn font-semibold text-btn-ink" : "font-medium text-ink-2 hover:bg-chip hover:text-ink"
+              }`}
+            >
+              {i.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+/**
+ * Share the report: the phone's own share sheet where there is one (touch screens), otherwise copy the link.
+ * The link carries parcel, date, period and crop, so whoever opens it sees the same report.
+ */
+function ShareButton({ url, title, className = "" }: { url: string; title: string; className?: string }) {
+  const [done, setDone] = useState<"copied" | "failed" | null>(null);
+  async function share() {
+    const href = new URL(url, location.origin).toString();
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      try {
+        await navigator.share({ title, url: href });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return; // closed the share sheet
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(href);
+      setDone("copied");
+    } catch {
+      // Clipboard API blocked (embedded browser, plain http): the older copy command still works in most of them.
+      const ta = document.createElement("textarea");
+      ta.value = href;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      setDone(ok ? "copied" : "failed");
+    }
+    setTimeout(() => setDone(null), 2200);
+  }
+  return (
+    <button
+      type="button"
+      onClick={share}
+      className={`inline-flex min-h-10 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink hover:border-ink-3 max-sm:min-h-11 ${className}`}
+    >
+      <Icon d={done === "copied" ? ICON.check : ICON.link} />
+      <span aria-live="polite">{done === "copied" ? "Skopiowano link" : done === "failed" ? "Nie udało się skopiować" : "Kopiuj link"}</span>
+    </button>
   );
 }
 
@@ -298,7 +429,7 @@ function AgriReport({ report }: { report: Report }) {
   return (
     <>
       {/* Co Cię czeka: dark feature card with the state in numbers (Planto's weather card) + the one urgent action */}
-      <section className="print-break-avoid grid gap-5 max-sm:gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" aria-label="Co Cię czeka">
+      <section id="stan" className="print-break-avoid grid gap-5 max-sm:gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" aria-label="Co Cię czeka">
         <div className="flex flex-col gap-5 rounded-[var(--r-card)] bg-feature p-6 text-feature-ink max-sm:p-4">
           <div className="flex flex-wrap items-center gap-2.5">
             <StatusPill tone={report.status.tone} label={report.status.label} onDark />

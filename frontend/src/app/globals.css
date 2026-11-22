@@ -420,6 +420,31 @@ html {
   opacity: 1;
 }
 
+/* Report section jumps: sticky under the top (below the floating header in the dark look); targets leave room for it. */
+.jump-nav {
+  top: 10px;
+}
+[data-theme="trace"] .jump-nav {
+  top: 84px;
+}
+#stan,
+#historia,
+#przyczyny,
+#mapa,
+#co-dalej,
+#zrodla {
+  scroll-margin-top: 72px;
+}
+[data-theme="trace"] :is(#stan, #historia, #przyczyny, #mapa, #co-dalej, #zrodla) {
+  scroll-margin-top: 146px;
+}
+
+/* Placeholder blocks while a report is being computed (app/raport/loading.tsx). */
+.skeleton {
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  border: 1px solid var(--rule-soft);
+}
+
 /* ---- Motion on the start screen (emil-design-eng: transform/opacity only, strong ease-out, reduced motion respected) ---- */
 @media (prefers-reduced-motion: no-preference) {
   /* Background photo: slow, ambient zoom — the app feels alive without asking for attention. */
@@ -481,6 +506,11 @@ html {
       box-shadow 300ms ease;
   }
 
+  /* Loading report: placeholders breathe gently. */
+  .skeleton {
+    animation: skeleton 1.6s ease-in-out infinite;
+  }
+
   /* Report: the soil-water tank fills up as the card appears. */
   .tank-fill {
     transform-origin: bottom;
@@ -522,6 +552,11 @@ html {
   details[open] > :not(summary) {
     animation: none !important;
     transition: none !important;
+  }
+}
+@keyframes skeleton {
+  50% {
+    opacity: 0.55;
   }
 }
 @keyframes tank-fill {

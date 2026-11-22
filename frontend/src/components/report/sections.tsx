@@ -188,7 +188,7 @@ export function Causes({ report, onShow }: { report: Report; onShow: (l: MapLaye
     { title: "Cechy działki", note: "na to można wpłynąć — zobacz zalecenia", items: byWeight.filter((c) => c.layer) },
   ].filter((g) => g.items.length > 0);
   return (
-    <Card className={SECTION}>
+    <Card id="przyczyny" className={SECTION}>
       <SectionHead eyebrow="Dlaczego" title="Co zwiększa ryzyko na tej działce" />
       <div className="grid gap-x-10 gap-y-5 md:grid-cols-2">
       {groups.map((g) => (
@@ -252,7 +252,7 @@ export function Risk({ report }: { report: Report }) {
     </tr>
   );
   return (
-    <Card className={`${SECTION} flex-[1_1_380px]`}>
+    <Card id="co-dalej" className={`${SECTION} flex-[1_1_380px]`}>
       <SectionHead eyebrow="Co dalej" title={risk.head} />
       {/* First sentence = the risk without action (bold); the rest explains what the plan changes. */}
       <p className="text-[15px] leading-snug">
@@ -301,7 +301,7 @@ export function Vulnerability({ report }: { report: Report }) {
   if (!v || history.length === 0) return null;
   const assumed = history.filter((h) => h.cropKnown === false).length;
   return (
-    <Card className={SECTION}>
+    <Card id="historia" className={SECTION}>
       <SectionHead
         eyebrow="Ostatnie 10 lat"
         title="Jak często brakowało wody"
@@ -357,7 +357,7 @@ export function Justification({ report }: { report: Report }) {
 export function Sources({ report }: { report: Report }) {
   const fetched = report.sources.find((x) => x.fetchedAt)?.fetchedAt;
   return (
-    <Card className={SECTION}>
+    <Card id="zrodla" className={SECTION}>
       <SectionHead
         eyebrow="Źródła"
         title="Skąd wiemy"
