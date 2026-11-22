@@ -11,7 +11,7 @@ from datetime import date, timedelta
 
 import httpx
 
-from .net import Wynik, cache_czytaj, cache_zapisz, get
+from .net import Wynik, cache_czytaj, cache_zapisz, get, limit
 
 EDO = "https://drought.emergency.copernicus.eu/api/wms"
 CDI_KLASY = [((240, 228, 66), "obserwacja", "spadek opadów (SPI)"),
@@ -44,7 +44,7 @@ async def edo_cdi(client: httpx.AsyncClient, lon: float, lat: float, D: date) ->
                   "CRS": "EPSG:4326", "BBOX": f"{lat - 0.05},{lon - 0.05},{lat + 0.05},{lon + 0.05}",
                   "WIDTH": 9, "HEIGHT": 9, "FORMAT": "image/png", "TIME": dek.isoformat()}
         try:
-            r = await client.get(EDO, params=params, timeout=15)
+            r = await client.get(EDO, params=params, timeout=limit(15))
             if r.status_code != 200 or not r.headers.get("content-type", "").startswith("image"):
                 continue
             px = Image.open(io.BytesIO(r.content)).convert("RGBA").getpixel((4, 4))
@@ -68,7 +68,7 @@ async def soilgrids(client: httpx.AsyncClient, lon: float, lat: float) -> Wynik:
     params = [("lon", round(lon, 4)), ("lat", round(lat, 4)), ("value", "mean"), ("depth", "5-15cm"), ("depth", "30-60cm")]
     params += [("property", p) for p in ("sand", "clay", "soc", "wv0033", "wv1500")]
     w = await get(client, "ISRIC SoilGrids 250 m", "https://rest.isric.org/soilgrids/v2.0/properties/query",
-                  params, timeout=15)
+                  params, timeout=limit(15))
     if not w.ok:
         return w
     try:

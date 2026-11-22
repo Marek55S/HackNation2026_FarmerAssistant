@@ -221,6 +221,18 @@ def rok_sceny(u, D: date) -> int:
 
 
 async def _satelita(rings, D: date, u) -> tuple:
+    """NDMI z satelity (P10) w budżecie czasu BUDZET_SATELITA_S: te usługi regularnie nie odpowiadają, a raport nie
+    może na nie czekać. Po przekroczeniu raport idzie bez stanu roślin, z powodem w „czego nie sprawdziliśmy”."""
+    try:
+        return await asyncio.wait_for(_satelita_lancuch(rings, D, u), C.BUDZET_SATELITA_S)
+    except asyncio.TimeoutError:
+        w = Wynik("Sentinel‑2 / Landsat – zdjęcia satelitarne", None,
+                  powod=f"usługi zdjęć satelitarnych nie odpowiedziały w {C.BUDZET_SATELITA_S:.0f} s",
+                  czas_ms=int(C.BUDZET_SATELITA_S * 1000))
+        return w, [w.opis()]
+
+
+async def _satelita_lancuch(rings, D: date, u) -> tuple:
     """NDMI z satelity (P10): Sentinel Hub → Planetary Computer → Landsat. Okno sceny zależy od uprawy `u`, która rosła
     w roku sceny – w wegetacji ostatnie 25 dni, poza nią okno wrażliwe minionego sezonu. Zwraca (surowy wynik, opisy
     źródeł); anomalię liczy `satellite.anomalia`, gdy znana jest historia upraw (L1)."""

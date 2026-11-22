@@ -598,3 +598,315 @@ html {
     opacity: 0;
   }
 }
+
+/* ---- Report as a printed document (components/report/print-document.tsx) ----
+   Hidden on screen; in print it replaces the interactive page. Plain document typography in points,
+   brand green only for headings and rules, tables instead of cards. */
+.print-doc {
+  display: none;
+}
+@media print {
+  .print-doc {
+    display: block;
+    color: #1d2b22;
+    font: 9.5pt/1.45 var(--font-inter), Inter, system-ui, sans-serif;
+  }
+  .print-doc h1,
+  .print-doc h2,
+  .print-doc h3 {
+    font-family: var(--font-red-hat), var(--font-inter), sans-serif;
+    color: #2f4d3c;
+    break-after: avoid;
+  }
+  .print-doc p {
+    margin: 0 0 6pt;
+  }
+  .pd-title {
+    border-bottom: 1.5pt solid #2f4d3c;
+    padding-bottom: 10pt;
+    margin-bottom: 12pt;
+  }
+  .pd-kicker {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #687266;
+  }
+  .pd-title h1 {
+    font-size: 24pt;
+    line-height: 1.1;
+    margin: 2pt 0 2pt;
+  }
+  .pd-sub {
+    font-size: 11pt;
+    color: #3a473e;
+  }
+  .pd-meta {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8pt;
+    font-size: 8.5pt;
+  }
+  .pd-meta th,
+  .pd-meta td {
+    text-align: left;
+    vertical-align: top;
+    padding: 3pt 6pt 3pt 0;
+    border-top: 0.5pt solid #d1d2c3;
+  }
+  .pd-meta th {
+    width: 17%;
+    font-weight: 600;
+    color: #687266;
+  }
+  .pd-summary {
+    background: #f3f4ea;
+    border-left: 3pt solid #2f4d3c;
+    padding: 8pt 10pt 4pt;
+    margin-bottom: 14pt;
+    break-inside: avoid;
+  }
+  .pd-status {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #687266;
+  }
+  .pd-status b {
+    color: #1d2b22;
+  }
+  .pd-headline {
+    font-size: 12pt;
+    font-weight: 600;
+  }
+  .pd-urgent {
+    border-top: 0.5pt solid #d1d2c3;
+    padding-top: 5pt;
+  }
+  .pd-chapter {
+    margin-top: 14pt;
+  }
+  .pd-chapter h2 {
+    font-size: 14pt;
+    margin: 0 0 6pt;
+    padding-bottom: 3pt;
+    border-bottom: 0.5pt solid #cfd6b9;
+  }
+  .pd-chapter h2 span {
+    color: #687266;
+    font-weight: 600;
+  }
+  .pd-chapter h3 {
+    font-size: 10.5pt;
+    margin: 10pt 0 4pt;
+  }
+  .pd-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4pt 0 8pt;
+    font-size: 8.5pt;
+  }
+  .pd-table caption {
+    caption-side: top;
+    text-align: left;
+    font-size: 8pt;
+    color: #687266;
+    padding-bottom: 3pt;
+  }
+  .pd-table th,
+  .pd-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 3.5pt 6pt 3.5pt 0;
+    border-bottom: 0.5pt solid #e2e2d6;
+  }
+  .pd-table thead th {
+    font-weight: 700;
+    color: #2f4d3c;
+    border-bottom: 1pt solid #2f4d3c;
+  }
+  .pd-table tr {
+    break-inside: avoid;
+  }
+  .pd-table .r {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .pd-muted {
+    color: #687266;
+  }
+  .pd-note {
+    font-size: 8pt;
+    color: #687266;
+  }
+  .pd-list {
+    margin: 2pt 0 8pt;
+    padding-left: 12pt;
+    list-style: disc;
+  }
+  .pd-list li {
+    margin-bottom: 2pt;
+  }
+  .pd-swatch {
+    display: inline-block;
+    width: 8pt;
+    height: 8pt;
+    border: 1.5pt solid;
+    border-radius: 2pt;
+    margin-right: 4pt;
+    vertical-align: -1pt;
+  }
+  .pd-figure {
+    margin: 6pt 0 12pt;
+    break-inside: avoid;
+  }
+  .pd-map {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    background: #dde7d5;
+    border: 0.5pt solid #b9bcae;
+    overflow: hidden;
+  }
+  .pd-map img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .pd-map-missing {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 12pt;
+    text-align: center;
+    color: #4b574e;
+  }
+  .pd-north {
+    position: absolute;
+    top: 6pt;
+    right: 6pt;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 3pt;
+    padding: 2pt 3pt 0;
+    line-height: 0;
+  }
+  .pd-scale {
+    position: absolute;
+    left: 6pt;
+    bottom: 6pt;
+    width: calc(100% - 12pt);
+    display: flex;
+    align-items: center;
+    gap: 4pt;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #1a1c19;
+  }
+  .pd-scale-bar {
+    height: 4pt;
+    border: 1pt solid #1a1c19;
+    border-top: 0;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 0 1pt rgba(255, 255, 255, 0.8);
+  }
+  .pd-scale > span:last-child {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0 3pt;
+    border-radius: 2pt;
+  }
+  .pd-figure figcaption {
+    font-size: 8.5pt;
+    padding-top: 4pt;
+  }
+  .pd-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2pt 10pt;
+    margin: 4pt 0 2pt;
+    padding: 0;
+    list-style: none;
+    font-size: 8pt;
+    color: #3a473e;
+  }
+  .pd-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4pt;
+  }
+  .pd-src {
+    display: block;
+    font-size: 7.5pt;
+    color: #687266;
+  }
+  .pd-figs-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12pt;
+  }
+  .pd-figure-small figcaption {
+    font-size: 8pt;
+  }
+  .pd-action {
+    break-inside: avoid;
+    border-top: 0.5pt solid #e2e2d6;
+    padding: 6pt 0 4pt;
+  }
+  .pd-action h3 {
+    display: flex;
+    align-items: center;
+    gap: 6pt;
+    margin: 0 0 4pt;
+    font-size: 10.5pt;
+    color: #1d2b22;
+  }
+  .pd-num {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 15pt;
+    height: 15pt;
+    border-radius: 99pt;
+    color: #fff;
+    font-size: 8pt;
+    font-weight: 800;
+  }
+  .pd-cat {
+    margin-left: auto;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #687266;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .pd-action dl {
+    display: grid;
+    gap: 1.5pt;
+    margin: 0;
+    font-size: 8.5pt;
+  }
+  .pd-action dl > div {
+    display: grid;
+    grid-template-columns: 22mm 1fr;
+    gap: 6pt;
+  }
+  .pd-action dt {
+    color: #687266;
+    font-weight: 600;
+  }
+  .pd-action dd {
+    margin: 0;
+  }
+  .pd-steps {
+    margin: 3pt 0 0 calc(22mm + 6pt);
+    padding-left: 12pt;
+    list-style: decimal;
+    font-size: 8.5pt;
+  }
+}
+@media print {
+  .pd-keep {
+    break-inside: avoid;
+  }
+}

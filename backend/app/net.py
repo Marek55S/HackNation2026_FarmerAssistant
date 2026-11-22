@@ -19,6 +19,13 @@ CACHE_DIR.mkdir(exist_ok=True)
 UA = {"User-Agent": "AsystentWodny/0.1 (prototyp HackNation)"}
 
 
+def limit(s: float) -> httpx.Timeout:
+    """`s` sekund na odpowiedź, ale tylko TIMEOUT_POLACZENIA_S na nawiązanie połączenia: usługa, która nie odpowiada
+    wcale, odpada po kilku sekundach zamiast po pełnym czasie."""
+    from .config import TIMEOUT_POLACZENIA_S
+    return httpx.Timeout(s, connect=min(s, TIMEOUT_POLACZENIA_S))
+
+
 @dataclass
 class Wynik:
     zrodlo: str
@@ -99,7 +106,7 @@ async def get(client: httpx.AsyncClient, zrodlo: str, url: str, params: dict | N
     last = "nieznany błąd"
     for _ in range(retries + 1):
         try:
-            r = await client.get(url, params=params, timeout=timeout, headers=UA)
+            r = await client.get(url, params=params, timeout=limit(timeout), headers=UA)
             if r.status_code == 429:
                 # limit zapytań: natychmiastowe ponowienie tylko zużywa limit dalej
                 last = "HTTP 429 — wyczerpany limit zapytań źródła, spróbuj za kilka minut"
@@ -112,6 +119,11 @@ async def get(client: httpx.AsyncClient, zrodlo: str, url: str, params: dict | N
             if cache:
                 path.write_text(json.dumps({"dane": dane, "pobrano": w.pobrano}), encoding="utf-8")
             return w
+        except httpx.ConnectTimeout:
+            # usługa w ogóle nie odpowiada: ponowienie tylko podwoiłoby czekanie
+            from .config import TIMEOUT_POLACZENIA_S
+            last = f"usługa nie odpowiada (brak połączenia w {TIMEOUT_POLACZENIA_S:.0f} s)"
+            break
         except httpx.TimeoutException:
             last = f"przekroczony czas odpowiedzi ({timeout:.0f} s)"
         except Exception as e:  # noqa: BLE001 – każdy błąd źródła = jawny brak

@@ -13,6 +13,7 @@ import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, StatusPill } from "../ui";
 import { CAT, LAYERS, LEGEND, partColor } from "./map-style";
+import { PrintDocument, usePrintFigures } from "./print-document";
 import { ActionList, Causes, CropParts, PeriodSummaryCard, Risk, RULE_ICON, SectionHead, Sources, Vulnerability } from "./sections";
 
 // MapLibre needs the browser (WebGL), so the map is loaded on the client only.
@@ -57,19 +58,34 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
     return () => window.removeEventListener("beforeprint", open);
   }, []);
 
+  // "Drukuj / PDF": the map figures of the print document are made first, then the print dialog opens.
+  const { figures, prepare, preparing, madeOn } = usePrintFigures(report);
+  const onPrint = async () => {
+    if (outOfScope) return printLight();
+    await prepare();
+    // Let React put the images in and the browser decode them before the dialog takes its snapshot.
+    await new Promise((r) => setTimeout(r, 50));
+    await Promise.all([...document.querySelectorAll<HTMLImageElement>(".print-doc img")].map((i) => i.decode().catch(() => {})));
+    printLight();
+  };
+  const printLabel = preparing ? "Przygotowuję PDF…" : null;
+
   return (
-    <div className="relative isolate min-h-screen pb-24 text-ink md:pb-0 print:pb-0">
+    <>
+    <div className={`relative isolate min-h-screen pb-24 text-ink md:pb-0 print:pb-0 ${outOfScope ? "" : "print:hidden"}`}>
       <Backdrop />
       <AppHeader active="raport" reportHref={outOfScope ? null : url}>
         <ThemeToggle className="max-sm:hidden" />
         <ShareButton url={url} title={`Działka ${p.number} · ${shortDate(report.date)}`} className="max-sm:hidden" />
         <button
-          onClick={printLight}
-          title="W oknie drukowania wybierz „Zapisz jako PDF”"
-          className="inline-flex min-h-10 items-center gap-2 rounded-[var(--r-btn)] bg-btn px-4 text-sm font-semibold text-btn-ink hover:bg-btn-hover max-sm:hidden"
+          onClick={onPrint}
+          disabled={preparing}
+          aria-busy={preparing}
+          title="Przygotowuje raport jako dokument z mapami; w oknie drukowania wybierz „Zapisz jako PDF”"
+          className="inline-flex min-h-10 items-center gap-2 rounded-[var(--r-btn)] bg-btn px-4 text-sm font-semibold text-btn-ink hover:bg-btn-hover disabled:cursor-wait disabled:opacity-80 max-sm:hidden"
         >
-          <Icon d={ICON.print} />
-          Drukuj / PDF
+          <Icon d={ICON.print} className={preparing ? "animate-pulse" : ""} />
+          {printLabel ?? "Drukuj / PDF"}
         </button>
         <span className="sm:hidden">
           <StatusPill tone={report.status.tone} label={report.status.label} small />
@@ -117,11 +133,13 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
           <ThemeToggle />
           <ShareButton url={url} title={`Działka ${p.number} · ${shortDate(report.date)}`} />
           <button
-            onClick={printLight}
-            className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink"
+            onClick={onPrint}
+            disabled={preparing}
+            aria-busy={preparing}
+            className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink disabled:cursor-wait"
           >
-            <Icon d={ICON.print} />
-            Drukuj / zapisz PDF
+            <Icon d={ICON.print} className={preparing ? "animate-pulse" : ""} />
+            {printLabel ?? "Drukuj / zapisz PDF"}
           </button>
         </div>
 
@@ -132,6 +150,8 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
 
       <MobileNav active="raport" reportHref={outOfScope ? null : url} />
     </div>
+    {!outOfScope && <PrintDocument report={report} url={url} figures={figures} madeOn={madeOn} />}
+    </>
   );
 }
 
