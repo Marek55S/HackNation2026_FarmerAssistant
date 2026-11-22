@@ -4,8 +4,40 @@
     {
       "name": "frontend-prod",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "frontend", "start", "-p", "3100"],
+      "runtimeArgs": [
+        "--dir",
+        "frontend",
+        "start",
+        "-p",
+        "3100"
+      ],
       "port": 3100
+    },
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "frontend",
+        "dev",
+        "-p",
+        "3101"
+      ],
+      "port": 3101
+    },
+    {
+      "name": "frontend-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "MOCK_API=1",
+        "pnpm",
+        "--dir",
+        "frontend",
+        "dev",
+        "-p",
+        "3102"
+      ],
+      "port": 3102
     }
   ]
 }

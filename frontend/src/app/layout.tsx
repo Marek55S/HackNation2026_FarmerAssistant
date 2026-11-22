@@ -34,6 +34,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         {children}
+        {process.env.MOCK_API === "1" && (
+          // MOCK_API: usunąć przed pushem
+          <div className="pointer-events-none fixed left-1/2 top-2 z-50 -translate-x-1/2 rounded-full bg-amber-tint px-3 py-1 text-xs font-semibold text-amber-ink shadow-sm">
+            Dane przykładowe (MOCK_API)
+          </div>
+        )}
         <ServiceWorker />
       </body>
     </html>

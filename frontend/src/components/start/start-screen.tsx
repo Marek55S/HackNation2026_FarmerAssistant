@@ -5,11 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useFarm } from "@/lib/farm";
 import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
 import { AppHeader } from "../app-header";
+import { Backdrop } from "../backdrop";
 import { MobileNav } from "../mobile-nav";
 import { ThemeToggle } from "../theme-toggle";
-import { Card, ICON, Icon, StepNumber } from "../ui";
-import { longDate } from "@/lib/dates";
-import { DatePicker, type DateChoice } from "./date-picker";
+import { Card, ICON, Icon } from "../ui";
+import { DatePicker, defaultFrom, type DateChoice } from "./date-picker";
 import { ParcelPicker } from "./parcel-picker";
 import { FarmPanel, ProgressPanel, type ProgressState } from "./side-panels";
 
@@ -37,7 +37,7 @@ export function StartScreen({
   const [lookup, setLookup] = useState<ParcelLookup | null>(null);
   const [crop, setCrop] = useState<CropId | null>(null);
   const [date, setDate] = useState(initialDate);
-  const [from, setFrom] = useState<string | null>(initialFrom);
+  const [from, setFrom] = useState<string | null>(() => initialFrom ?? defaultFrom(initialDate));
   const [dateValid, setDateValid] = useState(true);
   const [status, setStatus] = useState<ProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -153,53 +153,35 @@ export function StartScreen({
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 text-ink md:pb-0">
+    <div className="relative isolate min-h-screen pb-24 text-ink md:pb-0">
+      <Backdrop />
       <AppHeader active="start" reportHref={farm.find((f) => f.tone)?.url ?? null}>
         <ThemeToggle />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-heading max-lg:hidden">
-          <Icon d={ICON.lock} size={14} />
-          Bez logowania · bez danych osobowych
-        </span>
       </AppHeader>
 
       <main className="mx-auto flex max-w-[1376px] flex-wrap items-start gap-6 px-8 pb-12 pt-8 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
         <Card className="flex min-w-0 flex-[999_1_560px] flex-col gap-7 p-8 max-sm:gap-6 max-sm:p-4">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[27px]">
-              Sprawdź wodę <span className="accent-word">na swojej działce</span>
-            </h1>
-            <p className="inline-flex items-center gap-1.5 text-sm text-ink-2">
-              <Icon d={ICON.calendar} size={16} className="text-muted" />
-              {longDate(today)}
-            </p>
-            <p className="max-w-[60ch] text-base text-ink-3">
-              Podaj działkę i dzień. Glebę, teren i pogodę z 10 lat pobierzemy sami, uprawę podpowiemy z deklaracji ARiMR.
-            </p>
-          </div>
+          <h1 style={{ "--d": "0ms" } as React.CSSProperties} className="rise text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[27px]">
+            Sprawdź wodę <span className="accent-word">na swojej działce</span>
+          </h1>
 
           {/* Najpierw data: od roku daty zależy, którą deklarację upraw (ARiMR / mapa upraw) sprawdzamy dla działki. */}
-          <div className="flex flex-col gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <StepNumber n={1} />
-              <h2 className="text-[19px] font-bold">Na jaki dzień lub okres?</h2>
-            </div>
-            <DatePicker date={date} from={from} today={today} onChange={onDate} />
+          <div style={{ "--d": "70ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
+            <h2 className="text-[17px] font-semibold text-heading">Dzień</h2>
+            <DatePicker date={date} from={initialFrom} today={today} onChange={onDate} />
           </div>
 
-          <div className="flex flex-col gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <StepNumber n={2} />
-              <h2 className="text-[19px] font-bold">Wskaż działkę</h2>
-            </div>
+          <div style={{ "--d": "130ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
+            <h2 className="text-[17px] font-semibold text-heading">Działka</h2>
             <ParcelPicker initialId={initialParcelId} date={date} lookup={lookup} onLookup={onLookup} crop={crop} onCrop={setCrop} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
+          <div style={{ "--d": "180ms" } as React.CSSProperties} className="rise flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
             <button
               onClick={start}
               disabled={!canStart}
               aria-describedby="start-hint"
-              className="inline-flex min-h-14 items-center gap-2.5 rounded-[var(--r-btn)] bg-btn px-7 text-lg font-bold text-btn-ink hover:bg-btn-hover disabled:cursor-not-allowed disabled:opacity-50 max-sm:w-full max-sm:justify-center"
+              className="cta inline-flex min-h-14 items-center gap-2.5 rounded-[var(--r-btn)] bg-btn px-7 text-lg font-bold text-btn-ink hover:bg-btn-hover disabled:cursor-not-allowed disabled:opacity-50 max-sm:w-full max-sm:justify-center"
             >
               {running ? "Analizuję…" : "Sprawdź działkę"}
               <Icon d={ICON.arrowRight} size={20} stroke={2.5} />
@@ -211,12 +193,12 @@ export function StartScreen({
                   ? "Wybierz uprawę, żeby zacząć."
                   : !dateValid
                     ? "Popraw datę, żeby zacząć."
-                  : "Tylko publiczne, bezpłatne dane: GUGiK, ARiMR, IUNG-PIB, Copernicus, USGS Landsat, Open-Meteo, IMGW-PIB, Wody Polskie."}
+                    : null}
             </span>
           </div>
         </Card>
 
-        <aside className="flex min-w-0 flex-[1_1_380px] flex-col gap-6 max-sm:gap-4">
+        <aside style={{ "--d": "110ms" } as React.CSSProperties} className="rise flex min-w-0 flex-[1_1_380px] flex-col gap-6 max-sm:gap-4">
           {(running || status || error) && (
             <div ref={progressRef} className="scroll-mt-4">
               <ProgressPanel status={status} error={error} />

@@ -129,7 +129,10 @@ export default function ParcelMap({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const [ready, setReady] = useState(false);
+  // The map instance whose style has finished loading (not just "a map is ready"): when the parcel or data changes,
+  // the map is re-created and the effects below must not touch the new one before its own "load".
+  const [loadedMap, setLoadedMap] = useState<maplibregl.Map | null>(null);
+  const ready = !!loadedMap;
   const [base, setBaseState] = useState<BaseLayer>("orto");
   const [notice, setNotice] = useState<string | null>(null);
   const pins = useRef(new Map<number, HTMLElement>());
@@ -228,7 +231,7 @@ export default function ParcelMap({
         new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(l.punkt).addTo(map);
         return { el, layers: l.layers };
       });
-      setReady(true);
+      setLoadedMap(map);
     });
 
     return () => {
@@ -236,14 +239,14 @@ export default function ParcelMap({
       pinEls.clear();
       map.remove();
       mapRef.current = null;
-      setReady(false);
+      setLoadedMap(null);
     };
   }, [parcel, data]);
 
   // Pins
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
+    const map = loadedMap;
+    if (!map || map !== mapRef.current) return;
     const pinEls = pins.current;
     const markers = actions.map((a) => {
       const el = pinElement(a, () => onPinRef.current(a));
@@ -254,12 +257,12 @@ export default function ParcelMap({
       markers.forEach((m) => m.remove());
       pinEls.clear();
     };
-  }, [actions, ready]);
+  }, [actions, loadedMap]);
 
   // Map view (layer) and selection
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
+    const map = loadedMap;
+    if (!map || map !== mapRef.current) return;
     const inLayer: ExpressionSpecification = ["in", `,${layer},`, ["get", "ls"]];
     for (const id of ["strefa", "zaglebienie", "strefa-linia", "zaglebienie-linia", "pas", "row", "splyw"]) {
       const kind = { strefa: "strefa-podlewania", "strefa-linia": "strefa-podlewania", zaglebienie: "zaglebienie", "zaglebienie-linia": "zaglebienie", pas: "pas-zadrzewien", row: "row", splyw: "splyw" }[id]!;
@@ -281,7 +284,7 @@ export default function ParcelMap({
 
     labels.current.forEach((l) => (l.el.style.display = l.layers.includes(layer) ? "" : "none"));
     pins.current.forEach((el, n) => styleSelected(el, n === pin));
-  }, [layer, pin, ready, actions, data]);
+  }, [layer, pin, loadedMap, actions, data]);
 
   const sel = actions.find((a) => a.n === pin);
   return (

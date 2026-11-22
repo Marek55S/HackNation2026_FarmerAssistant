@@ -87,6 +87,7 @@ export function reportTitle(r: { parcel: { number: string }; crop: { name: strin
 
 /** Report from the backend (POST /api/raport); throws BackendError (404 parcel, 422 crop needed, 5xx). */
 export async function fetchReport(p: { dzialka: string; data: string; od: string | null; uprawa: string | null }): Promise<Report> {
+  if (process.env.MOCK_API === "1") return (await import("./mock")).mockReport(p); // MOCK_API: usunąć przed pushem
   const r = await backend<{ report: Report }>("/api/raport", {
     method: "POST",
     body: JSON.stringify({ id: p.dzialka, data: p.data, od: p.od, uprawa: p.uprawa }),

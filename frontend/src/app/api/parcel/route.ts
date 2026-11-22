@@ -6,6 +6,11 @@ import { isValidIso, todayIso } from "@/lib/dates";
 // ?id=…  |  ?gmina=…&obreb=…&nr=…  |  ?mapa=xy:<lon>,<lat> (click on a crop field – crop of the field under the point); all with &data=yyyy-mm-dd
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
+  if (process.env.MOCK_API === "1") {
+    // MOCK_API: usunąć przed pushem
+    const m = await (await import("@/lib/mock")).mockParcel(q);
+    return NextResponse.json(m.body, { status: m.status });
+  }
   const raw = q.get("data");
   const date = isValidIso(raw) ? raw : todayIso();
   const id = q.get("id")?.trim();

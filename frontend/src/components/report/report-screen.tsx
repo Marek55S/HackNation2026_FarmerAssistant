@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { MapLayer, Report, Zalecenie } from "@/lib/types";
 import { AppHeader } from "../app-header";
+import { Backdrop } from "../backdrop";
 import { MobileNav } from "../mobile-nav";
+import { SlidingPill } from "../sliding-pill";
 import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, StatusPill } from "../ui";
 import { CAT, LAYERS, LEGEND } from "./map-style";
-import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, Sources, Vulnerability } from "./sections";
+import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, RULE_ICON, SectionHead, Sources, Vulnerability } from "./sections";
 
 // MapLibre needs the browser (WebGL), so the map is loaded on the client only.
 const ParcelMap = dynamic(() => import("./parcel-map"), {
@@ -33,7 +35,8 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg pb-24 text-ink md:pb-0 print:pb-0">
+    <div className="relative isolate min-h-screen pb-24 text-ink md:pb-0 print:pb-0">
+      <Backdrop />
       <AppHeader active="raport" reportHref={outOfScope ? null : url}>
         <ThemeToggle className="max-sm:hidden" />
         <button
@@ -49,7 +52,7 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
         </span>
       </AppHeader>
 
-      <main className="mx-auto flex max-w-[1376px] flex-col gap-5 px-8 pb-14 pt-6 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
+      <main className="rise-children mx-auto flex max-w-[1376px] flex-col gap-5 px-8 pb-14 pt-6 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
         {/* Title row (Smartfarm "Welcome back" + date): what parcel, which day, where the data comes from */}
         <div className="flex flex-wrap items-end gap-x-6 gap-y-3 pt-2 max-sm:pt-0">
           <div className="flex min-w-0 flex-col gap-2">
@@ -73,7 +76,7 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
           </div>
           <Link
             href={startHref}
-            className="press no-print ml-auto inline-flex min-h-10 items-center gap-1.5 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink no-underline hover:border-ink-3 max-sm:ml-0"
+            className="press cta no-print ml-auto inline-flex min-h-10 items-center gap-1.5 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-4 text-sm font-semibold text-ink no-underline hover:border-ink-3 max-sm:ml-0"
           >
             Zmień działkę lub dzień
             <Icon d={ICON.chevronRight} size={15} />
@@ -124,7 +127,7 @@ function MapSummary({ report }: { report: Report }) {
         Podsumowanie
       </button>
       {open && (
-        <dl className="flex flex-col gap-2.5 border-t border-[#E2E2D6] px-3.5 py-3 text-[13px]">
+        <dl className="reveal flex flex-col gap-2.5 border-t border-[#E2E2D6] px-3.5 py-3 text-[13px]">
           <div className="flex justify-between gap-2">
             <dt className="text-[#687266]">Powierzchnia</dt>
             <dd className="tabular font-semibold">{p.areaHa.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} ha</dd>
@@ -269,17 +272,38 @@ function AgriReport({ report }: { report: Report }) {
           >
             <span className="text-xs font-bold uppercase tracking-[0.08em] text-heading">{report.urgent.label.toLowerCase()}</span>
             <span className="flex items-start gap-3">
-              <span
-                className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-full text-base font-extrabold text-white"
-                style={{ background: CAT[urgentAction.kategoria].color }}
-              >
-                {urgentAction.n}
+              {/* Pictogram of the action (as in the action list); the small number matches the pin on the map. */}
+              <span className="relative flex-none">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-primary-border bg-paper text-heading">
+                  <Icon d={RULE_ICON[urgentAction.regula] ?? ICON.check} size={28} stroke={1.6} />
+                </span>
+                <span
+                  className="absolute -right-1.5 -top-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary-tint bg-heading px-1 text-[11px] font-bold text-on-primary"
+                  aria-label={`działanie ${urgentAction.n} na mapie`}
+                >
+                  {urgentAction.n}
+                </span>
               </span>
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="font-[family-name:var(--font-display)] text-xl font-semibold leading-snug text-heading">{report.urgent.title}</span>
                 <span className="text-sm text-ink-2">{report.urgent.sub}</span>
               </span>
             </span>
+            {/* The urgent action's key facts, so the card answers "when, how much, what for" without scrolling. */}
+            <dl className="grid w-full grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-primary-border pt-3 text-[13px]">
+              <dt className="text-muted">Kiedy</dt>
+              <dd className="text-ink">{urgentAction.kiedy}</dd>
+              <dt className="text-muted">Gdzie</dt>
+              <dd className="text-ink">{urgentAction.gdzie}</dd>
+              {urgentAction.ile && (
+                <>
+                  <dt className="text-muted">Ile</dt>
+                  <dd className="text-ink">{urgentAction.ile}</dd>
+                </>
+              )}
+              <dt className="text-muted">Zyskasz</dt>
+              <dd className="font-semibold text-heading">{urgentAction.co_zyskasz}</dd>
+            </dl>
             <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-heading">
               Pokaż na mapie
               <Icon d={ICON.arrowRight} size={15} className="transition-transform duration-150 group-hover:translate-x-0.5" />
@@ -292,7 +316,7 @@ function AgriReport({ report }: { report: Report }) {
 
       {/* Order follows the KOWR task (3.3 pt 4–5), not the mock-up: state on day D (above) → 10-year vulnerability and
           causes → plan → scenarios. See makieta-ui/README.md. */}
-      <section className="flex flex-wrap items-stretch gap-5 max-sm:gap-4" aria-label="Podatność i przyczyny">
+      <section className="flex flex-col gap-5 max-sm:gap-4" aria-label="Podatność i przyczyny">
         <Vulnerability report={report} />
         <Causes report={report} onShow={showLayer} />
       </section>
@@ -305,15 +329,16 @@ function AgriReport({ report }: { report: Report }) {
           className="print-break-avoid flex min-w-0 flex-[999_1_640px] scroll-mt-4 flex-col gap-3.5 rounded-[var(--r-card)] border border-rule bg-paper p-[18px] max-sm:p-3"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-extrabold">Plan na Twojej działce</h2>
-            <div role="tablist" aria-label="Widok mapy" className="no-print ml-auto flex flex-wrap gap-1 rounded-[22px] bg-chip p-1 max-sm:ml-0 max-sm:w-full">
+            <SectionHead eyebrow="Co zrobić" title="Plan na Twojej działce" />
+            <div role="tablist" aria-label="Widok mapy" className="no-print relative ml-auto flex flex-wrap gap-1 rounded-[22px] bg-chip p-1 max-sm:ml-0 max-sm:w-full">
+              <SlidingPill active={layer} />
               {(Object.keys(LAYERS) as MapLayer[]).map((k) => (
                 <button
                   key={k}
                   role="tab"
                   aria-selected={layer === k}
                   onClick={() => setLayer(k)}
-                  className={`min-h-10 rounded-full px-3 text-[13px] max-sm:flex-1 max-sm:px-1.5 max-sm:text-xs ${layer === k ? "bg-tab-active font-bold text-ink shadow-sm" : "font-medium text-ink-2 hover:text-ink"}`}
+                  className={`relative min-h-10 rounded-full px-3 text-[13px] max-sm:flex-1 max-sm:px-1.5 max-sm:text-xs ${layer === k ? "font-bold text-ink" : "font-medium text-ink-2 hover:text-ink"}`}
                 >
                   {LAYERS[k]}
                 </button>
@@ -336,7 +361,7 @@ function AgriReport({ report }: { report: Report }) {
             <span className="text-xs text-muted">{report.mapInfo[layer].src}</span>
           </div>
         </div>
-        <aside className="flex min-w-0 flex-[1_1_380px] flex-col">
+        <aside className="flex min-w-0 flex-[1_1_380px] flex-col rounded-[var(--r-card)] border border-rule bg-paper p-[18px] max-sm:p-3">
           <ActionList actions={report.actions} pin={pin} onPick={(a) => select(a, window.matchMedia("(max-width: 1100px)").matches)} />
         </aside>
       </section>
