@@ -14,7 +14,7 @@ export const LAYERS: Record<MapLayer, string> = {
 export const CAT: Record<ActionCategory, { name: string; color: string; ink: string; bg: string }> = {
   ret: { name: "1 · Zatrzymaj wodę", color: "#1E5B3A", ink: "var(--cat-ret-ink)", bg: "var(--cat-ret-bg)" },
   agro: { name: "2 · Na polu", color: "#7A4E14", ink: "var(--cat-agro-ink)", bg: "var(--cat-agro-bg)" },
-  irr: { name: "3 · Nawadnianie", color: "#1f6fc9", ink: "var(--cat-irr-ink)", bg: "var(--cat-irr-bg)" },
+  irr: { name: "3 · Nawadnianie", color: "#2b7a8c", ink: "var(--cat-irr-ink)", bg: "var(--cat-irr-bg)" },
 };
 
 /**
@@ -24,19 +24,19 @@ export const CAT: Record<ActionCategory, { name: string; color: string; ink: str
 export const RASTER_RGBA: Record<Exclude<MapLayer, "plan">, [number, number, number, number][]> = {
   // 0 wetter · 1 as usual · 2 a bit drier · 3 drier · 4 much drier
   sucho: [
-    [70, 150, 235, 0.55],
+    [60, 145, 160, 0.55],
     [0, 0, 0, 0],
     [246, 196, 120, 0.5],
     [226, 120, 80, 0.62],
     [190, 55, 45, 0.72],
   ],
-  // 0 highest … 4 lowest — low ground in blue, where water gathers
+  // 0 highest … 4 lowest — low ground in water teal, where water gathers
   teren: [
     [250, 236, 196, 0.5],
     [235, 222, 190, 0.32],
     [0, 0, 0, 0],
-    [120, 170, 215, 0.38],
-    [45, 110, 190, 0.58],
+    [130, 190, 192, 0.38],
+    [43, 122, 140, 0.6],
   ],
   // 0 clay · 1 loamy sand · 2 sand
   gleba: [
@@ -54,7 +54,7 @@ export const LEGEND: Record<MapLayer, { style: CSSProperties; t: string }[]> = {
   plan: [
     { style: sw("#1E5B3A"), t: "zatrzymaj wodę" },
     { style: sw("#7A4E14"), t: "na polu" },
-    { style: sw("#1f6fc9"), t: "nawadnianie" },
+    { style: sw("#2b7a8c"), t: "nawadnianie" },
     { style: { width: 16, height: 0, borderTop: "3px solid #F2C14E" }, t: "granica działki" },
     { style: { ...sw("#FFFFFF"), border: "2px solid #1A1C19", boxSizing: "border-box" }, t: "zaznaczone działanie" },
   ],
@@ -67,8 +67,8 @@ export const LEGEND: Record<MapLayer, { style: CSSProperties; t: string }[]> = {
   teren: [
     { style: sw(rgba(RASTER_RGBA.teren[0])), t: "wyżej" },
     { style: sw(rgba(RASTER_RGBA.teren[4])), t: "niżej — tu zbiera się woda" },
-    { style: { width: 18, height: 0, borderTop: "3px solid #123f78" }, t: "kierunek spływu" },
-    { style: { width: 14, height: 10, borderRadius: "50%", border: "2px dashed #123f78" }, t: "zagłębienie" },
+    { style: { width: 18, height: 0, borderTop: "3px solid #174a57" }, t: "kierunek spływu" },
+    { style: { width: 14, height: 10, borderRadius: "50%", border: "2px dashed #174a57" }, t: "zagłębienie" },
   ],
   gleba: [
     { style: sw(rgba(RASTER_RGBA.gleba[0])), t: "glina — trzyma wodę" },
@@ -76,3 +76,10 @@ export const LEGEND: Record<MapLayer, { style: CSSProperties; t: string }[]> = {
     { style: sw(rgba(RASTER_RGBA.gleba[2])), t: "piasek — przepuszcza" },
   ],
 };
+
+/** One colour per crop part of a parcel (map fill/outline and the part tabs above the map). Kept apart from
+ *  the status and action colours so a part never reads as "drought" or as an action category. */
+// Muted, earthy hues (no cobalt, no neon): readable on the photo, and none is the yellow field boundary,
+//  the orange accent or the water teal.
+export const PART_COLORS = ["#a98bd0", "#9ccb8f", "#e3a07e", "#d48fb0", "#cfc57c"];
+export const partColor = (i: number) => PART_COLORS[i % PART_COLORS.length];

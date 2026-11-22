@@ -13,7 +13,7 @@ import type {
   Zalecenie,
 } from "@/lib/types";
 import { Card, ICON, Icon, SCALE, StatusPill } from "../ui";
-import { CAT, LAYERS } from "./map-style";
+import { CAT, LAYERS, partColor } from "./map-style";
 
 const ha = (v: number) =>
   v.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
@@ -25,11 +25,37 @@ const ha = (v: number) =>
 export function CropParts({
   report,
   onPick,
+  top = false,
 }: {
   report: Report;
+  /** At the top of the report instead of the dark state card: dark cards, no section header */
+  top?: boolean;
   onPick: (n: number) => void;
 }) {
   if (report.parts.length < 2) return null;
+  const stan = `stan na ${shortDate(report.date)} · pewność ${report.confidence.level}`;
+  const grid = (
+    <div className={`grid gap-3 sm:grid-cols-2 ${top ? "" : "xl:grid-cols-3"}`}>
+      {report.parts.map((p, i) => (
+        <CropPartCard
+          key={p.id}
+          part={p}
+          color={partColor(i)}
+          actions={report.actions.filter((a) => a.czesc === p.id)}
+          onPick={onPick}
+          dark={top}
+          footer={top ? stan : null}
+        />
+      ))}
+    </div>
+  );
+  if (top) {
+    return (
+      <section aria-label={`Uprawy na tej działce, ${stan}`} className="min-w-0">
+        {grid}
+      </section>
+    );
+  }
   return (
     <section className="flex flex-col gap-3" aria-label="Uprawy na tej działce">
       <SectionHead
@@ -37,91 +63,106 @@ export function CropParts({
         title="Uprawy na tej działce"
         sub="Woda, gleba i teren są wspólne, zalecenia polowe liczymy osobno dla każdej uprawy."
       />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {report.parts.map((p) => (
-          <CropPartCard
-            key={p.id}
-            part={p}
-            actions={report.actions.filter((a) => a.czesc === p.id)}
-            onPick={onPick}
-          />
-        ))}
-      </div>
+      {grid}
     </section>
   );
 }
 
+/**
+ * One crop of the parcel. Built as fixed rows (name, two-line summary, water bar, source, actions) so cards
+ * side by side line up; `dark` is the look of the state card at the top of the report.
+ */
+/**
+ * Category colours on the dark green card: the saturated map colours (blue, dark green) clash with it or vanish,
+ * so the badges use light, muted tints of the same hues with dark digits.
+ */
+const ON_DARK: Record<keyof typeof CAT, string> = { ret: "#a6d4b4", agro: "#e3bb82", irr: "#8ec9c4" /* --water-light */ };
+
 function CropPartCard({
   part,
+  color,
   actions,
   onPick,
+  dark = false,
+  footer = null,
 }: {
   part: ReportPart;
+  /** Same colour as this part on the map */
+  color: string;
   actions: Zalecenie[];
   onPick: (n: number) => void;
+  dark?: boolean;
+  /** Small line at the bottom (date and confidence of the state) */
+  footer?: string | null;
 }) {
+  const muted = dark ? "text-feature-muted" : "text-muted";
+  const below = part.soilWaterPct !== null && part.stressThresholdPct !== null && part.soilWaterPct < part.stressThresholdPct;
   return (
-    <article className="print-break-avoid flex flex-col gap-3 rounded-[var(--r-card)] border border-rule bg-paper p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <article
+      className={`print-break-avoid flex h-full flex-col gap-3 rounded-[var(--r-card)] p-5 max-sm:p-4 ${
+        dark ? "bg-feature text-feature-ink" : "border border-rule bg-paper"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="text-[17px] font-bold leading-snug">
-            {part.crop?.id === "brak" ? "Brak uprawy" : (part.crop?.name ?? "Bez wskazanej uprawy")}
+          <h3 className={`flex items-center gap-2 text-[18px] font-semibold leading-snug ${dark ? "text-feature-ink" : ""}`}>
+            <span className="h-3.5 w-3.5 flex-none rounded-[4px] border-2" style={{ borderColor: color, background: `${color}55` }} aria-hidden="true" />
+            <span className="truncate">{part.crop?.id === "brak" ? "Brak uprawy" : (part.crop?.name ?? "Bez wskazanej uprawy")}</span>
           </h3>
-          <span className="text-[13px] text-muted">
+          <span className={`text-[13px] ${muted}`}>
             {ha(part.areaHa)} ha · {part.sharePct}% działki
           </span>
         </div>
-        <StatusPill tone={part.status.tone} label={part.status.label} small />
+        <span className="flex-none">
+          <StatusPill tone={part.status.tone} label={part.status.label} small onDark={dark} />
+        </span>
       </div>
-      <p className="text-[13px] leading-snug text-ink-2">{part.headline}</p>
+      {/* Always two lines tall, so the water bars of neighbouring cards sit at the same height. */}
+      <p className={`line-clamp-2 min-h-[2.6em] text-[14px] leading-[1.3] ${dark ? "text-feature-ink" : "text-ink-2"}`} title={part.headline}>
+        {part.headline}
+      </p>
       {part.soilWaterPct !== null && part.stressThresholdPct !== null && (
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-2 text-[13px]">
-            <span className="text-muted">Woda w glebie</span>
+            <span className={muted}>Woda w glebie</span>
             <span className="tabular font-semibold">
-              {part.soilWaterPct}%{" "}
-              <span className="font-normal text-muted">
-                · próg {part.stressThresholdPct}%
-              </span>
+              {part.soilWaterPct}% <span className={`font-normal ${muted}`}>· próg {part.stressThresholdPct}%</span>
             </span>
           </div>
-          <div
-            className="relative h-1.5 rounded-full bg-chip"
-            aria-hidden="true"
-          >
+          <div className={`relative h-2 rounded-full ${dark ? "bg-white/15" : "bg-chip"}`} aria-hidden="true">
             <span
-              className="absolute inset-y-0 left-0 rounded-full bg-[#2a78d6]"
-              style={{ width: `${part.soilWaterPct}%` }}
+              className={`absolute inset-y-0 left-0 rounded-full ${below ? "bg-[#e9784a]" : dark ? "bg-water-light" : "bg-blue"}`}
+              style={{ width: `${Math.min(100, part.soilWaterPct)}%` }}
             />
-            <span
-              className="absolute -top-1 bottom-[-4px] w-0.5 bg-ink"
-              style={{ left: `${part.stressThresholdPct}%` }}
-            />
+            <span className={`absolute -top-1 bottom-[-4px] w-0.5 ${dark ? "bg-white" : "bg-ink"}`} style={{ left: `${part.stressThresholdPct}%` }} />
           </div>
         </div>
       )}
-      <p className="text-xs text-muted">
+      <p className={`truncate text-xs ${muted}`} title={part.manual ? "dodane przez Ciebie" : part.cropSplitSource}>
         {part.manual ? "dodane przez Ciebie" : part.cropSplitSource}
       </p>
       {actions.length > 0 && (
-        <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+        <div className="flex flex-col items-start gap-1.5">
           {actions.map((a) => (
             <button
               key={a.n}
               onClick={() => onPick(a.n)}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-rule-strong px-2.5 py-1 text-left text-[13px] font-semibold text-ink hover:border-heading"
+              className={`inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-left text-[13px] font-semibold ${
+                dark ? "border-white/20 text-feature-ink hover:bg-white/10" : "border-rule-strong text-ink hover:border-heading"
+              }`}
             >
               <span
-                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white"
-                style={{ background: CAT[a.kategoria].color }}
+                className={`inline-flex h-5 min-w-5 flex-none items-center justify-center rounded-full px-1 text-[11px] font-bold ${dark ? "text-[#1d2b23]" : "text-white"}`}
+                style={{ background: dark ? ON_DARK[a.kategoria] : CAT[a.kategoria].color }}
               >
                 {a.n}
               </span>
-              {a.co}
+              <span className="truncate">{a.co}</span>
             </button>
           ))}
         </div>
       )}
+      {footer && <p className={`mt-auto pt-1 text-[11px] ${muted}`}>{footer}</p>}
     </article>
   );
 }
@@ -129,7 +170,7 @@ function CropPartCard({
 
 /**
  * One header for every report section: a short label that tells where the reader is in the story
- * (stan → historia → przyczyny → plan → co dalej → źródła), the title, and at most one line of context.
+ * (stan → plan → przyczyny → co dalej → 10 lat → źródła), the title, and at most one line of context.
  */
 export function SectionHead({ eyebrow, title, sub, children }: { eyebrow: string; title: string; sub?: ReactNode; children?: ReactNode }) {
   return (
@@ -526,7 +567,7 @@ export function Risk({ report }: { report: Report }) {
 }
 
 /**
- * 10-year vulnerability (task 3.3 pt 4), shown right after the state on day D (TODO_LUKI L4):
+ * 10-year vulnerability (task 3.3 pt 4), shown at the end of the report, above the sources:
  * how often the parcel ran short of water, season by season, each judged for the crop grown that year.
  */
 export function Vulnerability({ report }: { report: Report }) {
@@ -569,30 +610,6 @@ export function Vulnerability({ report }: { report: Report }) {
         {assumed > 0 &&
           ` * w ${assumed} ${assumed === 1 ? "sezonie" : "sezonach"} nie wiemy, co rosło — przyjęto bieżącą uprawę.`}
       </span>
-    </Card>
-  );
-}
-
-/** Collapsed justification (pipeline_plan.md §8 pt 7): IUNG criterion on day D. The 10-year history is in Vulnerability. */
-export function Justification({ report }: { report: Report }) {
-  const j = report.justification;
-  if (!j) return null;
-  return (
-    <Card className="print-break-avoid px-6 py-4 max-sm:px-4">
-      <details className="group">
-        <summary className="flex min-h-10 list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
-          <Icon d={ICON.chevronRight} size={18} className="text-heading transition-transform duration-200 group-open:rotate-90" />
-          <h2 className="text-[17px] font-semibold text-heading">Uzasadnienie: kryterium suszy IUNG w dniu analizy</h2>
-        </summary>
-        <div className="flex flex-col gap-3 pt-3 text-[13px] text-ink-2">
-          <p className="text-sm text-ink">{j.iungNow}</p>
-          <span className="text-xs text-muted">
-            Próg suszy rolniczej IUNG‑PIB (Rozporządzenie MRiRW 2019) dla uprawy
-            i kategorii gleby. Liczby i metody: „Skąd wiemy” → „Szczegóły dla
-            doradcy”.
-          </span>
-        </div>
-      </details>
     </Card>
   );
 }

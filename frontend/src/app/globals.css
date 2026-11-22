@@ -24,9 +24,11 @@
   --primary-border: #cfd6b9;
   --brown: #7a4e14;
   --brown-tint: #f7efe3;
-  --blue: #1f6fc9;
-  --blue-dark: #123f78;
-  --blue-tint: #e9f1fc;
+  /* Water: one petrol-teal family instead of a cold cobalt, so it sits with the forest green and cream */
+  --blue: #2b7a8c;
+  --blue-dark: #174a57;
+  --blue-tint: #e4f0ef;
+  --water-light: #8ec9c4;
   --hl: #f2b53a;
   --warn-bg: #fbf3ec;
   --warn-ink: #5a2a12;
@@ -84,11 +86,11 @@
   /* Selected recommendation card background per category */
   --cat-ret-bg: #eef5ef;
   --cat-agro-bg: #f7efe3;
-  --cat-irr-bg: #e9f1fc;
+  --cat-irr-bg: #e4f0ef;
   /* Category text colour (group headings, urgent label) */
   --cat-ret-ink: #1e5b3a;
   --cat-agro-ink: #7a4e14;
-  --cat-irr-ink: #1f6fc9;
+  --cat-irr-ink: #22697a;
   --font-display: var(--font-red-hat);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -114,9 +116,9 @@
   --primary-border: rgba(255, 122, 69, 0.45);
   --brown: #e0b070;
   --brown-tint: rgba(224, 176, 112, 0.15);
-  --blue: #6fb0ff;
-  --blue-dark: #a8ceff;
-  --blue-tint: rgba(111, 176, 255, 0.12);
+  --blue: #7cc8cf;
+  --blue-dark: #b2e0e3;
+  --blue-tint: rgba(124, 200, 207, 0.12);
   --warn-bg: rgba(255, 170, 80, 0.12);
   --warn-ink: #ffc996;
   --danger-tint: rgba(255, 95, 85, 0.16);
@@ -138,7 +140,7 @@
   --r-btn: 8px;
   --cat-ret-bg: rgba(95, 190, 130, 0.12);
   --cat-agro-bg: rgba(224, 176, 112, 0.12);
-  --cat-irr-bg: rgba(111, 176, 255, 0.12);
+  --cat-irr-bg: rgba(124, 200, 207, 0.12);
   --heading: var(--ink);
   --feature: rgba(255, 255, 255, 0.06);
   --feature-ink: #eef1ef;
@@ -149,7 +151,7 @@
   --accent-ink: #ffb08e;
   --cat-ret-ink: #84d6a0;
   --cat-agro-ink: #e6b878;
-  --cat-irr-ink: #8fc0ff;
+  --cat-irr-ink: #8fd2d8;
   --font-display: var(--font-inter-tight);
 }
 
@@ -174,6 +176,7 @@
   --color-blue: var(--blue);
   --color-blue-dark: var(--blue-dark);
   --color-blue-tint: var(--blue-tint);
+  --color-water-light: var(--water-light);
   --color-hl: var(--hl);
   --color-warn-bg: var(--warn-bg);
   --color-warn-ink: var(--warn-ink);
