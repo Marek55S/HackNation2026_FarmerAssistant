@@ -2,26 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useFarm } from "@/lib/farm";
+import { farmEntry, OPENING_KEY, thumbShape, useFarm } from "@/lib/farm";
+import { longDate, periodDays, shortDate } from "@/lib/dates";
 import type { AnalyzeEvent, CropId, ParcelLookup, PartChoice, Report } from "@/lib/types";
 import { effectiveParts } from "./crop-parts";
 import { encodeParts } from "@/lib/backend";
 import { AppHeader } from "../app-header";
+import { Backdrop } from "../backdrop";
 import { MobileNav } from "../mobile-nav";
 import { ThemeToggle } from "../theme-toggle";
-import { Card, ICON, Icon, StepNumber } from "../ui";
-import { longDate } from "@/lib/dates";
-import { DatePicker, type DateChoice } from "./date-picker";
+import { Card, ICON, Icon } from "../ui";
+import { DatePicker, defaultFrom, type DateChoice } from "./date-picker";
 import { ParcelPicker } from "./parcel-picker";
 import { FarmPanel, ProgressPanel, type ProgressState } from "./side-panels";
-
-const FARM_STATUS: Record<Report["status"]["tone"], string> = {
-  susza: "Pilne",
-  zagrozenie: "Do obserwacji",
-  spokojnie: "W porządku",
-  plan: "Zrób przed sezonem",
-  "poza-zakresem": "Poza zakresem",
-};
 
 export function StartScreen({
   today,
@@ -41,7 +34,7 @@ export function StartScreen({
   const [choices, setChoices] = useState<Record<string, CropId | null>>({});
   const [added, setAdded] = useState<PartChoice[]>([]);
   const [date, setDate] = useState(initialDate);
-  const [from, setFrom] = useState<string | null>(initialFrom);
+  const [from, setFrom] = useState<string | null>(() => initialFrom ?? defaultFrom(initialDate));
   const [dateValid, setDateValid] = useState(true);
   const [status, setStatus] = useState<ProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,17 +71,26 @@ export function StartScreen({
   const cropMissing = !!lookup && !lookup.outOfScope && withCrop.length === 0;
   const canStart = !!lookup && !cropMissing && dateValid && !running;
 
+  // Enter in a parcel field starts the analysis. Pressed before the lookup answered (it waits 350 ms after typing),
+  // it is remembered for a few seconds and the analysis starts as soon as the parcel is found.
+  const enterAt = useRef(0);
+  function onParcelKey(e: React.KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.target instanceof HTMLInputElement)) return;
+    e.preventDefault();
+    if (canStart) start();
+    else enterAt.current = Date.now();
+  }
+  useEffect(() => {
+    if (!canStart || !enterAt.current) return;
+    const fresh = Date.now() - enterAt.current < 6000;
+    enterAt.current = 0;
+    if (fresh) start();
+    // `start` reads the current state when called; only the moment the parcel becomes ready matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canStart]);
+
   function saveToFarm(report: Report, url: string) {
-    const p = report.parcel;
-    upsert({
-      parcelId: p.id,
-      name: `${p.number}${report.crop ? ` · ${report.crop.name.toLowerCase()}` : ""}`,
-      meta: `${p.areaHa.toLocaleString("pl-PL")} ha · ${report.urgent ? report.urgent.title.toLowerCase() : report.status.label.toLowerCase()}`,
-      status: FARM_STATUS[report.status.tone],
-      tone: report.status.tone,
-      url,
-      checkedAt: new Date().toISOString(),
-    });
+    upsert(farmEntry(report, url));
   }
 
   async function start() {
@@ -127,6 +129,12 @@ export function StartScreen({
           else {
             setStatus((s) => (s ? { ...s, progress: 100, done: true } : s));
             saveToFarm(ev.report, ev.url);
+            // The report page loads on the server once more: tell its loading screen the analysis is already done.
+            try {
+              sessionStorage.setItem(OPENING_KEY, String(Date.now()));
+            } catch {
+              // storage blocked — the loading screen just shows the steps again
+            }
             router.push(ev.url);
             return;
           }
@@ -161,48 +169,34 @@ export function StartScreen({
       tone: null,
       url: cropMissing ? `/?dzialka=${encodeURIComponent(parcel.id)}` : `/raport?${q}`,
       checkedAt: "",
+      shape: thumbShape(parcel.geometry),
     });
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 text-ink md:pb-0">
+    <div className="relative isolate min-h-screen pb-24 text-ink md:pb-0">
+      <Backdrop />
       <AppHeader active="start" reportHref={farm.find((f) => f.tone)?.url ?? null}>
         <ThemeToggle />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-tint px-3 py-2 text-xs font-semibold text-heading max-lg:hidden">
-          <Icon d={ICON.lock} size={14} />
-          Bez logowania · bez danych osobowych
-        </span>
       </AppHeader>
 
       <main className="mx-auto flex max-w-[1376px] flex-wrap items-start gap-6 px-8 pb-12 pt-8 max-sm:gap-4 max-sm:px-4 max-sm:pt-4">
         <Card className="flex min-w-0 flex-[999_1_560px] flex-col gap-7 p-8 max-sm:gap-6 max-sm:p-4">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[27px]">
-              Sprawdź wodę <span className="accent-word">na swojej działce</span>
-            </h1>
-            <p className="inline-flex items-center gap-1.5 text-sm text-ink-2">
-              <Icon d={ICON.calendar} size={16} className="text-muted" />
-              {longDate(today)}
-            </p>
-            <p className="max-w-[60ch] text-base text-ink-3">
-              Podaj działkę i dzień. Glebę, teren i pogodę z 10 lat pobierzemy sami, uprawę podpowiemy z deklaracji ARiMR.
-            </p>
-          </div>
+          {/* The whole request as one sentence that follows the choices below (day, period, parcel). */}
+          <h1 style={{ "--d": "0ms" } as React.CSSProperties} className="rise text-[32px] font-semibold leading-[1.35] tracking-tight text-heading max-sm:text-[24px]">
+            Sprawdź wodę na <SentenceWord empty={!lookup}>{lookup ? `działce ${lookup.parcel.number}` : "swojej działce"}</SentenceWord> na{" "}
+            <SentenceWord invalid={!dateValid}>{date === today ? "dziś" : longDate(date)}</SentenceWord>, licząc z{" "}
+            <SentenceWord invalid={!dateValid}>{periodWords(from, date)}</SentenceWord>.
+          </h1>
 
           {/* Najpierw data: od roku daty zależy, którą deklarację upraw (ARiMR / mapa upraw) sprawdzamy dla działki. */}
-          <div className="flex flex-col gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <StepNumber n={1} />
-              <h2 className="text-[19px] font-bold">Na jaki dzień lub okres?</h2>
-            </div>
+          <div style={{ "--d": "70ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5">
+            <h2 className="text-[17px] font-semibold text-heading">Dzień</h2>
             <DatePicker date={date} from={from} today={today} onChange={onDate} />
           </div>
 
-          <div className="flex flex-col gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <StepNumber n={2} />
-              <h2 className="text-[19px] font-bold">Wskaż działkę</h2>
-            </div>
+          <div style={{ "--d": "130ms" } as React.CSSProperties} className="rise flex flex-col gap-3.5" onKeyDown={onParcelKey}>
+            <h2 className="text-[17px] font-semibold text-heading">Działka</h2>
             <ParcelPicker
               initialId={initialParcelId}
               date={date}
@@ -215,12 +209,12 @@ export function StartScreen({
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
+          <div style={{ "--d": "180ms" } as React.CSSProperties} className="rise flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
             <button
               onClick={start}
               disabled={!canStart}
               aria-describedby="start-hint"
-              className="inline-flex min-h-14 items-center gap-2.5 rounded-[var(--r-btn)] bg-btn px-7 text-lg font-bold text-btn-ink hover:bg-btn-hover disabled:cursor-not-allowed disabled:opacity-50 max-sm:w-full max-sm:justify-center"
+              className="cta inline-flex min-h-14 items-center gap-2.5 rounded-[var(--r-btn)] bg-btn px-7 text-lg font-bold text-btn-ink hover:bg-btn-hover disabled:cursor-not-allowed disabled:opacity-50 max-sm:w-full max-sm:justify-center"
             >
               {running ? "Analizuję…" : "Sprawdź działkę"}
               <Icon d={ICON.arrowRight} size={20} stroke={2.5} />
@@ -232,12 +226,12 @@ export function StartScreen({
                   ? "Wskaż uprawę albo „Brak uprawy” dla przynajmniej jednej części, żeby zacząć."
                   : !dateValid
                     ? "Popraw datę, żeby zacząć."
-                  : "Tylko publiczne, bezpłatne dane: GUGiK, ARiMR, IUNG-PIB, Copernicus, USGS Landsat, Open-Meteo, IMGW-PIB, Wody Polskie."}
+                    : null}
             </span>
           </div>
         </Card>
 
-        <aside className="flex min-w-0 flex-[1_1_380px] flex-col gap-6 max-sm:gap-4">
+        <aside style={{ "--d": "110ms" } as React.CSSProperties} className="rise flex min-w-0 flex-[1_1_380px] flex-col gap-6 max-sm:gap-4">
           {(running || status || error) && (
             <div ref={progressRef} className="scroll-mt-4">
               <ProgressPanel status={status} error={error} />
@@ -249,5 +243,25 @@ export function StartScreen({
 
       <MobileNav active="dzialki" reportHref={farm.find((f) => f.tone)?.url ?? null} />
     </div>
+  );
+}
+
+/** The data period in words for the sentence ("ostatniego miesiąca"); a custom range shows its dates. */
+function periodWords(from: string | null, to: string): string {
+  if (!from) return "tego jednego dnia";
+  const words: Record<number, string> = { 7: "ostatniego tygodnia", 30: "ostatniego miesiąca", 90: "ostatnich 3 miesięcy", 365: "ostatniego roku" };
+  return words[periodDays(from, to)] ?? `dni ${shortDate(from)} – ${shortDate(to)}`;
+}
+
+/** A word in the sentence that reflects a choice made below; it changes as the farmer picks. */
+function SentenceWord({ children, empty = false, invalid = false }: { children: React.ReactNode; empty?: boolean; invalid?: boolean }) {
+  return (
+    <span
+      className={`sentence-word rounded-md underline decoration-2 underline-offset-[7px] [box-decoration-break:clone] ${
+        invalid ? "bg-warn-bg text-warn-ink decoration-warn-ink" : empty ? "text-muted decoration-dashed decoration-rule-strong" : "text-heading decoration-primary-border"
+      }`}
+    >
+      {children}
+    </span>
   );
 }

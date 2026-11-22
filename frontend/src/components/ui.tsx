@@ -32,7 +32,9 @@ export const ICON = {
   gate: "M4 6.5 7.5 17h9L20 6.5M9.5 4v13M14.5 4v13M9.5 9.5h5",
   pond: "M3 15.5c0-2.4 4-4.3 9-4.3s9 1.9 9 4.3-4 4.3-9 4.3-9-1.9-9-4.3zM8 15.8c1.3.7 2.7.7 4 0s2.7-.7 4 0M12 3.5c0 1.3-1.5 2.4-1.5 3.5a1.5 1.5 0 0 0 3 0c0-1.1-1.5-2.2-1.5-3.5",
   trees: "M3 20.5h18M7 20.5v-4M17 20.5v-4M7 16.5a3 3 0 0 1-3-3c0-2.5 3-6.5 3-6.5s3 4 3 6.5a3 3 0 0 1-3 3zM17 16.5a3 3 0 0 1-3-3c0-2.5 3-6.5 3-6.5s3 4 3 6.5a3 3 0 0 1-3 3z",
-  watering: "M12 3c2.8 3.6 4.6 6 4.6 8.3a4.6 4.6 0 0 1-9.2 0C7.4 9 9.2 6.6 12 3zM5 18v2M9 18.5v2.5M15 18.5v2.5M19 18v2",
+  satellite: "M13.5 6.5l4 4-3.5 3.5-4-4zM10 10l-1.5 1.5M4 7l3-3 3 3-3 3zM14 17l3-3 3 3-3 3zM5.5 15.5a3 3 0 0 0 3 3",
+  link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+  watering: "M4 11h9v7.5A1.5 1.5 0 0 1 11.5 20h-6A1.5 1.5 0 0 1 4 18.5zM6 11V9a2.5 2.5 0 0 1 5 0v2M13 14l5.5-4.5M17.5 8l2 2.5M20 13.5v1M21.5 15.5v1M19 16.5v1",
   chevronDown: "M6 9l6 6 6-6",
   plus: "M12 5v14M5 12h14",
   calendar: "M4 6h16v15H4zM4 10h16M9 3v4M15 3v4",
@@ -80,8 +82,12 @@ export function Logo({ size = 34 }: { size?: number }) {
   );
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[var(--r-card)] border border-rule bg-paper ${className}`}>{children}</section>;
+export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
+  return (
+    <section id={id} className={`rounded-[var(--r-card)] border border-rule bg-paper ${className}`}>
+      {children}
+    </section>
+  );
 }
 
 export function StepNumber({ n }: { n: number }) {

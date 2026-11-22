@@ -398,3 +398,200 @@ html {
     color-scheme: light;
   }
 }
+
+/* ---- Start-screen background: orthophoto under a paper veil (components/backdrop.tsx) ---- */
+.bd {
+  --bd-veil: rgba(238, 238, 229, 0.72);
+}
+[data-theme="trace"] .bd {
+  --bd-veil: rgba(12, 17, 19, 0.8);
+}
+.bd-veil {
+  /* Even veil, slightly lighter towards the edges where no content sits. */
+  background: radial-gradient(ellipse at 50% 40%, var(--bd-veil), var(--bd-veil) 55%, color-mix(in srgb, var(--bd-veil), transparent 25%));
+}
+
+/* Photo tiles fade in as they arrive instead of popping in one by one; the photo drifts very slowly. */
+.bd-tile {
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+.bd-tile.is-loaded {
+  opacity: 1;
+}
+
+/* Report section jumps: sticky under the top (below the floating header in the dark look); targets leave room for it. */
+.jump-nav {
+  top: 10px;
+}
+[data-theme="trace"] .jump-nav {
+  top: 84px;
+}
+#stan,
+#historia,
+#przyczyny,
+#mapa,
+#co-dalej,
+#zrodla {
+  scroll-margin-top: 72px;
+}
+[data-theme="trace"] :is(#stan, #historia, #przyczyny, #mapa, #co-dalej, #zrodla) {
+  scroll-margin-top: 146px;
+}
+
+/* Placeholder blocks while a report is being computed (app/raport/loading.tsx). */
+.skeleton {
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  border: 1px solid var(--rule-soft);
+}
+
+/* ---- Motion on the start screen (emil-design-eng: transform/opacity only, strong ease-out, reduced motion respected) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Background photo: slow, ambient zoom — the app feels alive without asking for attention. */
+  .bd-photo {
+    animation: bd-drift 70s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* Page entrance: sections rise in with a short, non-blocking stagger (set with --d). */
+  .rise {
+    animation: rise 520ms var(--ease-out) both;
+    animation-delay: var(--d, 0ms);
+  }
+
+  /* Report: its sections rise in one after another (only the first screenful is staggered; the rest is off screen). */
+  .rise-children > * {
+    animation: rise 520ms var(--ease-out) both;
+  }
+  .rise-children > :nth-child(2) { animation-delay: 60ms; }
+  .rise-children > :nth-child(3) { animation-delay: 120ms; }
+  .rise-children > :nth-child(4) { animation-delay: 170ms; }
+  .rise-children > :nth-child(n + 5) { animation-delay: 210ms; }
+
+  /* Opened <details> (justification, advisor details): the content slides in like the other panels. */
+  details[open] > :not(summary) {
+    animation: reveal-in 220ms var(--ease-out);
+  }
+
+  /* Panels and notes that appear on a choice (custom day, custom period, errors). */
+  .reveal {
+    transition:
+      opacity 220ms var(--ease-out),
+      transform 220ms var(--ease-out);
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  /* Segmented controls: the active pill slides to the chosen option. */
+  .seg-pill[data-animate] {
+    transition:
+      transform 260ms var(--ease-out),
+      width 260ms var(--ease-out),
+      height 260ms var(--ease-out);
+  }
+
+  /* Analysis progress: the current step's pictogram breathes, each new sentence slides in, finished steps pop. */
+  .story-pulse {
+    animation: story-pulse 1.6s ease-in-out infinite;
+  }
+  .story-line {
+    animation: reveal-in 260ms var(--ease-out);
+  }
+  .pipe-step {
+    transition:
+      background-color 300ms ease,
+      color 300ms ease,
+      box-shadow 300ms ease;
+  }
+
+  /* Loading report: placeholders breathe gently. */
+  .skeleton {
+    animation: skeleton 1.6s ease-in-out infinite;
+  }
+
+  /* Report: the soil-water tank fills up as the card appears. */
+  .tank-fill {
+    transform-origin: bottom;
+    animation: tank-fill 900ms var(--ease-out) 200ms both;
+  }
+
+  /* Main action: the arrow leans forward on hover (mouse only). */
+  .cta svg {
+    transition: transform 200ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cta:not(:disabled):hover svg {
+      transform: translateX(3px);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: keep a gentle fade, drop the movement. */
+  .tank-fill {
+    animation: none;
+  }
+  .rise,
+  .rise-children > *,
+  .reveal,
+  details[open] > :not(summary) {
+    animation: fade 200ms ease both;
+  }
+}
+@media print {
+  /* The background photo is decoration: never printed. */
+  .bd {
+    display: none;
+  }
+  /* Print shows the finished page, never a frame of an entrance. */
+  .tank-fill,
+  .rise,
+  .rise-children > *,
+  .reveal,
+  details[open] > :not(summary) {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@keyframes skeleton {
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes tank-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes story-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes bd-drift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.12) translate(-2%, 1%);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

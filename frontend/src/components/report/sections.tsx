@@ -1,7 +1,7 @@
 "use client";
 
 import { shortDate } from "@/lib/dates";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   ActionCategory,
   CauseLevel,
@@ -32,13 +32,11 @@ export function CropParts({
   if (report.parts.length < 2) return null;
   return (
     <section className="flex flex-col gap-3" aria-label="Uprawy na tej działce">
-      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-        <h2 className="text-xl font-extrabold">Uprawy na tej działce</h2>
-        <span className="text-[13px] text-muted">
-          {report.parts.length} części · woda, gleba i teren są wspólne,
-          zalecenia polowe liczymy osobno dla każdej uprawy
-        </span>
-      </div>
+      <SectionHead
+        eyebrow={`${report.parts.length} części działki`}
+        title="Uprawy na tej działce"
+        sub="Woda, gleba i teren są wspólne, zalecenia polowe liczymy osobno dla każdej uprawy."
+      />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {report.parts.map((p) => (
           <CropPartCard
@@ -128,7 +126,28 @@ function CropPartCard({
   );
 }
 
-const RULE_ICON: Partial<Record<RuleId, string>> = {
+
+/**
+ * One header for every report section: a short label that tells where the reader is in the story
+ * (stan → historia → przyczyny → plan → co dalej → źródła), the title, and at most one line of context.
+ */
+export function SectionHead({ eyebrow, title, sub, children }: { eyebrow: string; title: string; sub?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">{eyebrow}</span>
+        <h2 className="text-[20px] font-semibold leading-tight tracking-tight text-heading">{title}</h2>
+        {sub && <p className="text-[13px] text-ink-3">{sub}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Same padding and rhythm for every section card. */
+export const SECTION = "print-break-avoid flex min-w-0 flex-col gap-5 p-6 max-sm:gap-4 max-sm:p-4";
+
+export const RULE_ICON: Partial<Record<RuleId, string>> = {
   R1: ICON.gate,
   R2: ICON.pond,
   R3: ICON.trees,
@@ -175,14 +194,14 @@ export function ActionList({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="text-xl font-bold">Co zrobić i gdzie</h2>
+        <h3 className="text-[17px] font-semibold text-heading">Lista działań</h3>
         <span className="text-[13px] text-muted">numery jak na mapie</span>
       </div>
       {sekcje.map((s) =>
         s.items.length === 0 ? null : (
           <section key={s.key} className="flex flex-col gap-4">
             {s.naglowek && (
-              <h3 className="border-b border-rule-strong pb-1.5 text-[17px] font-extrabold text-heading">
+              <h3 className="border-b border-rule-strong pb-1.5 text-[15px] font-semibold text-heading">
                 {s.naglowek}
               </h3>
             )}
@@ -252,18 +271,20 @@ export function ActionList({
                           />
                         </button>
                         {open && (
-                          <div className="flex flex-col gap-3 border-t border-rule-soft px-3.5 pb-4 pt-3 text-[13px]">
+                          <div className="reveal flex flex-col gap-3 border-t border-rule-soft px-3.5 pb-4 pt-3 text-[13px]">
+                            <p className="flex items-start gap-2 rounded-xl bg-primary-tint px-3 py-2 text-ink">
+                              <Icon d={ICON.trend} size={16} stroke={2} className="mt-0.5 flex-none text-heading" />
+                              <span>
+                                <span className="font-semibold text-heading">Co zyskasz: </span>
+                                {a.co_zyskasz}
+                              </span>
+                            </p>
                             {a.kroki?.length > 0 && (
                               <div className="flex flex-col gap-1.5">
-                                <h4 className="text-xs font-bold uppercase tracking-[0.06em] text-heading">
-                                  Co zrobić
-                                </h4>
+                                <h4 className="text-xs font-bold uppercase tracking-[0.06em] text-heading">Co zrobić</h4>
                                 <ol className="flex flex-col gap-1.5">
                                   {a.kroki.map((k, i) => (
-                                    <li
-                                      key={i}
-                                      className="flex items-start gap-2.5 text-ink"
-                                    >
+                                    <li key={i} className="flex items-start gap-2.5 text-ink">
                                       <span className="mt-px inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-chip text-[11px] font-bold text-heading">
                                         {i + 1}
                                       </span>
@@ -282,37 +303,24 @@ export function ActionList({
                                   <dd className="text-ink">{a.ile}</dd>
                                 </>
                               )}
-                              <dt className="text-muted">Dlaczego</dt>
+                              <dt className="text-muted">Bo</dt>
                               <dd className="text-ink">{a.bo.join("; ")}</dd>
                             </dl>
-                            <p className="flex items-start gap-2 rounded-xl bg-primary-tint px-3 py-2 text-ink">
-                              <Icon
-                                d={ICON.trend}
-                                size={16}
-                                stroke={2}
-                                className="mt-0.5 text-heading"
-                              />
-                              <span>
-                                <span className="font-semibold text-heading">
-                                  Co zyskasz:{" "}
-                                </span>
-                                {a.co_zyskasz}
-                              </span>
-                            </p>
-                            <p className="leading-relaxed text-ink-2">
-                              {a.dlaczego}
-                            </p>
-                            {a.tagi.length > 0 && (
-                              <p className="text-muted">{a.tagi.join(" · ")}</p>
-                            )}
-                            <p className="text-xs text-muted">
-                              Reguła {a.regula} · na podstawie:{" "}
-                              {a.fakty.join(", ")}
-                              <span className="no-print">
-                                {" "}
-                                · na mapie: {LAYERS[a.warstwa].toLowerCase()}
-                              </span>
-                            </p>
+                            {/* The long explanation is for whoever wants it — the card stays short. */}
+                            <details className="group/why border-t border-rule-soft pt-2">
+                              <summary className="flex min-h-8 list-none items-center gap-1.5 font-semibold text-heading [&::-webkit-details-marker]:hidden">
+                                <Icon d={ICON.chevronRight} size={14} className="transition-transform duration-200 group-open/why:rotate-90" />
+                                Dlaczego właśnie tu?
+                              </summary>
+                              <div className="flex flex-col gap-2 pt-1">
+                                <p className="leading-relaxed text-ink-2">{a.dlaczego}</p>
+                                {a.tagi.length > 0 && <p className="text-muted">{a.tagi.join(" · ")}</p>}
+                                <p className="text-xs text-muted">
+                                  Reguła {a.regula} · na podstawie: {a.fakty.join(", ")}
+                                  <span className="no-print"> · na mapie: {LAYERS[a.warstwa].toLowerCase()}</span>
+                                </p>
+                              </div>
+                            </details>
                           </div>
                         )}
                       </div>
@@ -384,10 +392,11 @@ export function Causes({
     },
   ].filter((g) => g.items.length > 0);
   return (
-    <Card className="print-break-avoid flex min-w-0 flex-[999_1_560px] flex-col gap-5 p-6 max-sm:p-4">
-      <h2 className="text-xl font-bold">Co zwiększa ryzyko na tej działce</h2>
+    <Card id="przyczyny" className={SECTION}>
+      <SectionHead eyebrow="Dlaczego" title="Co zwiększa ryzyko na tej działce" />
+      <div className="grid gap-x-10 gap-y-5 md:grid-cols-2">
       {groups.map((g) => (
-        <div key={g.title} className="flex flex-col">
+        <div key={g.title} className="flex min-w-0 flex-col">
           <h3 className="flex flex-wrap items-baseline gap-x-2 pb-1 text-xs font-bold uppercase tracking-[0.06em] text-heading">
             {g.title}
             <span className="text-[11px] font-medium normal-case tracking-normal text-muted">
@@ -428,6 +437,7 @@ export function Causes({
           </ul>
         </div>
       ))}
+      </div>
     </Card>
   );
 }
@@ -467,8 +477,8 @@ export function Risk({ report }: { report: Report }) {
     </tr>
   );
   return (
-    <Card className="print-break-avoid flex min-w-0 flex-[1_1_380px] flex-col gap-3 p-5 max-sm:p-4">
-      <h2 className="text-lg font-extrabold">{risk.head}</h2>
+    <Card id="co-dalej" className={`${SECTION} flex-[1_1_380px]`}>
+      <SectionHead eyebrow="Co dalej" title={risk.head} />
       {/* First sentence = the risk without action (bold); the rest explains what the plan changes. */}
       <p className="text-[15px] leading-snug">
         {(() => {
@@ -525,18 +535,13 @@ export function Vulnerability({ report }: { report: Report }) {
   if (!v || history.length === 0) return null;
   const assumed = history.filter((h) => h.cropKnown === false).length;
   return (
-    <Card className="print-break-avoid flex min-w-0 flex-[1_1_380px] flex-col gap-3 p-5 max-sm:p-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-bold">Jak często brakowało wody</h2>
-        <p className="text-[13px] text-ink-3">
-          {report.yearsLabel && `${report.yearsLabel} · `}każdy sezon oceniony
-          dla uprawy, która wtedy rosła
-        </p>
-      </div>
-      <ul
-        className="grid grid-cols-5 gap-1.5"
-        aria-label={`Susza w ${v.drought} z ${v.seasons} sezonów`}
-      >
+    <Card id="historia" className={SECTION}>
+      <SectionHead
+        eyebrow="Ostatnie 10 lat"
+        title="Jak często brakowało wody"
+        sub={`${report.yearsLabel ? `${report.yearsLabel} · ` : ""}każdy sezon oceniony dla uprawy, która wtedy rosła`}
+      />
+      <ul className="grid grid-cols-5 gap-1.5 md:grid-cols-10" aria-label={`Susza w ${v.drought} z ${v.seasons} sezonów`}>
         {history.map((h) => (
           <li
             key={h.year}
@@ -546,7 +551,7 @@ export function Vulnerability({ report }: { report: Report }) {
             }
             className={`flex flex-col items-center gap-px rounded-lg px-1 py-1.5 ${TAG[h.tag]}`}
           >
-            <b className="text-[13px]">{h.year}</b>
+            <b className="tabular text-[13px]">{h.year}</b>
             <span className="text-center text-[11px] leading-tight">
               {h.crop}
               {h.cropKnown === false && (
@@ -573,17 +578,11 @@ export function Justification({ report }: { report: Report }) {
   const j = report.justification;
   if (!j) return null;
   return (
-    <Card className="print-break-avoid p-5 max-sm:p-4">
+    <Card className="print-break-avoid px-6 py-4 max-sm:px-4">
       <details className="group">
-        <summary className="flex min-h-8 list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
-          <Icon
-            d={ICON.chevronRight}
-            size={18}
-            className="text-heading transition-transform duration-200 group-open:rotate-90"
-          />
-          <h2 className="text-xl font-bold">
-            Uzasadnienie: kryterium suszy IUNG w dniu analizy
-          </h2>
+        <summary className="flex min-h-10 list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <Icon d={ICON.chevronRight} size={18} className="text-heading transition-transform duration-200 group-open:rotate-90" />
+          <h2 className="text-[17px] font-semibold text-heading">Uzasadnienie: kryterium suszy IUNG w dniu analizy</h2>
         </summary>
         <div className="flex flex-col gap-3 pt-3 text-[13px] text-ink-2">
           <p className="text-sm text-ink">{j.iungNow}</p>
@@ -601,14 +600,12 @@ export function Justification({ report }: { report: Report }) {
 export function Sources({ report }: { report: Report }) {
   const fetched = report.sources.find((x) => x.fetchedAt)?.fetchedAt;
   return (
-    <Card className="print-break-avoid flex flex-col gap-5 p-6 max-sm:p-4">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-xl font-bold">Skąd wiemy</h2>
-        <span className="text-[13px] text-muted">
-          {report.sources.length} źródeł danych publicznych
-          {fetched && ` · pobrane ${shortDate(fetched)}`}
-        </span>
-      </div>
+    <Card id="zrodla" className={SECTION}>
+      <SectionHead
+        eyebrow="Źródła"
+        title="Skąd wiemy"
+        sub={`${report.sources.length} źródeł danych publicznych${fetched ? ` · pobrane ${shortDate(fetched)}` : ""}`}
+      />
 
       {/* Plain two-column list: what · where from. Caveats only where something is off — no badges. */}
       <dl className="grid gap-x-12 md:grid-cols-2">
@@ -707,14 +704,8 @@ export function PeriodSummaryCard({ report }: { report: Report }) {
     },
   ];
   return (
-    <Card className="print-break-avoid flex flex-col gap-3.5 p-5 max-sm:p-4">
-      <div className="flex flex-wrap items-baseline gap-2">
-        <h2 className="text-lg font-extrabold">Podsumowanie okresu</h2>
-        <span className="text-[13px] text-muted">
-          {shortDate(p.from)} – {shortDate(p.to)} · {p.days} dni
-        </span>
-      </div>
-      <p className="text-[15px] font-semibold leading-snug">{p.say}</p>
+    <Card className={SECTION}>
+      <SectionHead eyebrow={`Wybrany okres · ${p.days} dni`} title={`${shortDate(p.from)} – ${shortDate(p.to)}`} sub={p.say} />
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
         {stats.map((s) => (
           <div
