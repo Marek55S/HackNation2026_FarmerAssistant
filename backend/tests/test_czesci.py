@@ -106,3 +106,23 @@ def test_status_bez_uprawy_zachowuje_pewnosc_i_sygnaly():
     assert st["pewnosc"] == "średnia" and st["sygnaly"] == [{"t": "satelita", "v": True}]
     assert "F4" not in st  # zapas wody liczony dla zastępczej uprawy nie trafia do statusu „bez uprawy”
     assert status_bez_uprawy({})["pewnosc"] == "—"
+
+
+def test_scal_czesci_uprawa_i_brak_na_jednej_dzialce():
+    # Regresja (22.11.2026): działka z kukurydzą i częścią „Brak uprawy” dawała HTTP 500 (KeyError: 'brak'),
+    # bo dla „brak” nie liczymy osobnej analizy, gdy na działce jest też uprawa.
+    from app.analysis import _scal_czesci
+
+    def czesc(cid, uprawa, ha):
+        return {"id": cid, "uprawa": uprawa, "ha": ha, "udzial": ha / 2, "geometria": None,
+                "zrodlo": "test", "pewne": True, "reczna": False}
+
+    lista = [czesc("c1", "kukurydza", 1.5), czesc("c2", "brak", 0.5)]
+    glowna = {"ok": True, "uprawa": {"key": "kukurydza"}, "status": {"label": "Susza"}, "fakty": {"F4": 0.4},
+              "braki": [], "akcje": [{"id": "R1", "cat": "ret", "n": 1, "when": "jesienią"},
+                                     {"id": "R5", "cat": "pole", "n": 2, "when": "po zbiorze"}]}
+    out = _scal_czesci(glowna, {"kukurydza": glowna}, lista, lista)
+
+    assert [c["id"] for c in out["czesci"]] == ["c1", "c2"]
+    assert out["czesci"][1]["uprawa"]["key"] == "brak" and out["czesci"][1]["reguly"] == []
+    assert [(a["id"], a["czesc"]) for a in out["akcje"]] == [("R1", None), ("R5", "c1")]
