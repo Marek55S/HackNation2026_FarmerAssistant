@@ -2,9 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { CROPS } from "@/lib/crops";
-import type { CropId, LngLat, ParcelLookup } from "@/lib/types";
+import type { CropId, LngLat, ParcelLookup, PartChoice } from "@/lib/types";
 import { ICON, Icon } from "../ui";
+import { CropParts } from "./crop-parts";
 
 type Mode = "id" | "name" | "map";
 
@@ -29,15 +29,21 @@ export function ParcelPicker({
   date,
   lookup,
   onLookup,
-  crop,
-  onCrop,
+  choices,
+  added,
+  onChoice,
+  onAdded,
 }: {
   initialId: string;
   date: string;
   lookup: ParcelLookup | null;
   onLookup: (p: ParcelLookup | null) => void;
-  crop: CropId | null;
-  onCrop: (c: CropId | null) => void;
+  /** Crop the farmer picked for a detected part, keyed by part id (overrides the source). */
+  choices: Record<string, CropId | null>;
+  /** Parts the farmer added by hand (crop + area, no geometry). */
+  added: PartChoice[];
+  onChoice: (id: string, crop: CropId | null) => void;
+  onAdded: (next: PartChoice[]) => void;
 }) {
   const [mode, setMode] = useState<Mode>("id");
   const [id, setId] = useState(initialId);
@@ -45,9 +51,8 @@ export function ParcelPicker({
   const [mapPick, setMapPick] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cropEdit, setCropEdit] = useState(false);
 
-  // Look the parcel up as the user types (backend: ULDK + crop hint for the year of the chosen date + IUNG land cover).
+  // Look the parcel up as the user types (backend: ULDK + the crop split for the year of the chosen date + IUNG land cover).
   useEffect(() => {
     const q =
       mode === "id"
@@ -93,11 +98,6 @@ export function ParcelPicker({
   }, [mode, id, name, mapPick, date, onLookup]);
 
   const parcel = lookup?.parcel;
-  const hint = lookup?.cropHint ?? null;
-  const needsCrop = !!lookup && !lookup.outOfScope && !hint && !crop;
-  const showTiles = !!lookup && !lookup.outOfScope && (cropEdit || needsCrop);
-  const current = crop ?? hint?.crop ?? null;
-  const cropName = CROPS.find((c) => c.id === current)?.name.toLowerCase();
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -159,12 +159,7 @@ export function ParcelPicker({
       )}
 
       {mode === "map" && (
-        <PickMap
-          selected={mapPick}
-          onPick={setMapPick}
-          rok={Number(date.slice(0, 4))}
-          selectedGeometry={mapPick?.startsWith("xy:") ? lookup?.parcel.geometry : undefined}
-        />
+        <PickMap selected={mapPick} onPick={setMapPick} selectedGeometry={mapPick?.startsWith("xy:") ? lookup?.parcel.geometry : undefined} />
       )}
 
       <div aria-live="polite">
@@ -197,61 +192,7 @@ export function ParcelPicker({
               </span>
             </div>
           ) : (
-            <div className="flex flex-wrap items-center gap-3 border-t border-primary-border bg-paper p-3.5">
-              <span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brown-tint text-brown">
-                <Icon d={ICON.sprout} size={20} stroke={2.2} />
-              </span>
-              <div className="flex min-w-[200px] flex-1 flex-col gap-0.5">
-                {current ? (
-                  <>
-                    <span className="text-[15px]">
-                      Uprawa: <b>{cropName}</b>
-                    </span>
-                    <span className="text-xs text-muted">
-                      {crop && crop !== hint?.crop ? "wybrana przez Ciebie" : `podpowiedź: ${hint?.source} · możesz ją zmienić`}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[15px] font-semibold">Co rośnie na tej działce?</span>
-                    <span className="text-xs text-muted">Brak deklaracji ARiMR i mapy upraw dla tego roku — wybierz uprawę.</span>
-                  </>
-                )}
-              </div>
-              {current && (
-                <button
-                  onClick={() => setCropEdit(!cropEdit)}
-                  aria-expanded={cropEdit}
-                  className="min-h-11 rounded-[var(--r-btn)] border border-rule-strong bg-paper px-3.5 text-sm font-semibold text-primary"
-                >
-                  {cropEdit ? "Zamknij" : "Zmień"}
-                </button>
-              )}
-            </div>
-          )}
-          {showTiles && (
-            <div className="flex flex-col gap-2.5 border-t border-primary-border bg-paper p-3.5">
-              <span className="text-[13px] text-ink-3">Od uprawy zależą progi suszy i odczyt zdjęć.</span>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-2">
-                {CROPS.map((c) => {
-                  const sel = current === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      aria-pressed={sel}
-                      onClick={() => {
-                        onCrop(c.id === hint?.crop ? null : c.id);
-                        setCropEdit(false);
-                      }}
-                      className={`flex min-h-16 flex-col justify-center gap-0.5 rounded-xl px-3 py-2.5 text-left text-ink ${sel ? "border-2 border-primary bg-primary-tint" : "border border-rule-strong bg-paper hover:border-ink-3"}`}
-                    >
-                      <span className="text-sm font-bold">{c.name}</span>
-                      <span className="text-xs text-muted">{c.hint || " "}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <CropParts parts={lookup.parts} areaHa={parcel.areaHa} choices={choices} added={added} onChoice={onChoice} onAdded={onAdded} />
           )}
         </div>
       )}

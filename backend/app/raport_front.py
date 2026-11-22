@@ -16,7 +16,8 @@ CROP_HINT = {"kukurydza": "na ziarno lub kiszonkę", "pszenica": "pszenica, żyt
              "laka": "trwałe użytki zielone", "inna": "warzywa, sady, strączkowe"}
 FAKTY = {"R1": ["F9", "F5"], "R2": ["F8", "F5"], "R3": ["F7", "F7b"], "R4": ["F9b"], "R5": ["F6", "F6c"], "R6": ["F7"],
          "R7": ["F4", "F11", "F12", "F10"], "R7-": ["F4", "F11"], "R8": ["F18", "F19", "F10"], "R9": ["F5"]}
-TONE = {"Susza": "susza", "Zagrożenie": "zagrozenie", "Spokojnie": "spokojnie", "Poza zakresem": "poza-zakresem"}
+TONE = {"Susza": "susza", "Zagrożenie": "zagrozenie", "Spokojnie": "spokojnie", "Poza zakresem": "poza-zakresem",
+        "Bez uprawy": "poza-zakresem"}
 POKRYCIE = {11: "las", 12: "woda", 13: "zabudowa", 14: "drogi"}
 MIESIACE = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września",
             "października", "listopada", "grudnia"]
@@ -274,6 +275,27 @@ def _not_checked(braki: list[str]) -> list[dict]:
     return res
 
 
+def _parts(out: dict) -> list[dict]:
+    """Części uprawne działki: uprawa, powierzchnia i stan wody dla każdej z nich (sekcje raportu)."""
+    res = []
+    for c in out.get("czesci", []):
+        st, f = c.get("status") or {}, c.get("fakty") or {}
+        res.append({
+            "id": c["id"], "crop": _crop((c.get("uprawa") or {}).get("key")),
+            "cropSource": (c.get("uprawa") or {}).get("zrodlo", ""), "cropSplitSource": c.get("zrodlo", ""),
+            "areaHa": round(c.get("ha", 0.0), 2), "sharePct": round(100 * c.get("udzial", 0.0)),
+            "manual": bool(c.get("reczna")), "confirmed": bool(c.get("pewne")),
+            "geometry": (c.get("geometria") or {}).get("coordinates"),
+            "status": {"label": st.get("label", ""), "tone": TONE.get(st.get("label", ""),
+                                                                      "plan" if str(st.get("label", "")).startswith("Plan") else "spokojnie")},
+            "headline": st.get("head", ""), "summary": st.get("sub", ""),
+            "soilWaterPct": round(100 * f["F4"]) if f.get("F4") is not None else None,
+            "stressThresholdPct": round(100 * f["F4p"]) if f.get("F4p") is not None else None,
+            "rules": c.get("reguly", []),
+        })
+    return res
+
+
 def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
     sur = out.get("surowe") or {}
     D = out["data"]
@@ -286,7 +308,7 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
                 "soilWaterPct": None, "stressThresholdPct": None,
                 "status": {"label": "Poza zakresem", "tone": "poza-zakresem"}, "headline": out["status"]["head"],
                 "summary": out["status"]["sub"], "confidence": {"level": "niska", "agreeing": 0, "total": 0, "note": None},
-                "urgent": None, "actions": [], "mapInfo": info, "causes": [], "risk": None, "vulnerability": None,
+                "urgent": None, "actions": [], "parts": [], "mapInfo": info, "causes": [], "risk": None, "vulnerability": None,
                 "justification": None,
                 "sources": _sources(out, today), "notChecked": [], "advisorDetails": []}
 
@@ -298,7 +320,8 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
     dost = [g["v"] for g in syg if g["v"] is not None]
     zgod = max(sum(dost), len(dost) - sum(dost)) if dost else 0
     brak = [g["t"] for g in syg if g["v"] is None]
-    pil = next((a for a in akcje if a["id"] == out.get("pilne")), None)
+    pil = next((a for a in akcje if a["n"] == out.get("pilne_n")), None) \
+        or next((a for a in akcje if a["id"] == out.get("pilne")), None)
     tone = TONE.get(st["label"], "plan" if st["label"].startswith("Plan") else "spokojnie")
     kbw = out.get("fakty", {}).get("F1", {})
     if kbw.get("dostepny") and kbw.get("prog") is not None:
@@ -335,7 +358,9 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
             "bo": [a["cause"]], "co_zyskasz": a["gain"], "fakty": FAKTY.get(a["id"], []), "n": a["n"],
             "kategoria": a["cat"], "punkt": a["punkt"], "warstwa": a["layer"] if a["layer"] in ("plan", "sucho", "teren", "gleba") else "plan",
             "dlaczego": a["why"], "tagi": a.get("chips", []), "kroki": a.get("steps", []),
+            "czesc": a.get("czesc"),
         } for a in akcje],
+        "parts": _parts(out),
         "mapInfo": _map_info(out, sur),
         "causes": [{"id": c["id"], "name": c["name"], "evidence": c["ev"], "level": c["lvl"], "icon": c["icon"],
                     "color": c["color"], "layer": c.get("map")} for c in out.get("przyczyny", [])],

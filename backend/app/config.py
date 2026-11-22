@@ -37,7 +37,17 @@ BUDZET_KARTY_S = 7.0
 # Hydrologia (L3): powyżej tej powierzchni zlewni elementarnej MPHP piętrzenie dotyczy cieku zarządzanego przez
 # Wody Polskie, a nie rowu spółki wodnej – zalecenie R1 kieruje wtedy do zarządcy. ⚙️ wartość robocza, do T. Bolewskiego.
 ZLEWNIA_DUZA_KM2 = 10.0
+# WMS Catchments bywa zwracać też duże dorzecza (np. „Odra” ~10⁵ km²). Powyżej tego progu nie traktujemy
+# wyniku jako zlewni elementarnej przy rowie. ⚙️ typowa zlewnia elementarna MPHP to pojedyncze–kilkadziesiąt km².
+ZLEWNIA_ELEMENTARNA_MAX_KM2 = 100.0
 BUDZET_MPHP_S = 12.0          # usługa Wód Polskich bywa wolna (zmierzone 2,6–11,7 s); wynik w cache bez terminu
 
 # Budżet czasu źródeł kontekstowych analizy (EDO, SoilGrids, mapa upraw, prognoza) – wolna usługa nie trzyma raportu (s).
 BUDZET_KONTEKST_S = 8.0
+
+# Podział działki na części uprawne (czesci.py). Skrawek poniżej tych progów to zwykle niedokładność granic
+# deklaracji ARiMR względem ewidencji, a nie osobna uprawa – dołączamy go do reszty działki.
+CZESC_MIN_HA = 0.10
+CZESC_MIN_UDZIAL = 0.03
+# Poniżej tego udziału nieobsadzona reszta działki nie jest pokazywana jako osobna część.
+RESZTA_MIN_UDZIAL = 0.05

@@ -10,7 +10,7 @@ import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, StatusPill } from "../ui";
 import { CAT, LAYERS, LEGEND } from "./map-style";
-import { ActionList, Causes, Justification, PeriodSummaryCard, Risk, Sources, Vulnerability } from "./sections";
+import { ActionList, Causes, CropParts, Justification, PeriodSummaryCard, Risk, Sources, Vulnerability } from "./sections";
 
 // MapLibre needs the browser (WebGL), so the map is loaded on the client only.
 const ParcelMap = dynamic(() => import("./parcel-map"), {
@@ -22,6 +22,7 @@ const ParcelMap = dynamic(() => import("./parcel-map"), {
 
 export function ReportScreen({ report, url }: { report: Report; url: string }) {
   const p = report.parcel;
+  const uprawy = cropLabel(report);
   const startHref = `/?${new URLSearchParams({ dzialka: p.id, data: report.date, ...(report.period ? { od: report.period.from } : {}) })}`;
   const outOfScope = report.status.tone === "poza-zakresem";
 
@@ -55,7 +56,7 @@ export function ReportScreen({ report, url }: { report: Report; url: string }) {
           <div className="flex min-w-0 flex-col gap-2">
             <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight max-sm:text-[26px]">
               Działka {p.number}
-              {report.crop && <span className="font-medium text-ink-3"> · {report.crop.name.toLowerCase()}</span>}
+              {uprawy && <span className="font-medium text-ink-3"> · {uprawy}</span>}
             </h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-2">
               <span className="inline-flex items-center gap-1.5">
@@ -129,10 +130,10 @@ function MapSummary({ report }: { report: Report }) {
             <dt className="text-[#687266]">Powierzchnia</dt>
             <dd className="tabular font-semibold">{p.areaHa.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} ha</dd>
           </div>
-          {report.crop && (
+          {cropLabel(report) && (
             <div className="flex justify-between gap-2">
-              <dt className="text-[#687266]">Uprawa</dt>
-              <dd className="font-semibold">{report.crop.name.toLowerCase()}</dd>
+              <dt className="text-[#687266]">{report.parts.length > 1 ? "Uprawy" : "Uprawa"}</dt>
+              <dd className="text-right font-semibold">{cropLabel(report)}</dd>
             </div>
           )}
           {report.soilWaterPct !== null && report.stressThresholdPct !== null && (
@@ -174,10 +175,22 @@ function MapSummary({ report }: { report: Report }) {
  * Key numbers for the feature card — the state on day D and the 10-year vulnerability (task 3.3 pt 4).
  * Scenario numbers ("jak bywało") live in the Risk section further down, so they are not read as today's state.
  */
+/** Nagłówek wymienia uprawy z działki (po podziale na części), a nie tylko tę dominującą. */
+function cropLabel(r: Report): string {
+  const n = r.parts.map((c) => c.crop?.name.toLowerCase()).filter((x): x is string => !!x);
+  if (n.length === 0) return r.crop ? r.crop.name.toLowerCase() : "";
+  if (n.length <= 2) return n.join(" i ");
+  return `${n[0]} i ${n.length - 1} inne uprawy`;
+}
+
 function stateCells(r: Report) {
   const cells: { label: string; value: string; note: string }[] = [];
-  if (r.soilWaterPct !== null) cells.push({ label: "Woda w glebie", value: `${r.soilWaterPct}%`, note: `zapas w strefie korzeni, ${shortDate(r.date)}` });
-  if (r.stressThresholdPct !== null) cells.push({ label: "Próg stresu", value: `${r.stressThresholdPct}%`, note: r.crop ? `dla: ${r.crop.name.toLowerCase()}` : "" });
+  // Zapas wody zależy od rośliny, więc przy kilku uprawach liczby u góry dotyczą największej części.
+  const glowna = r.parts.length > 1 && r.parts[0].crop ? ` · część ${r.parts[0].areaHa.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ha` : "";
+  if (r.soilWaterPct !== null)
+    cells.push({ label: "Woda w glebie", value: `${r.soilWaterPct}%`, note: `zapas w strefie korzeni, ${shortDate(r.date)}${glowna}` });
+  if (r.stressThresholdPct !== null)
+    cells.push({ label: "Próg stresu", value: `${r.stressThresholdPct}%`, note: r.crop ? `dla: ${r.crop.name.toLowerCase()}${glowna}` : "" });
   if (r.vulnerability && r.vulnerability.seasons > 0) {
     const v = r.vulnerability;
     cells.push({
@@ -288,6 +301,14 @@ function AgriReport({ report }: { report: Report }) {
         )}
       </section>
 
+      <CropParts
+        report={report}
+        onPick={(n) => {
+          const a = report.actions.find((x) => x.n === n);
+          if (a) select(a, true);
+        }}
+      />
+
       <PeriodSummaryCard report={report} />
 
       {/* Order follows the KOWR task (3.3 pt 4–5), not the mock-up: state on day D (above) → 10-year vulnerability and
@@ -337,7 +358,12 @@ function AgriReport({ report }: { report: Report }) {
           </div>
         </div>
         <aside className="flex min-w-0 flex-[1_1_380px] flex-col">
-          <ActionList actions={report.actions} pin={pin} onPick={(a) => select(a, window.matchMedia("(max-width: 1100px)").matches)} />
+          <ActionList
+            actions={report.actions}
+            parts={report.parts}
+            pin={pin}
+            onPick={(a) => select(a, window.matchMedia("(max-width: 1100px)").matches)}
+          />
         </aside>
       </section>
 

@@ -10,6 +10,7 @@ from datetime import date, datetime
 
 import httpx
 
+from . import config as C
 from . import geo
 from .net import Wynik, get
 
@@ -18,6 +19,7 @@ IMGW_HYDRO = "https://danepubliczne.imgw.pl/api/data/hydro/"
 IMGW_OSTRZ = "https://danepubliczne.imgw.pl/api/data/warningshydro"
 TTL_IMGW_S = 30 * 60          # ⚙️ dane bieżące: jedna lista na cały kraj, odświeżana co 30 min
 PROMIEN_KM = 30.0             # ⚙️ wodowskaz dalej niż 30 km nie mówi nic o cieku przy działce
+MPHP_FEATURE_COUNT = 10       # WMS bywa zwracać kilka zlewni o różnej skali — bierzemy najmniejszą
 
 
 def _km(lon1, lat1, lon2, lat2) -> float:
@@ -34,22 +36,61 @@ def _liczba(x) -> float | None:
 
 
 # ---------------------------------------------------------------- MPHP10k – zlewnia elementarna
-def zlewnia_z_json(dane: dict) -> dict | None:
-    """GetFeatureInfo (JSON, EPSG:4326, lon/lat) → nazwa, id i powierzchnia zlewni."""
-    feats = (dane or {}).get("features") or []
-    if not feats:
-        return None
-    f = feats[0]
-    pr, g = f.get("properties") or {}, f.get("geometry") or {}
+def _pow_z_geom(g: dict) -> float | None:
     if g.get("type") == "Polygon":
         rings = [g["coordinates"][0]]
     elif g.get("type") == "MultiPolygon":
         rings = [p[0] for p in g["coordinates"]]
     else:
-        rings = []
-    pow_km2 = geo.area_m2([[tuple(p[:2]) for p in r] for r in rings]) / 1e6 if rings else None
+        return None
+    if not rings:
+        return None
+    return geo.area_m2([[tuple(p[:2]) for p in r] for r in rings]) / 1e6
+
+
+def _z_z_feature(f: dict) -> dict | None:
+    pr, g = f.get("properties") or {}, f.get("geometry") or {}
+    pow_km2 = _pow_z_geom(g)
     return {"nazwa": pr.get("gn_spelling") or "", "id": pr.get("hy_localid") or pr.get("id_localid"),
             "pow_km2": pow_km2}
+
+
+def zlewnia_z_json(dane: dict, max_km2: float | None = None) -> dict | None:
+    """GetFeatureInfo → najmniejsza zlewnia pod punktem (elementarna, nie dorzecze).
+
+    Gdy wszystkie trafienia są większe niż `max_km2` (domyślnie config), zwraca None —
+    WMS często oddaje też duże zlewnie rzeczne (np. „Odra”).
+    """
+    feats = (dane or {}).get("features") or []
+    kand = [z for f in feats if (z := _z_z_feature(f)) is not None]
+    if not kand:
+        return None
+    # bez powierzchni na końcu listy; z powierzchnią — od najmniejszej
+    z_pow = [z for z in kand if z["pow_km2"] is not None]
+    z_bez = [z for z in kand if z["pow_km2"] is None]
+    z_pow.sort(key=lambda z: z["pow_km2"])
+    limit = C.ZLEWNIA_ELEMENTARNA_MAX_KM2 if max_km2 is None else max_km2
+    if z_pow:
+        najlepsza = z_pow[0]
+        if najlepsza["pow_km2"] is not None and najlepsza["pow_km2"] > limit:
+            return None  # tylko dorzecza — caller poda powód z nazwą
+        return najlepsza
+    return z_bez[0] if z_bez else None
+
+
+def zlewnia_odrzucona_powod(dane: dict, max_km2: float | None = None) -> str | None:
+    """Gdy `zlewnia_z_json` zwróciło None przez zbyt dużą powierzchnię — tekst powodu."""
+    feats = (dane or {}).get("features") or []
+    kand = [z for f in feats if (z := _z_z_feature(f)) is not None and z["pow_km2"] is not None]
+    if not kand:
+        return None
+    naj = min(kand, key=lambda z: z["pow_km2"])
+    limit = C.ZLEWNIA_ELEMENTARNA_MAX_KM2 if max_km2 is None else max_km2
+    if naj["pow_km2"] > limit:
+        nazwa = f"„{naj['nazwa']}” " if naj["nazwa"] else ""
+        return (f"WMS zwrócił tylko dużą zlewnię {nazwa}({naj['pow_km2']:.0f} km²) — "
+                f"powyżej {limit:.0f} km² nie używamy jej jako zlewni elementarnej przy rowie")
+    return None
 
 
 async def zlewnia(client: httpx.AsyncClient, lon: float, lat: float) -> Wynik:
@@ -58,13 +99,14 @@ async def zlewnia(client: httpx.AsyncClient, lon: float, lat: float) -> Wynik:
     params = {"SERVICE": "WMS", "VERSION": "1.3.0", "REQUEST": "GetFeatureInfo", "LAYERS": "HY.PhysicalWaters.Catchments",
               "QUERY_LAYERS": "HY.PhysicalWaters.Catchments", "CRS": "EPSG:4326", "STYLES": "",
               "BBOX": f"{lat - d:.5f},{lon - d:.5f},{lat + d:.5f},{lon + d:.5f}", "WIDTH": 101, "HEIGHT": 101,
-              "I": 50, "J": 50, "INFO_FORMAT": "application/json", "FEATURE_COUNT": 1}
+              "I": 50, "J": 50, "INFO_FORMAT": "application/json", "FEATURE_COUNT": MPHP_FEATURE_COUNT}
     w = await get(client, zr, MPHP_WMS, params, timeout=12, retries=1)   # zlewnie się nie zmieniają → cache bez terminu
     if not w.ok:
         return w
     z = zlewnia_z_json(w.dane)
     if not z:
-        return Wynik(zr, None, powod="punkt działki poza zlewniami MPHP", url=MPHP_WMS, czas_ms=w.czas_ms)
+        powod = zlewnia_odrzucona_powod(w.dane) or "punkt działki poza zlewniami MPHP"
+        return Wynik(zr, None, powod=powod, url=MPHP_WMS, czas_ms=w.czas_ms)
     return Wynik(zr, z, url=MPHP_WMS, czas_ms=w.czas_ms, z_cache=w.z_cache, pobrano=w.pobrano)
 
 

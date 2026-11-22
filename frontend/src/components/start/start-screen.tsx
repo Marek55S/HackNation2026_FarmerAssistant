@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFarm } from "@/lib/farm";
-import type { AnalyzeEvent, CropId, ParcelLookup, Report } from "@/lib/types";
+import type { AnalyzeEvent, CropId, ParcelLookup, PartChoice, Report } from "@/lib/types";
+import { effectiveParts } from "./crop-parts";
+import { encodeParts } from "@/lib/backend";
 import { AppHeader } from "../app-header";
 import { MobileNav } from "../mobile-nav";
 import { ThemeToggle } from "../theme-toggle";
@@ -35,7 +37,9 @@ export function StartScreen({
   const router = useRouter();
   const { farm, upsert, remove } = useFarm();
   const [lookup, setLookup] = useState<ParcelLookup | null>(null);
-  const [crop, setCrop] = useState<CropId | null>(null);
+  // Uprawa wskazana przez rolnika dla wykrytej części (klucz = id części) i części dodane ręcznie.
+  const [choices, setChoices] = useState<Record<string, CropId | null>>({});
+  const [added, setAdded] = useState<PartChoice[]>([]);
   const [date, setDate] = useState(initialDate);
   const [from, setFrom] = useState<string | null>(initialFrom);
   const [dateValid, setDateValid] = useState(true);
@@ -56,15 +60,22 @@ export function StartScreen({
 
   const onLookup = useCallback((l: ParcelLookup | null) => {
     setLookup((prev) => {
-      // Keep the farmer's crop choice when only the date changed for the same parcel.
-      if (prev?.parcel.id !== l?.parcel.id) setCrop(null);
+      // Podział należy do konkretnej działki i roku – przy zmianie działki zaczynamy od tego, co podają źródła.
+      if (prev?.parcel.id !== l?.parcel.id) {
+        setChoices({});
+        setAdded([]);
+      }
       return l;
     });
   }, []);
 
-  const cropMissing = !!lookup && !lookup.outOfScope && !lookup.cropHint && !crop;
-  // Uprawa do analizy = to, co rolnik widzi na karcie działki: własny wybór albo podpowiedź (kliknięte pole ARiMR / mapa upraw).
-  const chosenCrop = crop ?? lookup?.cropHint?.crop ?? null;
+  const onChoice = useCallback((id: string, c: CropId | null) => setChoices((p) => ({ ...p, [id]: c })), []);
+
+  // Części, które pójdą do analizy: wykryte z nadpisaniami rolnika plus dodane ręcznie.
+  // „brak” też jest wyborem — pozwala iść dalej bez zaleceń polowych.
+  const parts = lookup ? effectiveParts(lookup.parts, choices, added) : [];
+  const withCrop = parts.filter((p) => p.crop);
+  const cropMissing = !!lookup && !lookup.outOfScope && withCrop.length === 0;
   const canStart = !!lookup && !cropMissing && dateValid && !running;
 
   function saveToFarm(report: Report, url: string) {
@@ -92,7 +103,7 @@ export function StartScreen({
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, od: from ?? undefined, uprawa: chosenCrop ?? undefined }),
+        body: JSON.stringify({ dzialka: lookup.parcel.id, data: date, od: from ?? undefined, czesci: withCrop }),
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) {
@@ -140,7 +151,8 @@ export function StartScreen({
     const { parcel } = lookup;
     const q = new URLSearchParams({ dzialka: parcel.id, data: date });
     if (from) q.set("od", from);
-    if (chosenCrop) q.set("uprawa", chosenCrop);
+    const cz = encodeParts(withCrop);
+    if (cz) q.set("cz", cz);
     upsert({
       parcelId: parcel.id,
       name: parcel.number,
@@ -191,7 +203,16 @@ export function StartScreen({
               <StepNumber n={2} />
               <h2 className="text-[19px] font-bold">Wskaż działkę</h2>
             </div>
-            <ParcelPicker initialId={initialParcelId} date={date} lookup={lookup} onLookup={onLookup} crop={crop} onCrop={setCrop} />
+            <ParcelPicker
+              initialId={initialParcelId}
+              date={date}
+              lookup={lookup}
+              onLookup={onLookup}
+              choices={choices}
+              added={added}
+              onChoice={onChoice}
+              onAdded={setAdded}
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-4 border-t border-rule-soft pt-4">
@@ -208,7 +229,7 @@ export function StartScreen({
               {!lookup
                 ? "Najpierw wskaż działkę."
                 : cropMissing
-                  ? "Wybierz uprawę, żeby zacząć."
+                  ? "Wskaż uprawę albo „Brak uprawy” dla przynajmniej jednej części, żeby zacząć."
                   : !dateValid
                     ? "Popraw datę, żeby zacząć."
                   : "Tylko publiczne, bezpłatne dane: GUGiK, ARiMR, IUNG-PIB, Copernicus, USGS Landsat, Open-Meteo, IMGW-PIB, Wody Polskie."}

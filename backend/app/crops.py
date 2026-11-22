@@ -39,13 +39,17 @@ UPRAWY: dict[str, Uprawa] = {u.key: u for u in [
            ((4, 15), (9, 15)), "cały sezon", "odrost po pokosie"),
     Uprawa("inna", "Inna uprawa", "Warzywa gruntowe", (5, 1), (25, 35, 50, 30), (0.60, 1.05, 0.90), 0.45, 0.6,
            ((6, 15), (8, 15)), "połowa czerwca–połowa sierpnia", "intensywny wzrost"),
+    # Świadomy wybór / auto, gdy źródła nic nie znalazły: raport działkowy (retencja), bez zaleceń polowych.
+    Uprawa("brak", "Brak uprawy", None, (5, 1), (25, 35, 50, 30), (0.60, 1.05, 0.90), 0.45, 0.6,
+           ((6, 15), (8, 15)), "—", "—"),
 ]}
 
 
 # Grupy łanu do porównań satelitarnych (L1, decyzja 21.11.2026; ⚙️ do potwierdzenia z dr. Gozdowskim):
-# NDMI porównujemy tylko z latami, w których rosła roślina o podobnym łanie. „inna” nie ma grupy → brak porównania.
+# NDMI porównujemy tylko z latami, w których rosła roślina o podobnym łanie. „inna”/„brak” nie mają grupy → brak porównania.
 GRUPA: dict[str, str | None] = {"pszenica": "zboża", "jare": "zboża", "kukurydza": "kukurydza", "rzepak": "rzepak",
-                                "ziemniak": "okopowe", "burak": "okopowe", "laka": "użytki zielone", "inna": None}
+                                "ziemniak": "okopowe", "burak": "okopowe", "laka": "użytki zielone",
+                                "inna": None, "brak": None}
 
 
 def grupa(u: "Uprawa | None") -> str | None:

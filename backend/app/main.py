@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .analysis import analizuj, znajdz_dzialke
+from .analysis import analizuj_dzialke, znajdz_dzialke
 from .raport_front import do_raportu
 from .crops import UPRAWY
 
@@ -26,6 +26,13 @@ ID_RE = re.compile(r"^[0-9A-Za-z_./-]{5,60}$")
 app = FastAPI(title="Asystent Wodny – API", version="0.1")
 
 
+class CzescWybor(BaseModel):
+    """Wybór rolnika dla jednej części uprawnej; pozycja bez `id` to część dodana ręcznie."""
+    id: str | None = Field(None, max_length=8)
+    uprawa: str | None = None
+    ha: float | None = Field(None, gt=0, le=10000)
+
+
 class Zapytanie(BaseModel):
     id: str | None = Field(None, description="identyfikator działki EGiB, np. 041005_5.0008.57/11")
     lon: float | None = None
@@ -33,6 +40,7 @@ class Zapytanie(BaseModel):
     data: date | None = None
     uprawa: str | None = None
     od: date | None = None
+    czesci: list[CzescWybor] | None = Field(None, max_length=20, description="uprawy na częściach działki")
 
 
 def _waliduj(q: Zapytanie) -> date:
@@ -49,6 +57,9 @@ def _waliduj(q: Zapytanie) -> date:
         raise HTTPException(422, "Data analizy musi być z ostatnich 10 lat i nie z przyszłości.")
     if q.uprawa and q.uprawa not in UPRAWY:
         raise HTTPException(422, "Nieznana uprawa.")
+    for c in q.czesci or []:
+        if c.uprawa and c.uprawa not in UPRAWY:
+            raise HTTPException(422, f"Nieznana uprawa: {c.uprawa}")
     return d
 
 
@@ -80,10 +91,14 @@ async def dzialka(q: Zapytanie):
     return await znajdz_dzialke(q.id, q.lon, q.lat, d)
 
 
+def _wybor(q: Zapytanie) -> list[dict] | None:
+    return [c.model_dump() for c in q.czesci] if q.czesci else None
+
+
 @app.post("/api/analiza")
 async def analiza(q: Zapytanie):
     d = _waliduj(q)
-    out = await analizuj(q.id, q.lon, q.lat, d, q.uprawa)
+    out = await analizuj_dzialke(q.id, q.lon, q.lat, d, q.uprawa, _wybor(q))
     out.pop("surowe", None)
     return out
 
@@ -92,10 +107,11 @@ async def analiza(q: Zapytanie):
 async def raport(q: Zapytanie):
     """Raport w kształcie `Report` frontendu Next.js (frontend/src/lib/types.ts)."""
     d = _waliduj(q)
-    out = await analizuj(q.id, q.lon, q.lat, d, q.uprawa)
+    out = await analizuj_dzialke(q.id, q.lon, q.lat, d, q.uprawa, _wybor(q))
     if not out.get("ok"):
         if out.get("potrzebna_uprawa"):
-            return JSONResponse({"error": out["powod"], "potrzebna_uprawa": True}, status_code=422)
+            return JSONResponse({"error": out["powod"], "potrzebna_uprawa": True,
+                                 "czesci": out.get("czesci", [])}, status_code=422)
         status = 404 if "ewidencji" in (out.get("powod") or "") else 502
         return JSONResponse({"error": out.get("powod") or "Analiza nie powiodła się."}, status_code=status)
     od = q.od.isoformat() if q.od and q.od < d else None

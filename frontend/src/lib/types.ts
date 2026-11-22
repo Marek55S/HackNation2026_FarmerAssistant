@@ -8,7 +8,8 @@ export type CropId =
   | "ziemniak"
   | "burak"
   | "laka"
-  | "inna";
+  | "inna"
+  | "brak";
 
 export interface Crop {
   id: CropId;
@@ -45,9 +46,42 @@ export interface CropHint {
   source: string;
 }
 
+/**
+ * One crop on the cadastral parcel. The parcel carries soil, terrain and catchment, so it is the unit of
+ * retention; the crop decides the water balance, so it is the unit of field and irrigation advice.
+ * Comes from ARiMR declarations clipped to the parcel (2025–2026), the Copernicus crop map (2017–2024),
+ * or the farmer (`manual`).
+ */
+export interface ParcelPart {
+  id: string;
+  /** null = nothing known about this piece; the farmer has to pick the crop. */
+  crop: CropId | null;
+  areaHa: number;
+  /** Share of the parcel area, 0–1 */
+  share: number;
+  /** Plant name as the source spells it, e.g. "żyto ozime" */
+  plant: string | null;
+  /** Where the split came from, e.g. "deklaracje ARiMR 2025: żyto ozime" */
+  source: string;
+  /** false = guessed or unknown, the farmer should confirm */
+  confirmed: boolean;
+  manual: boolean;
+  /** MultiPolygon rings, [lon, lat]; null for a part the farmer added without drawing. */
+  geometry: LngLat[][][] | null;
+}
+
+/** The farmer's answer for one part; an entry without `id` adds a new part. */
+export interface PartChoice {
+  id?: string;
+  crop: CropId | null;
+  areaHa?: number;
+}
+
 export interface ParcelLookup {
   parcel: Parcel;
   cropHint: CropHint | null;
+  /** Crops found on the parcel; always at least one entry. */
+  parts: ParcelPart[];
   /** Non-agricultural parcel (IUNG codes 11–14) → "Poza zakresem" (T2.6) */
   outOfScope: boolean;
 }
@@ -88,6 +122,8 @@ export interface Zalecenie {
   tagi: string[];
   /** Concrete steps ("Co zrobić"), in order; empty when the rule has none */
   kroki: string[];
+  /** Crop part this applies to (`ReportPart.id`); null = the whole parcel (retention R1–R4) */
+  czesc: string | null;
 }
 
 export type CauseLevel = "główna" | "duża" | "mała";
@@ -208,12 +244,41 @@ export interface ReportMap {
   labels: MapLabel[];
 }
 
+/**
+ * A crop section of the report. The parcel-level findings (weather, soil, terrain, catchment) are shared;
+ * everything here depends on what grows on this piece.
+ */
+export interface ReportPart {
+  id: string;
+  crop: Crop | null;
+  /** Where the crop itself comes from, e.g. "deklaracja ARiMR 2025: żyto ozime" */
+  cropSource: string;
+  /** Where the split of the parcel comes from */
+  cropSplitSource: string;
+  areaHa: number;
+  sharePct: number;
+  manual: boolean;
+  confirmed: boolean;
+  /** MultiPolygon rings, [lon, lat]; null when the farmer gave only a crop and an area. */
+  geometry: LngLat[][][] | null;
+  status: { label: string; tone: StatusTone };
+  headline: string;
+  summary: string;
+  soilWaterPct: number | null;
+  stressThresholdPct: number | null;
+  /** Rules that produced this part's recommendations, e.g. ["R5", "R7"] */
+  rules: RuleId[];
+}
+
 export interface Report {
   parcel: Parcel;
   map: ReportMap;
   period: PeriodSummary | null;
+  /** Crop of the largest part — kept so a single-crop parcel reads as before. */
   crop: Crop | null;
   cropSource: string;
+  /** One section per crop on the parcel; `actions` are tied to these through `Zalecenie.czesc`. */
+  parts: ReportPart[];
   date: string; // ISO yyyy-mm-dd
   dateLong: string;
   isToday: boolean;

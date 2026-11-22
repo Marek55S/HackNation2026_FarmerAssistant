@@ -8,7 +8,7 @@ from app import hydro, satellite
 from app.analysis import lata_tej_samej_uprawy, plan_efekt
 from app.crops import UPRAWY, grupa
 from app.facts import bilans
-from app.net import Wynik
+from app.net import Wynik, powod_bledu, powod_czytelny
 
 
 # ---------------------------------------------------------------- L2
@@ -77,6 +77,27 @@ def test_zlewnia_z_mphp():
     z = hydro.zlewnia_z_json(dane)
     assert z["nazwa"] == "Cisownik" and z["id"] == "2486821" and 0.6 < z["pow_km2"] < 0.8
     assert hydro.zlewnia_z_json({"features": []}) is None
+
+
+def test_powod_bledu_ukrywa_libexpat():
+    e = ImportError("libexpat.so.1: cannot open shared object file")
+    assert "aktualizacja obrazu" in powod_bledu(e)
+    assert "libexpat.so" not in powod_bledu(e)
+    assert "aktualizacja obrazu" in powod_czytelny("Sentinel Hub: ImportError: libexpat.so.1: cannot open")
+
+
+def test_zlewnia_wybiera_najmniejsza_i_odrzuca_dorzecze():
+    """WMS bywa zwracać Odra (~10⁵ km²) obok małej zlewni — bierzemy najmniejszą; same dorzecze = brak."""
+    mala = {"properties": {"gn_spelling": "Cisownik", "hy_localid": "1"},
+            "geometry": {"type": "Polygon", "coordinates": [[[22.0, 51.8], [22.01, 51.8], [22.01, 51.81], [22.0, 51.81], [22.0, 51.8]]]}}
+    # ~1°×1° ≈ 7–8 tys. km² — powyżej limitu elementarnej
+    duza = {"properties": {"gn_spelling": "Odra", "hy_localid": "odra"},
+            "geometry": {"type": "Polygon", "coordinates": [[[14.0, 50.0], [23.0, 50.0], [23.0, 54.0], [14.0, 54.0], [14.0, 50.0]]]}}
+    z = hydro.zlewnia_z_json({"features": [duza, mala]})
+    assert z["nazwa"] == "Cisownik" and z["pow_km2"] < 1
+    assert hydro.zlewnia_z_json({"features": [duza]}) is None
+    powod = hydro.zlewnia_odrzucona_powod({"features": [duza]})
+    assert powod and "Odra" in powod and "nie używamy" in powod
 
 
 def test_wodowskaz_ta_sama_rzeka_i_promien():

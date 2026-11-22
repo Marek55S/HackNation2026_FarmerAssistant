@@ -15,8 +15,8 @@ import httpx
 import numpy as np
 
 from . import config as C
-from . import bdot, cdse, context, geo, hydro, satellite, sources, terrain
-from .net import Wynik
+from . import bdot, cdse, context, czesci, geo, hydro, satellite, sources, terrain
+from .net import Wynik, powod_czytelny
 from .crops import UPRAWY, Uprawa, grupa, kc_dnia, koniec_wegetacji, w_oknie, z_arimr
 from .facts import (MIES, Meteo, Plan, bilans, ocena_kbw_teraz, odplyw, s_cn, scenariusze, sezon_kbw, _shift)
 
@@ -89,34 +89,38 @@ async def znajdz_dzialke(ident: str | None, lon: float | None, lat: float | None
         d = w.dane
         if not terrain.nmt_gotowy(d["rings"]):
             asyncio.get_running_loop().run_in_executor(None, terrain.pobierz_nmt, d["rings"])
-        punkt = (lon, lat) if lon is not None and lat is not None else None
-        # podpowiedź uprawy i kategoria gleby mają stały budżet czasu: wolna usługa nie może zablokować karty działki
-        a, cl, wi = await asyncio.gather(
-            _w_czasie(sources.arimr_uprawa(client, d["rings"], D.year, punkt), f"ARiMR – deklaracje upraw {D.year}"),
-            _w_czasie(cdse.uprawy_clms(client, d["rings"], D.year), "CLMS Crop Types 2017–2024 (CDSE)"),  # tylko rok daty
-            _w_czasie(sources.iung_kategoria(client, d["rings"]), "IUNG‑PIB – kategorie gleb"))
-    zadeklarowana = a.ok and a.dane["udzial"] >= 0.1      # pole uprawne ARiMR na działce = grunt rolny, nawet gdy IUNG widzi las
+        # Karta działki: IUNG + podział na uprawy. ARiMR/CLMS woła sam czesci_dzialki — osobne arimr_uprawa
+        # i uprawy_clms dublowały te same requesty i w budżecie 7 s często obcinały właśnie podział.
+        wi, cz = await asyncio.gather(
+            _w_czasie(sources.iung_kategoria(client, d["rings"]), "IUNG‑PIB – kategorie gleb"),
+            _w_czasie(czesci.czesci_dzialki(client, d["rings"], D.year), "Podział działki na uprawy"))
+    czesci_lista = list(cz.dane or [])
+    # Timeout / błąd podziału nie może zostawić pustej karty — jedna część „brak uprawy”, rolnik idzie dalej.
+    if not czesci_lista:
+        ha_dz = float(d.get("pow_ha") or 0)
+        czesci_lista = [{"id": "c1", "uprawa": "brak", "nazwa": "Brak uprawy", "roslina": None,
+                         "ha": round(ha_dz, 3), "udzial": 1.0, "geometria": None,
+                         "zrodlo": f"podział niedostępny ({cz.powod or 'timeout'}) — przyjęto brak uprawy; możesz zmienić",
+                         "pewne": False, "reczna": False}]
+    # Deklaracja / mapa na działce = grunt rolny, nawet gdy IUNG widzi las.
+    zadeklarowana = any(c.get("uprawa") and c["uprawa"] != "brak" for c in czesci_lista)
     kod = wi.dane["nierolnicza_kod"] if wi.ok and wi.dane["nierolnicza"] and not zadeklarowana else None
     pokrycie = {11: "las", 12: "woda", 13: "zabudowa", 14: "drogi"}.get(kod, "drogi") if kod else (
         "organiczna" if wi.ok and wi.dane["kategoria"] == 5 else "rolny")
+    # Podpowiedź = największa część z rozpoznaną uprawą (bez „brak”).
     sug = None
-    if a.ok and a.dane["udzial"] >= 0.3:
-        key = z_arimr(a.dane["roslina"])
-        if key:
-            sug = {"key": key, "nazwa": UPRAWY[key].nazwa, "roslina": a.dane["roslina"], "rok": D.year,
-                   "udzial": a.dane["udzial"], "zrodlo": f"{'kliknięte pole – ' if a.dane.get('pod_punktem') else 'wg '}"
-                                                         f"deklaracji ARiMR {D.year}: {a.dane['roslina']}"}
-    if not sug:
-        c = _clms_rok(cl, D.year)
-        if c:
-            sug = {"key": c["key"], "nazwa": UPRAWY[c["key"]].nazwa, "roslina": c["nazwa"], "rok": D.year, "udzial": c["udzial"],
-                   "zrodlo": f"wg mapy upraw Copernicus {D.year}: {c['nazwa']}"}
+    for c in sorted((x for x in czesci_lista if x.get("uprawa") and x["uprawa"] != "brak"), key=lambda x: -x.get("ha", 0)):
+        key = c["uprawa"]
+        if key in UPRAWY:
+            sug = {"key": key, "nazwa": UPRAWY[key].nazwa, "roslina": c.get("roslina") or UPRAWY[key].nazwa,
+                   "rok": D.year, "udzial": c.get("udzial", 0), "zrodlo": c.get("zrodlo", "")}
+            break
     return {"ok": True, "dzialka": _dzialka_out(d) | {"pokrycie": pokrycie,
                                                        "kategoria": wi.dane["kategoria"] if wi.ok else None},
             "podpowiedz": None if kod else sug,
-            "arimr_powod": None if sug else (a.powod or "deklaracja obejmuje mniej niż 30% działki")
-            + ("" if D.year in range(2017, 2025) else "; mapa upraw Copernicus obejmuje 2017–2024"),
-            "zrodla": [w.opis(), a.opis(), cl.opis(), wi.opis()]}
+            "czesci": [] if kod else czesci_lista,
+            "arimr_powod": None if sug else (cz.powod or "brak rozpoznanej uprawy na działce"),
+            "zrodla": [w.opis(), wi.opis(), cz.opis()]}
 
 
 async def _w_czasie(coro, zrodlo: str, s: float = C.BUDZET_KARTY_S):
@@ -501,6 +505,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
 
     # --- teren (F7, F7b, F8) i woda (F9): NMT 1 m z cache (pobierany w tle), inaczej Copernicus DEM 30 m
     nmt = False
+    nmt_w_tle = False
     if terrain.nmt_gotowy(d["rings"]):
         try:
             wn = terrain.wczytaj_nmt(d["rings"])
@@ -511,13 +516,16 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
             pass
     else:
         asyncio.get_running_loop().run_in_executor(None, terrain.pobierz_nmt, d["rings"])
-        braki.append("dokładny model terenu NMT 1 m (GUGiK) pobiera się w tle (1–3 min) — teraz teren z Copernicus DEM 30 m; "
-                     "odśwież raport później, by przeliczyć spadki i zagłębienia na NMT")
+        nmt_w_tle = True
     ter = terrain.analiza_terenu(wdem.dane, d["rings"]) if wdem.ok else {"dostepny": False}
     if ter.get("dostepny"):
         ter["zrodlo"] = "NMT 1 m GUGiK (uśredniony do 5 m)" if nmt else "Copernicus DEM 30 m (model powierzchni)"
-    if not ter.get("dostepny"):
-        braki.append("model terenu niedostępny — nie oceniliśmy spadków, spływu i zagłębień")
+        if nmt_w_tle and not nmt:
+            braki.append("dokładny model terenu NMT 1 m (GUGiK) pobiera się w tle (1–3 min) — teraz teren z Copernicus DEM 30 m; "
+                         "odśwież raport później, by przeliczyć spadki i zagłębienia na NMT")
+    else:
+        powod_ter = powod_czytelny(wdem.powod if not wdem.ok else None)
+        braki.append(f"model terenu niedostępny ({powod_ter}) — nie oceniliśmy spadków, spływu i zagłębień")
     hyd = wh.dane if wh.ok else None
     if not hyd:
         braki.append("brak danych o rowach i ciekach (BDOT10k) — nie oceniliśmy możliwości piętrzenia")
@@ -552,7 +560,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     wyp = ter.get("wyplyw")
     sat = wsat.dane if wsat.ok else None
     if not sat:
-        braki.append(f"stan roślin z satelity niedostępny: {wsat.powod}")
+        braki.append(f"stan roślin z satelity niedostępny: {powod_czytelny(wsat.powod)}")
     strefa = sat and sat["sucho_ha"] >= 0.2 and sat["sucho_srodek"]
     gdzie_woda = (f"najsuchsza część działki, ok. {fmt(sat['sucho_ha'], 1)} ha (satelita {sat['data'][8:10]}.{sat['data'][5:7]})"
                   if strefa else "cała działka")
@@ -816,6 +824,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
         if not ll:                        # działanie dla całej działki – punkt wewnątrz działki (rozłożone, by się nie nakładały)
             gp = geo.grid_points(d["rings"], 5)
             ll = gp[(i * 3 + 1) % len(gp)] if gp else geo.centroid(d["rings"])
+            a["ogolny_punkt"] = True      # pinezkę można przenieść na część uprawną (analizuj_dzialke)
         a["punkt"] = [round(float(ll[0]), 6), round(float(ll[1]), 6)]
         p = pin_pct(tr_map, *ll)
         a["x"], a["y"] = p["x"], p["y"]
@@ -930,7 +939,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
                    + ", ".join(f"{y} ({c})" for y, c in sat.get("uprawy_ref", {}).items())
                    + f" — {sat['n_ref']} czystych scen; suszej niż zwykle (z < −1): {fmt(100 * sat['sucho_udzial'])}% działki")
     else:
-        det.append(f"Wilgotność roślin NDMI: nie oceniamy — {wsat.powod}")
+        det.append(f"Wilgotność roślin NDMI: nie oceniamy — {powod_czytelny(wsat.powod)}")
     if najbl:
         det.append("Najbliższe wody (BDOT10k, od granicy działki): " + "; ".join(
             f"{x['typ']} {fmt(x['dist_m'])} m" for x in sorted(najbl.values(), key=lambda x: x["dist_m"])))
@@ -985,6 +994,123 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
         "szczegoly": det, "braki": braki, "zrodla_chips": src_chips, "zrodla": zrodla,
         "czas_s": round(elapsed, 1),
     })
+    return out
+
+
+async def analizuj_dzialke(ident: str | None, lon: float | None, lat: float | None, D: date,
+                           uprawa: str | None = None, wybor: list[dict] | None = None) -> dict:
+    """Raport działki ewidencyjnej: jedna warstwa działkowa i po jednej warstwie uprawowej na każdą część.
+
+    Działka niesie pogodę, glebę, teren i zlewnię, więc retencja (R1–R4) jest wspólna. Uprawa decyduje o
+    bilansie FAO‑56, scenariuszach i zaleceniach polowych oraz nawodnieniowych, więc R5–R9 liczymy osobno
+    dla każdej uprawy na działce. Źródła pobieramy raz (cache w net.get) – kolejna uprawa to ok. 2 s liczenia.
+    """
+    async with httpx.AsyncClient() as client:
+        wd = await sources.dzialka(client, ident, lon, lat)
+        if not wd.ok:
+            return {"ok": False, "powod": wd.powod, "zrodla": [wd.opis()]}
+        rings = wd.dane["rings"]
+        ha_dz = wd.dane["pow_ha"]
+        wcz = await czesci.czesci_dzialki(client, rings, D.year)
+
+    lista = wcz.dane if wcz.ok else [
+        {"id": "c1", "uprawa": "brak", "nazwa": "Brak uprawy", "roslina": None, "ha": round(ha_dz, 3), "udzial": 1.0,
+         "geometria": None, "zrodlo": f"podział niedostępny ({wcz.powod}) — przyjęto brak uprawy; możesz zmienić",
+         "pewne": False, "reczna": False}]
+    lista = czesci.scal_wybor(lista, wybor, ha_dz)
+    # Zgodność wstecz: klient, który zna tylko jedną uprawę, przysyła `uprawa` – dotyczy wtedy całej działki.
+    if uprawa and not wybor:
+        for c in lista:
+            c["uprawa"], c["nazwa"], c["pewne"] = uprawa, UPRAWY[uprawa].nazwa, True
+        lista = lista[:1]
+        lista[0].update(ha=round(ha_dz, 3), udzial=1.0, zrodlo="wybrane przez rolnika")
+
+    gotowe = czesci.do_analizy(lista)
+    if not gotowe:
+        return {"ok": False, "potrzebna_uprawa": True, "czesci": lista,
+                "powod": "Nie wiemy, co rośnie na tej działce — wskaż uprawę albo wybierz „Brak uprawy”.",
+                "zrodla": [wd.opis(), wcz.opis()]}
+
+    # Części tej samej uprawy dają identyczny wynik – liczymy raz na uprawę. „brak” nie ma warstwy uprawowej.
+    kolejnosc = sorted(gotowe, key=lambda c: -c["ha"])
+    z_uprawa = [c for c in kolejnosc if c["uprawa"] != "brak"]
+    wyniki: dict[str, dict] = {}
+    for c in z_uprawa:
+        if c["uprawa"] not in wyniki:
+            wyniki[c["uprawa"]] = await analizuj(ident, lon, lat, D, c["uprawa"])
+
+    tylko_brak = not z_uprawa
+    if tylko_brak:
+        # Jedna analiza działkowa (parametry jak „inna”) — bez zaleceń polowych w scalaniu.
+        glowna = await analizuj(ident, lon, lat, D, "inna")
+        wyniki["brak"] = glowna
+    else:
+        glowna = wyniki[z_uprawa[0]["uprawa"]]
+    if not glowna.get("ok") or glowna.get("tryb") == "poza_zakresem":
+        return glowna | {"czesci": lista}
+    out = _scal_czesci(glowna, wyniki, kolejnosc, lista)
+    if tylko_brak:
+        out["status"] = {"label": "Bez uprawy", "head": "Brak wskazanej uprawy na działce",
+                         "sub": "Pokazujemy teren, glebę i retencję. Wskaż uprawę, jeśli chcesz zalecenia polowe i podlewanie."}
+        out["uprawa"] = {"key": "brak", "nazwa": "Brak uprawy", "zrodlo": "przyjęto brak uprawy", "okno": "—"}
+        out["akcje"] = [a for a in out.get("akcje", []) if a.get("cat") == "ret" or a.get("czesc") is None]
+    return out
+
+
+def _rings_czesci(c: dict) -> list | None:
+    """Obrysy części uprawnej w formacie geo.* (otwory pomijamy – służą tylko do postawienia pinezki)."""
+    g = c.get("geometria") or {}
+    poly = g.get("coordinates") or []
+    rings = [[(x, y) for x, y in p[0]] for p in poly if p and len(p[0]) >= 4]
+    return rings or None
+
+
+def _scal_czesci(glowna: dict, wyniki: dict[str, dict], kolejnosc: list[dict], lista: list[dict]) -> dict:
+    """Jeden raport z przebiegów per uprawa: retencja z warstwy działkowej, reszta zaleceń przypisana do części."""
+    out = dict(glowna)
+    akcje = [a | {"czesc": None} for a in glowna["akcje"] if a["cat"] == "ret"]
+    czesci_out, braki = [], list(glowna.get("braki", []))
+    for c in kolejnosc:
+        w = wyniki[c["uprawa"]]
+        if not w.get("ok"):
+            continue
+        # „Brak uprawy”: zostaje warstwa działkowa (retencja), bez R5–R8.
+        if c["uprawa"] == "brak":
+            czesci_out.append({k: c[k] for k in ("id", "ha", "udzial", "geometria", "zrodlo", "pewne", "reczna")} | {
+                "uprawa": {"key": "brak", "nazwa": "Brak uprawy", "zrodlo": c.get("zrodlo", ""), "okno": "—"},
+                "status": {"label": "Bez uprawy", "head": "Brak wskazanej uprawy",
+                           "sub": "Liczymy retencję i teren dla całej działki. Wskaż uprawę, jeśli chcesz zalecenia polowe."},
+                "reguly": [], "fakty": {}, "szczegoly": []})
+            continue
+        moje = [a | {"czesc": c["id"]} for a in w["akcje"] if a["cat"] != "ret"]
+        # zalecenie polowe dotyczy tej uprawy, więc pinezka ma stać na jej części działki
+        gp_c = geo.grid_points(_rings_czesci(c), 3) if _rings_czesci(c) else []
+        for k, a in enumerate([x for x in moje if x.get("ogolny_punkt")]):
+            if gp_c:
+                ll = gp_c[(k * 2) % len(gp_c)]
+                a["punkt"] = [round(float(ll[0]), 6), round(float(ll[1]), 6)]
+        akcje += moje
+        czesci_out.append({k: c[k] for k in ("id", "ha", "udzial", "geometria", "zrodlo", "pewne", "reczna")} | {
+            "uprawa": w["uprawa"], "status": w["status"], "ryzyko": w.get("ryzyko"), "historia": w.get("historia"),
+            "fakty": {k: w["fakty"][k] for k in ("F1", "F4", "F4p", "TAW", "F5", "faza") if k in w["fakty"]},
+            "szczegoly": w.get("szczegoly", []), "reguly": [a["id"] for a in moje]})
+    # Część bez uprawy też trafia do raportu (bez zaleceń polowych) — inaczej powierzchnie nie sumują się do działki.
+    for c in czesci.bez_uprawy(lista):
+        braki.append(f"{c['ha']:.2f} ha działki bez wskazanej uprawy ({c['zrodlo']}) — ta część nie ma zaleceń polowych"
+                     .replace(".", ",", 1))
+        czesci_out.append({k: c[k] for k in ("id", "ha", "udzial", "geometria", "zrodlo", "pewne", "reczna")} | {
+            "uprawa": None, "reguly": [],
+            "status": {"label": "Bez uprawy", "head": "Nie wiemy, co tu rośnie",
+                       "sub": "Wskaż uprawę dla tej części, a policzymy dla niej zapas wody i zalecenia polowe."}})
+
+    akcje.sort(key=lambda a: (a["czesc"] is not None, a.get("n", 99)))
+    for i, a in enumerate(akcje):
+        a["n"] = i + 1
+    real = [a for a in akcje if not a.get("mock") and a["id"] != "R7-"]
+    pilne = next((a for a in real if a["id"] == "R7"), None) \
+        or next((a for a in real if "teraz" in a["when"]), None) or (real[0] if real else None)
+    out.update(akcje=akcje, czesci=czesci_out, braki=braki, pilne=pilne and pilne["id"],
+               pilne_n=pilne and pilne["n"])
     return out
 
 

@@ -43,6 +43,27 @@ def _key(url: str, params: dict | None) -> Path:
     return CACHE_DIR / (hashlib.sha1(raw.encode()).hexdigest() + ".json")
 
 
+def powod_bledu(e: BaseException, limit: int = 200) -> str:
+    """Powód braku do raportu: bez surowych ścieżek bibliotek systemowych."""
+    raw = f"{type(e).__name__}: {e}"
+    low = raw.lower()
+    if "libexpat" in low or ("importerror" in low and "expat" in low):
+        return "brak biblioteki systemowej do odczytu rastra (libexpat) — wymagana aktualizacja obrazu serwera"
+    if isinstance(e, ImportError) and ("gdal" in low or "rasterio" in low):
+        return "brak biblioteki do odczytu rastra na serwerze — wymagana aktualizacja obrazu"
+    return raw[:limit]
+
+
+def powod_czytelny(powod: str | None) -> str:
+    """Ujednolicenie już zapisanego powodu (np. z kilku fallbacków satelity)."""
+    if not powod:
+        return "nieznany powód"
+    low = powod.lower()
+    if "libexpat" in low or ("importerror" in low and "expat" in low):
+        return "brak biblioteki systemowej do odczytu rastra (libexpat) — wymagana aktualizacja obrazu serwera"
+    return powod
+
+
 def cache_czytaj(nazwa: str, klucz) -> object | None:
     """Wynik przetworzony wcześniej (np. uprawy CLMS działki) – dane, które się nie zmieniają."""
     f = _key(nazwa, {"k": klucz})

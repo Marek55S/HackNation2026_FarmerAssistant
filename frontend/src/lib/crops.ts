@@ -12,6 +12,7 @@ export const CROPS: Crop[] = [
   // No row for grassland / "other" in dane/kbw_progi_iung.csv
   { id: "laka", name: "Łąka / pastwisko", hint: "trwałe użytki zielone", hasOfficialThreshold: false },
   { id: "inna", name: "Inna uprawa", hint: "warzywa, sady, strączkowe", hasOfficialThreshold: false },
+  { id: "brak", name: "Brak uprawy", hint: "tylko retencja i teren — bez zaleceń polowych", hasOfficialThreshold: false },
 ];
 
 export function cropById(id: string | null | undefined): Crop | undefined {

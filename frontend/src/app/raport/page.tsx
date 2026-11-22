@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ReportScreen } from "@/components/report/report-screen";
-import { BackendError, fetchReport, reportUrl } from "@/lib/backend";
+import { BackendError, decodeParts, fetchReport, reportUrl } from "@/lib/backend";
 import { isValidIso, MIN_DATE, shortDate, todayIso, validatePeriod } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ async function params(searchParams: PageProps<"/raport">["searchParams"]) {
   const uprawa = one(q.uprawa);
   const rawFrom = one(q.od);
   const od = rawFrom && validatePeriod(rawFrom, date, today) === null ? rawFrom : null;
-  return { dzialka, date, od, uprawa };
+  return { dzialka, date, od, uprawa, czesci: decodeParts(one(q.cz)) };
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/raport">): Promise<Metadata> {
@@ -25,16 +25,16 @@ export async function generateMetadata({ searchParams }: PageProps<"/raport">): 
 }
 
 export default async function RaportPage({ searchParams }: PageProps<"/raport">) {
-  const { dzialka, date, od, uprawa } = await params(searchParams);
+  const { dzialka, date, od, uprawa, czesci } = await params(searchParams);
   if (!dzialka) notFound();
   let report;
   try {
-    report = await fetchReport({ dzialka, data: date, od, uprawa });
+    report = await fetchReport({ dzialka, data: date, od, uprawa, czesci });
   } catch (e) {
     // No crop data for that year and none chosen → back to the start screen to pick one (pipeline_plan.md F0).
     if (e instanceof BackendError && e.status === 422) redirect(`/?${new URLSearchParams({ dzialka, data: date, ...(od ? { od } : {}) })}`);
     if (e instanceof BackendError && e.status === 404) notFound();
     throw e;
   }
-  return <ReportScreen report={report} url={reportUrl({ dzialka: report.parcel.id, data: date, od, uprawa })} />;
+  return <ReportScreen report={report} url={reportUrl({ dzialka: report.parcel.id, data: date, od, uprawa, czesci })} />;
 }

@@ -17,7 +17,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import CACHE_DIR, Wynik
+from .net import CACHE_DIR, Wynik, powod_bledu
 
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
 TOKEN = "https://planetarycomputer.microsoft.com/api/sas/v1/token/sentinel-2-l2a"
@@ -162,7 +162,7 @@ async def ndmi_anomalia(client: httpx.AsyncClient, rings, D: date, okno: tuple[d
         refs = [(int(k["properties"]["datetime"][:4]), x) for k, x in zip(kand, wyn)
                 if isinstance(x, dict) and x["ndmi"].shape == r["ndmi"].shape and _udzial_czystych(x) >= 0.5]
     except Exception as e:  # noqa: BLE001
-        return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], url=STAC, czas_ms=int((time.perf_counter() - t0) * 1000))
+        return Wynik(zr, None, powod=powod_bledu(e), url=STAC, czas_ms=int((time.perf_counter() - t0) * 1000))
     meta = {"data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": tile,
             "piksel_m": 20, "sensor": "Sentinel‑2 (Planetary Computer)"}
     return surowe(zr, r, refs, meta, min_px=3, px_ha=0.04,
@@ -264,7 +264,7 @@ async def ndmi_landsat(client: httpx.AsyncClient, rings, D: date, okno: tuple[da
                 widziane.add(y)
                 refs.append((y, x))
     except Exception as e:  # noqa: BLE001
-        return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], czas_ms=int((time.perf_counter() - t0) * 1000))
+        return Wynik(zr, None, powod=powod_bledu(e), czas_ms=int((time.perf_counter() - t0) * 1000))
     meta = {"data": dsc.isoformat(), "chmury": float(it["properties"]["eo:cloud_cover"]), "kafel": it["properties"]["platform"],
             "piksel_m": 30, "sensor": "Landsat " + ("8/9 (OLI)" if oli else "5/7 (TM/ETM+)")}
     return surowe(zr, r, refs, meta, min_px=2, px_ha=0.09,

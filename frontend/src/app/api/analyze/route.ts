@@ -1,28 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BackendError, fetchReport, reportUrl } from "@/lib/backend";
+import { CROPS } from "@/lib/crops";
 import { todayIso, validatePeriod } from "@/lib/dates";
 import { stepDefs, stepsAt } from "@/lib/progress";
-import type { AnalyzeEvent, Report } from "@/lib/types";
+import type { AnalyzeEvent, CropId, PartChoice, Report } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+const CROP_IDS = new Set(CROPS.map((c) => c.id));
+
+/** Wybór upraw dla części działki; odrzucamy pozycje bez znanej uprawy, żeby backend nie dostał śmieci. */
+function parseParts(raw: unknown): PartChoice[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 20)
+    .map((p) => (p && typeof p === "object" ? (p as Record<string, unknown>) : {}))
+    .filter((p) => typeof p.crop === "string" && CROP_IDS.has(p.crop as CropId))
+    .map((p) => ({
+      ...(typeof p.id === "string" && p.id ? { id: p.id.slice(0, 8) } : {}),
+      crop: p.crop as CropId,
+      ...(typeof p.areaHa === "number" && p.areaHa > 0 ? { areaHa: p.areaHa } : {}),
+    }));
+}
+
 /**
- * POST /api/analyze {dzialka, data, od?, uprawa?} → report JSON computed by the backend.
+ * POST /api/analyze {dzialka, data, od?, uprawa?, czesci?} → report JSON computed by the backend.
  * With `Accept: application/x-ndjson` the response is a stream of progress events ending with the report.
  */
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { dzialka?: unknown; data?: unknown; od?: unknown; uprawa?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const dzialka = typeof body?.dzialka === "string" ? body.dzialka.trim() : "";
   const data = typeof body?.data === "string" ? body.data : "";
   const od = typeof body?.od === "string" ? body.od : null;
   const uprawa = typeof body?.uprawa === "string" ? body.uprawa : null;
+  const czesci = parseParts(body?.czesci);
   const today = todayIso();
 
   if (!dzialka || dzialka.length > 64) return NextResponse.json({ error: "Podaj identyfikator działki." }, { status: 400 });
   const dateError = validatePeriod(od, data, today);
   if (dateError) return NextResponse.json({ error: dateError }, { status: 400 });
 
-  const job = fetchReport({ dzialka, data, od, uprawa });
+  const job = fetchReport({ dzialka, data, od, uprawa, czesci });
   const errorOf = (e: unknown) => (e instanceof BackendError ? e : new BackendError("Analiza nie powiodła się.", 500));
 
   if (!req.headers.get("accept")?.includes("application/x-ndjson")) {
@@ -57,7 +75,7 @@ export async function POST(req: NextRequest) {
       } else {
         const s = stepsAt(defs, (Date.now() - t0) / 1000, true);
         send({ type: "progress", elapsed: (Date.now() - t0) / 1000, progress: 100, steps: s.steps });
-        send({ type: "report", report: done.report, url: reportUrl({ dzialka: done.report.parcel.id, data, od, uprawa }) });
+        send({ type: "report", report: done.report, url: reportUrl({ dzialka: done.report.parcel.id, data, od, uprawa, czesci }) });
       }
       controller.close();
     },

@@ -19,7 +19,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz
+from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz, powod_bledu
 from .satellite import surowe
 
 STAC = "https://stac.dataspace.copernicus.eu/v1/search"
@@ -62,7 +62,8 @@ def _klasa(rgb) -> int | None:
     return best[0] if sum((a - b) ** 2 for a, b in zip(best[1], rgb)) < 300 else None
 
 
-async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | None]:
+async def _piksele_rok(client, item: dict, rings, E0, N0) -> tuple[int, list[tuple[int, int, int]], int]:
+    """(rok, piksele [(wiersz, kolumna, kod klasy)] leżące w działce, liczba pikseli w działce)."""
     from PIL import Image
     from pyproj import Transformer
     rok = int(item["properties"]["datetime"][:4])
@@ -77,12 +78,12 @@ async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | No
         else:
             r = await client.get(THUMB, params=params, timeout=30)
             if r.status_code != 200 or not r.headers.get("content-type", "").startswith("image"):
-                return rok, None
+                return rok, [], 0
             content = r.content
             path.write_bytes(content)
         im = np.asarray(Image.open(io.BytesIO(content)).convert("RGB"))
     except Exception:  # noqa: BLE001
-        return rok, None
+        return rok, [], 0
     # Tylko piksele w prostokącie działki (działka to ułamek kwadratu 2,5 km), transformacja wektorowo.
     fwd = Transformer.from_crs(4326, 3035, always_xy=True)
     inv = Transformer.from_crs(3035, 4326, always_xy=True)
@@ -90,8 +91,7 @@ async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | No
     ex, ny = fwd.transform([x0, x1, x0, x1], [y0, y0, y1, y1])
     j0, j1 = max(0, int((min(ex) - E0) // 10) - 1), min(250, int((max(ex) - E0) // 10) + 2)
     i0, i1 = max(0, int((N0 + 2500 - max(ny)) // 10) - 1), min(250, int((N0 + 2500 - min(ny)) // 10) + 2)
-    licz: Counter = Counter()
-    n = 0
+    px, n = [], 0
     if i1 > i0 and j1 > j0:
         jj, ii = np.meshgrid(np.arange(j0, j1), np.arange(i0, i1))
         lon, lat = inv.transform(E0 + (jj + 0.5) * 10, N0 + 2500 - (ii + 0.5) * 10)
@@ -100,42 +100,75 @@ async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | No
                 n += 1
                 k = _klasa(tuple(int(x) for x in im[i, j]))
                 if k is not None:
-                    licz[k] += 1
-    if not n or not licz:
+                    px.append((int(i), int(j), k))
+    return rok, px, n
+
+
+async def _uprawa_rok(client, item: dict, rings, E0, N0) -> tuple[int, dict | None]:
+    rok, px, n = await _piksele_rok(client, item, rings, E0, N0)
+    if not n or not px:
         return rok, None
-    kod, cnt = licz.most_common(1)[0]
+    kod, cnt = Counter(k for _, _, k in px).most_common(1)[0]
     nazwa, key = KLASY.get(kod, (str(kod), None))
     return rok, {"kod": kod, "nazwa": nazwa, "key": key, "udzial": cnt / n, "pikseli": n}
 
 
+CLMS_URL = "https://land.copernicus.eu/en/products/high-resolution-layer-croplands"
+
+
+async def _stac_lata(client: httpx.AsyncClient, rings) -> tuple[dict[int, dict], int, int, str | None]:
+    """Kafle mapy upraw {rok: item STAC} i lewy dolny róg kwadratu 2,5 km w EPSG:3035."""
+    from pyproj import Transformer
+    x0, y0, x1, y1 = geo.bbox(rings)
+    try:
+        s = await client.post(STAC, json={"collections": ["clms_vlcc_crop-types_europe_10m_yearly_v1"],
+                                          "bbox": [x0, y0, x1, y1], "limit": 20}, timeout=20)
+        items = s.json().get("features", [])
+    except Exception as e:  # noqa: BLE001
+        return {}, 0, 0, f"katalog CDSE: {type(e).__name__}"
+    if not items:
+        return {}, 0, 0, "brak mapy upraw CLMS dla tego miejsca"
+    cx, cy = geo.centroid(rings)
+    E, N = Transformer.from_crs(4326, 3035, always_xy=True).transform(cx, cy)
+    lata: dict[int, dict] = {}
+    for it in items:                       # jeden kafel na rok (pierwszy pasujący)
+        lata.setdefault(int(it["properties"]["datetime"][:4]), it)
+    return lata, int(E // 10 * 10) - 1250, int(N // 10 * 10) - 1250, None
+
+
+async def piksele_clms(client: httpx.AsyncClient, rings, rok: int) -> Wynik:
+    """Piksele mapy upraw CLMS (10 m, EPSG:3035) leżące w działce – podstawa podziału na części (czesci.py)."""
+    t0 = time.perf_counter()
+    zr = "CLMS Crop Types 2017–2024 (CDSE)"
+    lata, E0, N0, powod = await _stac_lata(client, rings)
+    if powod:
+        return Wynik(zr, None, powod=powod, czas_ms=int((time.perf_counter() - t0) * 1000))
+    it = lata.get(rok)
+    if it is None:
+        return Wynik(zr, None, powod=f"mapa upraw Copernicus obejmuje 2017–2024 (nie {rok})")
+    _, px, n = await _piksele_rok(client, it, rings, E0, N0)
+    if not n or not px:
+        return Wynik(zr, None, powod="nie udało się odczytać mapy upraw dla tej działki")
+    return Wynik(zr, {"px": px, "n": n, "E0": E0, "N0": N0, "klasy": KLASY}, url=CLMS_URL,
+                 czas_ms=int((time.perf_counter() - t0) * 1000))
+
+
 async def uprawy_clms(client: httpx.AsyncClient, rings, tylko_rok: int | None = None) -> Wynik:
     """Uprawa w każdym roku 2017–2024 wg mapy CLMS (dominanta pikseli 10 m w działce); `tylko_rok` = jeden rok."""
-    from pyproj import Transformer
     t0 = time.perf_counter()
     zr = "CLMS Crop Types 2017–2024 (CDSE)"
     x0, y0, x1, y1 = geo.bbox(rings)
     klucz = [round(v, 5) for v in (x0, y0, x1, y1)]
-    url_clms = "https://land.copernicus.eu/en/products/high-resolution-layer-croplands"
+    url_clms = CLMS_URL
     for k in ([klucz, None], [klucz, tylko_rok]) if tylko_rok is not None else ([klucz, None],):
         c = cache_czytaj("clms", k)       # mapy 2017–2024 się nie zmieniają – raz odczytane z CDSE wystarczą
         if c:
             dane = {int(r): v for r, v in c.items() if tylko_rok is None or int(r) == tylko_rok}
             if dane:
                 return Wynik(zr, dane, url=url_clms, z_cache=True)
-    try:
-        s = await client.post(STAC, json={"collections": ["clms_vlcc_crop-types_europe_10m_yearly_v1"],
-                                          "bbox": [x0, y0, x1, y1], "limit": 20}, timeout=20)
-        items = s.json().get("features", [])
-    except Exception as e:  # noqa: BLE001
-        return Wynik(zr, None, powod=f"katalog CDSE: {type(e).__name__}", czas_ms=int((time.perf_counter() - t0) * 1000))
-    if not items:
-        return Wynik(zr, None, powod="brak mapy upraw CLMS dla tego miejsca")
-    cx, cy = geo.centroid(rings)
-    E, N = Transformer.from_crs(4326, 3035, always_xy=True).transform(cx, cy)
-    E0, N0 = int(E // 10 * 10) - 1250, int(N // 10 * 10) - 1250
-    lata = {}
-    for it in items:                       # jeden kafel na rok (pierwszy pasujący)
-        lata.setdefault(int(it["properties"]["datetime"][:4]), it)
+    lata, E0, N0, powod = await _stac_lata(client, rings)
+    if powod:
+        return Wynik(zr, None, powod=powod, czas_ms=int((time.perf_counter() - t0) * 1000))
     if tylko_rok is not None:
         lata = {r: it for r, it in lata.items() if r == tylko_rok}
         if not lata:
@@ -248,7 +281,7 @@ async def ndmi_anomalia_sh(client, rings, D: date, okno: tuple[date, date]) -> W
         refs_ok = [(okna[i][0].year, x) for i, x in enumerate(refs)
                    if isinstance(x, dict) and x["inside"].sum() and (x["czyste"] & x["inside"]).sum() / x["inside"].sum() >= 0.5]
     except Exception as e:  # noqa: BLE001
-        return Wynik(zr, None, powod=f"{type(e).__name__}: {e}"[:200], czas_ms=int((time.perf_counter() - t0) * 1000))
+        return Wynik(zr, None, powod=powod_bledu(e), czas_ms=int((time.perf_counter() - t0) * 1000))
     meta = {"data": koniec.isoformat(), "okres": f"{pocz:%d.%m}–{koniec:%d.%m.%Y}", "chmury": 0.0, "kafel": "kompozyt leastCC",
             "piksel_m": 20, "sensor": "Sentinel‑2 (Sentinel Hub, kompozyt)"}
     return surowe(zr, r, refs_ok, meta, min_px=2, px_ha=0.04, url="https://dataspace.copernicus.eu",

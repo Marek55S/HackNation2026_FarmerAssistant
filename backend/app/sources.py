@@ -175,10 +175,24 @@ def progi() -> dict:
 
 
 # ---------- A10. ARiMR GSA – uprawy (WFS 2025–2026) ----------
-async def arimr_uprawa(client, rings, rok: int, punkt: tuple[float, float] | None = None) -> Wynik:
-    """Dominująca uprawa ARiMR w działce; z `punkt` (kliknięcie na mapie) – uprawa pola pod tym punktem."""
+ARIMR_LATA = (2025, 2026)
+
+
+def _frings(f: dict) -> list[list[tuple[float, float]]]:
+    """Zewnętrzne pierścienie deklaracji; WFS 2.0 w EPSG:4326 bywa (lat, lon) – wykrywamy po zakresie."""
+    g = f.get("geometry") or {}
+    polys = g.get("coordinates", [])
+    polys = [polys] if g.get("type") == "Polygon" else polys
+    frings = [[tuple(p[:2]) for p in poly[0]] for poly in polys if poly]
+    if frings and frings[0] and frings[0][0][0] > 40:
+        frings = [[(b, a) for a, b in r] for r in frings]
+    return frings
+
+
+async def arimr_pola(client, rings, rok: int) -> Wynik:
+    """Deklaracje ARiMR przecinające prostokąt działki: geometria + roślina. Podstawa podziału na części (czesci.py)."""
     zr = f"ARiMR – deklaracje upraw {rok}"
-    if rok not in (2025, 2026):
+    if rok not in ARIMR_LATA:
         return Wynik(zr, None, powod=f"brak usługi WFS dla {rok} (2020–2024: shapefile do przetworzenia – T3.9)")
     x0, y0, x1, y1 = geo.bbox(rings)
     url = f"https://geoportal-w2.arimr.gov.pl/geoserver/gsa_public/uprawy_{rok}/wfs"
@@ -188,25 +202,35 @@ async def arimr_uprawa(client, rings, rok: int, punkt: tuple[float, float] | Non
     w = await get(client, zr, url, params, timeout=12)
     if not w.ok:
         return w
+    pola = []
+    for f in w.dane.get("features", []):
+        fr = _frings(f)
+        if fr:
+            p = f.get("properties", {})
+            pola.append({"roslina": p.get("roslina") or "?", "grupa": p.get("grupa_roslin") or "",
+                         "pow": p.get("pow") or "", "rings": fr})
+    w.dane = pola or None
+    if not pola:
+        w.powod = "brak deklaracji w prostokącie działki"
+    return w
+
+
+async def arimr_uprawa(client, rings, rok: int, punkt: tuple[float, float] | None = None) -> Wynik:
+    """Dominująca uprawa ARiMR w działce; z `punkt` (kliknięcie na mapie) – uprawa pola pod tym punktem."""
+    w = await arimr_pola(client, rings, rok)
+    if not w.ok:
+        return w
     pts = geo.grid_points(rings, 14)
     licz: Counter = Counter()
-    for f in w.dane.get("features", []):
-        g = f.get("geometry") or {}
-        polys = g.get("coordinates", [])
-        polys = [polys] if g.get("type") == "Polygon" else polys
-        frings = [[tuple(p[:2]) for p in poly[0]] for poly in polys if poly]
-        # oś: WFS 2.0 w EPSG:4326 bywa (lat, lon) – wykrywamy po zakresie
-        if frings and frings[0] and frings[0][0][0] > 40:
-            frings = [[(b, a) for a, b in r] for r in frings]
-        n = sum(1 for p in pts if geo.inside_any(p, frings))
-        if punkt and geo.inside_any(punkt, frings):
-            w.dane = {"roslina": f["properties"].get("roslina") or "?", "grupa": f["properties"].get("grupa_roslin") or "",
-                      "udzial": 1.0, "inne": [], "pod_punktem": True}
+    for f in w.dane:
+        n = sum(1 for p in pts if geo.inside_any(p, f["rings"]))
+        if punkt and geo.inside_any(punkt, f["rings"]):
+            w.dane = {"roslina": f["roslina"], "grupa": f["grupa"], "udzial": 1.0, "inne": [], "pod_punktem": True}
             return w
         if n:
-            licz[(f["properties"].get("roslina") or "?", f["properties"].get("grupa_roslin") or "")] += n
+            licz[(f["roslina"], f["grupa"])] += n
     if not licz:
-        return Wynik(zr, None, powod="brak deklaracji przecinającej działkę", url=url, czas_ms=w.czas_ms)
+        return Wynik(w.zrodlo, None, powod="brak deklaracji przecinającej działkę", url=w.url, czas_ms=w.czas_ms)
     (roslina, grupa), n = licz.most_common(1)[0]
     w.dane = {"roslina": roslina, "grupa": grupa, "udzial": n / len(pts),
               "inne": [r for (r, _), _ in licz.most_common()[1:4]]}

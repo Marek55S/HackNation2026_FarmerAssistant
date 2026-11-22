@@ -15,7 +15,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import Wynik
+from .net import Wynik, powod_bledu
 
 STAC = "https://earth-search.aws.element84.com/v1/search"
 BUF_M = 400.0
@@ -59,7 +59,7 @@ async def pobierz_dem(client: httpx.AsyncClient, rings) -> Wynik:
         except Exception:  # noqa: BLE001 – chwilowy błąd S3/sieci: jedno ponowienie
             arr, tr = await asyncio.to_thread(_read_window, urls, b)
     except Exception as e:  # noqa: BLE001
-        return Wynik("Copernicus DEM 30 m", None, powod=f"{type(e).__name__}: {e}"[:200], url=STAC,
+        return Wynik("Copernicus DEM 30 m", None, powod=powod_bledu(e), url=STAC,
                      czas_ms=int((time.perf_counter() - t0) * 1000))
     arr[arr <= -1000] = np.nan
     return Wynik("Copernicus DEM 30 m", {"z": arr, "tr": tr}, url="https://registry.opendata.aws/copernicus-dem/",
