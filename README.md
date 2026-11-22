@@ -11,7 +11,7 @@ i na telefonie, bez logowania i bez danych osobowych.
 |---|---|
 | Działająca wersja | https://asystent-wodny-888051665742.europe-central2.run.app |
 | API backendu (Swagger) | https://asystent-backend-888051665742.europe-central2.run.app/docs |
-| Prezentacja (PDF) | [prezentacja/Asystent_Wodny_prezentacja.pdf](prezentacja/Asystent_Wodny_prezentacja.pdf) |
+| Prezentacja (PDF) | [prezentacja/Hydrowise_prezentacja.pdf](prezentacja/Hydrowise_prezentacja.pdf) |
 
 ![Ekran startowy: dzień analizy i wybór działki](prezentacja/img/s1_start.png)
 
@@ -171,7 +171,7 @@ z 10 lat), sekrety są poza kodem, kontener backendu działa bez uprawnień admi
 | przestrzenne | siatka działek i podkład mapy | KIEG i ortofotomapa GUGiK, OpenStreetMap | stan obecny, tylko do wyświetlania |
 | przestrzenne | teren | Copernicus DEM 30 m; NMT 1 m GUGiK (w tle) | stan obecny |
 | przestrzenne | uprawa w danym roku | ARiMR GSA (2025–26), Copernicus CLMS Crop Types (2017–24) | rok D i 10 sezonów wstecz |
-| meteorologiczne | opad, ET0, temperatura dobowo | Open‑Meteo (ERA5‑Land) | 31 lat przed D |
+| meteorologiczne | opad, ET0, temperatura dobowo | Open‑Meteo (ERA5‑Land) | 11 lat przed D (10 sezonów + rok na rozruch bilansu wody w glebie) |
 | meteorologiczne | prognoza | Open‑Meteo Forecast | 16 dni, tylko gdy D = dziś |
 | satelitarne | wilgotność roślin NDMI | Sentinel‑2 L2A (Sentinel Hub / CDSE, zapas: Planetary Computer), Landsat 5/7/8/9 | ok. 20 dni przed D + te same dni w latach odniesienia |
 | glebowe | kategoria podatności na suszę | IUNG‑PIB WMS `katgl_landuse2024` | stan obecny |
@@ -257,7 +257,8 @@ Pełna tabela atrybucji: [ZRODLA_DANYCH.md](ZRODLA_DANYCH.md) §8.
 ## 9. Weryfikacja wyników
 
 - **Testy jednostkowe** (`cd backend && python -m pytest -q`, bez sieci): progi IUNG, KBW, SCS‑CN, bilans FAO‑56,
-  wybór lat odniesienia satelity, podział działki na uprawy, parsowanie MPHP i IMGW.
+  wybór lat odniesienia satelity, podział działki na uprawy i scalanie części (uprawa + „Brak uprawy”),
+  parsowanie MPHP i IMGW.
 - **Notebook** [`notebooks/pipeline_dzialka.ipynb`](notebooks/pipeline_dzialka.ipynb): każdy krok obliczeń
   dla jednej działki liczony ręcznie i porównany z wynikiem backendu.
 - **Prawdziwe działki** (21–22.11.2026):
@@ -265,7 +266,9 @@ Pełna tabela atrybucji: [ZRODLA_DANYCH.md](ZRODLA_DANYCH.md) §8.
   - Szubin `041005_5.0028.47/15`, 15.07.2025, kukurydza: zapas 41% przy progu 45%, susza w 6 z 10 sezonów,
     podlanie 20 mm najsuchszych 2,3 ha;
   - Krzywda `061104_2.0001.100`, 21.11.2026, pszenica: poza sezonem, 3 z 10 sezonów z suszą, ostrzeżenie IMGW
-    o suszy hydrologicznej w zlewni Wieprza.
+    o suszy hydrologicznej w zlewni Wieprza;
+  - Gołcza `120802_2.0005.347/4`, 20.06.2022: działka podzielona na rzepak 1,0 ha, łąkę 0,25 ha i część bez
+    uprawy 0,11 ha; status „Susza” (rzepak poniżej progu stresu), część bez uprawy bez zaleceń polowych.
 - **Pewność w raporcie:** wynik zestawia cztery niezależne sygnały (woda w glebie, KBW, satelita, EDO); gdy się
   rozjeżdżają lub brakuje danych, raport obniża pewność i mówi dlaczego.
 - **Do zrobienia:** porównanie z tabelami suszy SMSR IUNG dla gmin i EDO na latach 2018–2019, kalibracja progów
