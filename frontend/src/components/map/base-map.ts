@@ -1,12 +1,10 @@
 // Shared MapLibre setup: Geoportal orthophoto (GUGiK WMTS, EPSG:3857, free, no key) with an OpenStreetMap fallback.
 
 import maplibregl, { type LngLatBoundsLike, type StyleSpecification } from "maplibre-gl";
+import { ORTO_TILES } from "./tiles";
 
 export type BaseLayer = "orto" | "osm";
 
-const ORTO_TILES =
-  "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0" +
-  "&LAYER=ORTOFOTOMAPA&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=EPSG:3857:{z}&TILEROW={y}&TILECOL={x}";
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const STYLE: StyleSpecification = {

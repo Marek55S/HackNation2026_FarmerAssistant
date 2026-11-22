@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import type { CropId, LngLat, ParcelLookup, PartChoice } from "@/lib/types";
+import { SlidingPill } from "../sliding-pill";
 import { ICON, Icon } from "../ui";
 import { CropParts } from "./crop-parts";
 
@@ -104,15 +105,16 @@ export function ParcelPicker({
       <div
         role="tablist"
         aria-label="Sposób wskazania działki"
-        className="flex flex-wrap gap-1 self-start rounded-[22px] bg-chip p-1 max-sm:grid max-sm:grid-cols-3 max-sm:self-stretch"
+        className="relative flex flex-wrap gap-1 self-start rounded-[22px] bg-chip p-1 max-sm:grid max-sm:grid-cols-3 max-sm:self-stretch"
       >
+        <SlidingPill active={mode} />
         {MODES.map((m) => (
           <button
             key={m.id}
             role="tab"
             aria-selected={mode === m.id}
             onClick={() => setMode(m.id)}
-            className={`min-h-11 rounded-full px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "bg-tab-active font-semibold text-ink shadow-sm" : "font-medium text-ink-3 hover:text-ink"}`}
+            className={`relative min-h-11 rounded-full px-4 text-sm max-sm:px-1.5 max-sm:text-[13px] max-sm:leading-tight ${mode === m.id ? "font-semibold text-ink" : "font-medium text-ink-3 hover:text-ink"}`}
           >
             {m.label}
           </button>

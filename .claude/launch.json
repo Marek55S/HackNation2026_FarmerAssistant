@@ -4,8 +4,26 @@
     {
       "name": "frontend-prod",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "frontend", "start", "-p", "3100"],
+      "runtimeArgs": [
+        "--dir",
+        "frontend",
+        "start",
+        "-p",
+        "3100"
+      ],
       "port": 3100
+    },
+    {
+      "name": "frontend-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "frontend",
+        "dev",
+        "-p",
+        "3101"
+      ],
+      "port": 3101
     }
   ]
 }
