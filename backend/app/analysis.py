@@ -1090,16 +1090,17 @@ def _scal_czesci(glowna: dict, wyniki: dict[str, dict], kolejnosc: list[dict], l
     akcje = [a | {"czesc": None} for a in glowna["akcje"] if a["cat"] == "ret"]
     czesci_out, braki = [], list(glowna.get("braki", []))
     for c in kolejnosc:
-        w = wyniki[c["uprawa"]]
-        if not w.get("ok"):
-            continue
-        # „Brak uprawy”: zostaje warstwa działkowa (retencja), bez R5–R8.
+        # „Brak uprawy”: zostaje warstwa działkowa (retencja), bez R5–R8. Sprawdzamy przed odczytem `wyniki`,
+        # bo przy działce z uprawą i częścią „brak” dla „brak” nie liczymy osobnej analizy.
         if c["uprawa"] == "brak":
             czesci_out.append({k: c[k] for k in ("id", "ha", "udzial", "geometria", "zrodlo", "pewne", "reczna")} | {
                 "uprawa": {"key": "brak", "nazwa": "Brak uprawy", "zrodlo": c.get("zrodlo", ""), "okno": "—"},
                 "status": {"label": "Bez uprawy", "head": "Brak wskazanej uprawy",
                            "sub": "Liczymy retencję i teren dla całej działki. Wskaż uprawę, jeśli chcesz zalecenia polowe."},
                 "reguly": [], "fakty": {}, "szczegoly": []})
+            continue
+        w = wyniki[c["uprawa"]]
+        if not w.get("ok"):
             continue
         moje = [a | {"czesc": c["id"]} for a in w["akcje"] if a["cat"] != "ret"]
         # zalecenie polowe dotyczy tej uprawy, więc pinezka ma stać na jej części działki
