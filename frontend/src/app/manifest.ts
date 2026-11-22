@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Asystent Wodny – woda na Twojej działce",
-    short_name: "Asystent Wodny",
+    name: "Hydrowise – woda na Twojej działce",
+    short_name: "Hydrowise",
     description: "Susza i retencja na działce rolnej: co zrobić i gdzie, z danych publicznych.",
     id: "/",
     start_url: "/",

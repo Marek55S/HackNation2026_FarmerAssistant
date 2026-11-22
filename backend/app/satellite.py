@@ -105,8 +105,10 @@ def anomalia(w: Wynik, lata_ok: set[int] | None = None, powod_braku_lat: str | N
     r, meta = s["r"], s["meta"]
     refs = [(y, x) for y, x in s["refs"] if lata_ok is None or y in lata_ok]
     if len(refs) < MIN_LAT_REF:
-        powod = powod_braku_lat or (f"za mało sezonów z tą samą grupą upraw do porównania ({len(refs)} < {MIN_LAT_REF}; "
-                                    f"zdjęcia z lat {', '.join(str(y) for y, _ in sorted(s['refs']))})")
+        n = len(refs)
+        powod = powod_braku_lat or ((f"w żadnym roku ze zdjęciami nie rosła podobna uprawa" if n == 0 else
+                                     f"podobna uprawa rosła tylko w {n} {'roku' if n == 1 else 'latach'} ze zdjęciami")
+                                    + f", a do porównania potrzeba co najmniej {MIN_LAT_REF} takich lat")
         return Wynik(w.zrodlo, None, powod=powod, url=w.url, czas_ms=w.czas_ms, pobrano=w.pobrano)
     stack = np.stack([np.where(x["czyste"], x["ndmi"], np.nan) for _, x in refs])
     mu, sd = np.nanmean(stack, 0), np.maximum(np.nanstd(stack, 0), 0.03)

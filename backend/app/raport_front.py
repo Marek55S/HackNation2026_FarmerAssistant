@@ -25,6 +25,46 @@ TAGI = {"skrajna", "silna", "umiark.", "lekka", "brak"}
 AKTUALNE = ("granice", "rowy", "teren", "gleba — IUNG")   # dane w stanie obecnym (bez historii)
 
 
+
+# Grupy działań w kolejności z listy (1 · zatrzymaj wodę, 2 · na polu, 3 · nawadnianie), jako czynności.
+def _liczba(x: float, nd: int = 1) -> str:
+    """Liczba po polsku: przecinek dziesiętny („3,2”)."""
+    return f"{x:.{nd}f}".replace(".", ",")
+
+
+# Grupy działań w kolejności z listy: (kategoria, „zacznij od …” – dopełniacz, „potem …” – tryb rozkazujący).
+_GRUPY = (("ret", "zatrzymania wody na działce", "zatrzymaj wodę na działce"),
+          ("agro", "zmian w uprawie pola", "zmień sposób uprawy pola"),
+          ("irr", "przygotowania nawadniania", "przygotuj nawadnianie"))
+
+
+# Kategorie podatności gleb na suszę IUNG‑PIB (I = najbardziej podatne).
+_GLEBA_OPIS = {1: "Gleba bardzo podatna na suszę (kategoria I)", 2: "Gleba podatna na suszę (kategoria II)",
+               3: "Gleba średnio podatna na suszę (kategoria III)", 4: "Gleba mało podatna na suszę (kategoria IV)",
+               5: "Gleba organiczna"}
+
+
+def _ile_dzialan(n: int) -> str:
+    if n == 1:
+        return "jedno działanie"
+    if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
+        return f"{n} działania"
+    return f"{n} działań"
+
+
+def plan_zdanie(akcje: list[dict]) -> str:
+    """Nagłówek planu: ile działań i od czego zacząć — tylko grupy, które są w raporcie, w kolejności z listy."""
+    grupy = [g for g in _GRUPY if any(a.get("cat") == g[0] for a in akcje)]
+    ile = f"Plan ma {_ile_dzialan(len(akcje))}"
+    if not grupy:
+        return ile + "."
+    if len(grupy) == 1:
+        return f"{ile}: {grupy[0][2]}." if len(akcje) == 1 else f"{ile} — wszystkie dotyczą {grupy[0][1]}."
+    reszta = [g[2] for g in grupy[1:]]
+    potem = reszta[0] if len(reszta) == 1 else f"{reszta[0]}, a na końcu {reszta[1]}"
+    return f"{ile}. Zacznij od {grupy[0][1]}, potem {potem}."
+
+
 def _ring(rings):
     return max(rings, key=len)
 
@@ -211,32 +251,34 @@ def _map_info(out: dict, sur: dict) -> dict:
     gleba = out.get("gleba") or {}
     kat = sur.get("kat", 2)
     info = {
-        "plan": {"say": f"{len(akcje)} działań: najpierw zatrzymaj wodę, potem pole, na końcu nawadnianie." if akcje
-                 else "Nie widzimy potrzeby działań — obserwuj stan w kolejnych tygodniach.",
-                 "src": "Kliknij numer, aby zobaczyć, dlaczego właśnie tam."},
-        "gleba": {"say": f"Kategoria podatności gleby na suszę: {['', 'I', 'II', 'III', 'IV', 'gleba organiczna'][kat]}"
-                         + (f" · ok. {gleba['piasek']:.0f}% piasku, {gleba['soc']:.1f}% węgla" if gleba.get("piasek") is not None else "") + ".",
-                  "src": "Kategorie podatności gleb na suszę IUNG‑PIB · skład gleby ISRIC SoilGrids 250 m"},
+        "plan": {"say": plan_zdanie(akcje) if akcje
+                 else "Na razie nie trzeba nic robić. Sprawdź działkę ponownie za kilka tygodni.",
+                 "src": "Kliknij numer na mapie, żeby zobaczyć, dlaczego to działanie jest właśnie w tym miejscu."},
+        "gleba": {"say": _GLEBA_OPIS.get(kat, "Gleba o nieznanej podatności na suszę")
+                         + (f": ok. {gleba['piasek']:.0f}% piasku i {_liczba(gleba['soc'])}% węgla organicznego"
+                            if gleba.get("piasek") is not None else "") + ".",
+                  "src": "Podatność gleb na suszę: IUNG‑PIB · skład gleby: ISRIC SoilGrids (siatka 250 m)"},
     }
     if ter:
-        info["teren"] = {"say": f"Wysokość {ter['wys_min']:.0f}–{ter['wys_max']:.0f} m n.p.m., średni spadek {ter['spadek_sr']:.1f}%."
-                                + (" Linia pokazuje, którędy woda z ulew opuszcza działkę." if ter.get("wyplyw") else ""),
+        info["teren"] = {"say": f"Teren leży na wysokości {ter['wys_min']:.0f}–{ter['wys_max']:.0f} m n.p.m., średnie nachylenie "
+                                f"to {_liczba(ter['spadek_sr'])}%."
+                                + (" Ciemna linia pokazuje, którędy woda po ulewie spływa z działki." if ter.get("wyplyw") else ""),
                          "src": f"{ter.get('zrodlo', 'model terenu')} · rowy i wody: BDOT10k (stan obecny)"}
     else:
-        info["teren"] = {"say": "Model terenu niedostępny.", "src": "Copernicus DEM 30 m / NMT GUGiK 1 m"}
+        info["teren"] = {"say": "Nie udało się pobrać modelu terenu.", "src": "Copernicus DEM 30 m / NMT GUGiK 1 m"}
     if sat:
         y, m, d = sat["data"].split("-")
-        say = (f"Suszej niż zwykle jest ok. {sat['sucho_ha']:.1f} ha działki — tam w pierwszej kolejności woda."
-               if sat["sucho_ha"] >= 0.2 else "Cała działka jest suszsza niż zwykle." if sat["z_med"] < -1
-               else "Rośliny mają wilgotność typową dla tej pory roku.")
+        say = (f"Na ok. {_liczba(sat['sucho_ha'])} ha działki rośliny są suchsze niż zwykle — tam woda jest potrzebna najpierw."
+               if sat["sucho_ha"] >= 0.2 else "Rośliny na całej działce są suchsze niż zwykle." if sat["z_med"] < -1
+               else "Rośliny są tak wilgotne jak zwykle o tej porze roku.")
         ref = ", ".join(f"{yy} ({c})" for yy, c in (sat.get("uprawy_ref") or {}).items()) \
             or ", ".join(map(str, sat["lata_ref"]))
-        info["sucho"] = {"say": say, "src": f"Wilgotność roślin (NDMI) z {sat.get('sensor', 'Sentinel‑2')}, {d}.{m}.{y}, "
-                                            f"w porównaniu z tymi samymi dniami w sezonach z tą samą grupą upraw: {ref}"}
+        info["sucho"] = {"say": say, "src": f"Wilgotność roślin (wskaźnik NDMI) ze zdjęcia {sat.get('sensor', 'Sentinel‑2')} "
+                                            f"z {d}.{m}.{y}, porównana z tymi samymi dniami w latach, gdy rosła podobna uprawa: {ref}"}
     else:
         powod = next((b for b in out.get("braki", []) if b.startswith("stan roślin")), "brak bezchmurnego zdjęcia")
-        info["sucho"] = {"say": "Brak porównania satelitarnego — " + powod.removeprefix("stan roślin z satelity niedostępny: ") + ".",
-                         "src": "Sentinel‑2 / Landsat · porównujemy tylko sezony z tą samą grupą upraw"}
+        info["sucho"] = {"say": "Nie porównujemy zdjęć satelitarnych: " + powod.removeprefix("stan roślin z satelity niedostępny: ") + ".",
+                         "src": "Sentinel‑2 / Landsat · porównujemy tylko lata, gdy rosła podobna uprawa"}
     return info
 
 

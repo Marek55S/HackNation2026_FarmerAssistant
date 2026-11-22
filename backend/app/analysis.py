@@ -479,7 +479,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     P60 = m.suma(m.P, a60, b60) or 0.0
     E60 = m.suma(m.ET0, a60, b60) or 0.0
     normP, normE = [], []
-    for k in range(1, 31):
+    for k in range(1, C.LATA_NORMY + 1):
         pa, pb = _shift(a60, -k), _shift(b60, -k)
         if pa in m.idx and pb in m.idx:
             normP.append(m.suma(m.P, pa, pb))
@@ -923,7 +923,7 @@ async def analizuj(ident: str | None, lon: float | None, lat: float | None, D: d
     det.append(f"Zapas wody w strefie korzeni {fmt(TAW - Dr)} z {fmt(TAW)} mm ({fmt(100 * F4)}%), próg stresu (RAW, p={u.p}) "
                f"{fmt(100 * F4p)}% · bilans dobowy FAO‑56 od {m.dni[0]:%Y}, Kc dziś {kc:.2f} ({faza}), odpływ SCS‑CN λ=0,05, CN={CN}")
     if nP:
-        det.append(f"Opad {a60:%d.%m}–{b60:%d.%m.%Y}: {fmt(P60)} mm vs średnia 30 lat {fmt(nP)} mm; ET0 {fmt(E60)} vs {fmt(nE or 0)} mm; dni >30°C: {upal}")
+        det.append(f"Opad {a60:%d.%m}–{b60:%d.%m.%Y}: {fmt(P60)} mm vs średnia {C.LATA_NORMY} lat {fmt(nP)} mm; ET0 {fmt(E60)} vs {fmt(nE or 0)} mm; dni >30°C: {upal}")
     det.append(f"Historia {lata[0]}–{lata[-1]}: susza (próg IUNG, a dla upraw bez progu – dni stresu FAO‑56) w {F5} z {len(hist_ok)} sezonów"
                + (f", najczęściej w miesiącach: {', '.join(MIES[x - 1] for x, _ in mies.most_common(3))}" if mies else "")
                + f" (każdy sezon oceniony dla uprawy, która wtedy rosła: {n_upr_znane} z {len(hist)} lat z ARiMR / mapy upraw "

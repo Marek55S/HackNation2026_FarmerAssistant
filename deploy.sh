@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wdrożenie Asystenta Wodnego na Google Cloud Run (backend + frontend).
+# Wdrożenie Hydrowise na Google Cloud Run (backend + frontend).
 #
 #   ./deploy.sh               oba serwisy
 #   ./deploy.sh backend       tylko backend
@@ -14,6 +14,11 @@ PROJECT=asystent-wodny-hn26
 REGION=europe-central2
 REPO="$REGION-docker.pkg.dev/$PROJECT/asystent"
 BACKEND_SERVICE=asystent-backend
+# Trwały cache backendu (pogoda Open‑Meteo, zdjęcia satelitarne, DEM, zlewnie…) – katalog .cache w kontenerze jest
+# montowany z tego bucketu, więc dane pobrane raz zostają dla wszystkich instancji i kolejnych wdrożeń.
+# Bez tego każda nowa instancja pobierała historię pogody od nowa i wyczerpywała darmowy limit Open‑Meteo (HTTP 429).
+CACHE_BUCKET="$PROJECT-cache"
+CACHE_DAYS=180   # starsze pliki cache są usuwane (i pobierane ponownie przy potrzebie) – koszt bucketu zostaje mały
 FRONTEND_SERVICE=asystent-wodny
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -59,8 +64,33 @@ check() { # check <nazwa> <url>
   echo "$1 OK ($2)"
 }
 
+# Bucket na cache + prawo zapisu dla konta usługi backendu. Idempotentne: przy kolejnych wdrożeniach tylko sprawdza.
+ensure_cache_bucket() {
+  local sa number
+  if ! gcloud storage buckets describe "gs://$CACHE_BUCKET" --project "$PROJECT" >/dev/null 2>&1; then
+    log "Cache: tworzenie bucketu gs://$CACHE_BUCKET ($REGION, usuwanie plików po $CACHE_DAYS dniach)"
+    gcloud storage buckets create "gs://$CACHE_BUCKET" --project "$PROJECT" --location "$REGION" \
+      --uniform-bucket-level-access --public-access-prevention --quiet
+    local rule
+    rule="$(mktemp)"
+    printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":%d}}]}' "$CACHE_DAYS" >"$rule"
+    gcloud storage buckets update "gs://$CACHE_BUCKET" --lifecycle-file "$rule" --quiet
+    rm -f "$rule"
+  fi
+  # Konto, na którym działa backend (domyślne konto Compute Engine, jeśli serwis nie ma własnego).
+  sa="$(gcloud run services describe "$BACKEND_SERVICE" --project "$PROJECT" --region "$REGION" \
+        --format='value(spec.template.spec.serviceAccountName)' 2>/dev/null || true)"
+  if [[ -z "$sa" ]]; then
+    number="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+    sa="$number-compute@developer.gserviceaccount.com"
+  fi
+  gcloud storage buckets add-iam-policy-binding "gs://$CACHE_BUCKET" --project "$PROJECT" \
+    --member "serviceAccount:$sa" --role roles/storage.objectUser --quiet >/dev/null
+}
+
 deploy_backend() {
   local img="$REPO/backend:$TAG"
+  ensure_cache_bucket
   log "Backend: budowanie $img"
   docker build --target run --build-context dane=dane -t "$img" backend
   built+=("$img")
@@ -70,6 +100,9 @@ deploy_backend() {
   gcloud run deploy "$BACKEND_SERVICE" --project "$PROJECT" --region "$REGION" --image "$img" \
     --allow-unauthenticated --memory 2Gi --cpu 2 --timeout 300 --max-instances 3 \
     --set-secrets CDSE_CLIENT_ID=cdse-client-id:latest,CDSE_CLIENT_SECRET=cdse-client-secret:latest \
+    --execution-environment gen2 \
+    --add-volume "name=cache,type=cloud-storage,bucket=$CACHE_BUCKET,mount-options=uid=1000;gid=1000" \
+    --add-volume-mount volume=cache,mount-path=/srv/backend/.cache \
     --quiet
 }
 

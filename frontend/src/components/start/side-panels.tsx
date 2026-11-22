@@ -100,7 +100,7 @@ const STORY: { match: RegExp; icon: string; say: string }[] = [
   { match: /^Granice/, icon: ICON.fields, say: "Szukam granic działki i upraw" },
   { match: /^Prognoza/, icon: ICON.calendar, say: "Sprawdzam prognozę na najbliższe dni" },
   { match: /po tamtym dniu/, icon: ICON.calendar, say: "Uzupełniam pogodę po tamtym dniu" },
-  { match: /^Pogoda/, icon: ICON.rain, say: "Zbieram pogodę z 30 lat" },
+  { match: /^Pogoda/, icon: ICON.rain, say: "Zbieram pogodę z 10 lat" },
   { match: /^Gleba/, icon: ICON.sand, say: "Sprawdzam, jaka jest gleba" },
   { match: /^Rzeźba/, icon: ICON.slope, say: "Czytam ukształtowanie terenu" },
   { match: /^Rowy/, icon: ICON.ditch, say: "Szukam rowów i zbiorników w okolicy" },

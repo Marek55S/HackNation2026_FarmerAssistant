@@ -259,7 +259,7 @@ export function PrintDocument({ report, url, figures, madeOn }: { report: Report
   const condFigs = specs.filter((s) => s.layer !== "plan");
   const crops = r.parts.map((x) => x.crop?.name.toLowerCase()).filter(Boolean).join(", ") || r.crop?.name.toLowerCase() || "nie wskazano";
   const history = r.justification?.history ?? [];
-  const footer = `Asystent Wodny · działka ${p.number} · ${shortDate(r.date)}`.replace(/["\\]/g, "");
+  const footer = `Hydrowise · działka ${p.number} · ${shortDate(r.date)}`.replace(/["\\]/g, "");
 
   let ch = 0;
   const next = () => ++ch;
@@ -270,7 +270,7 @@ export function PrintDocument({ report, url, figures, madeOn }: { report: Report
       <style>{`@page { @bottom-left { content: "${footer}"; font: 8pt 'Inter Variable', Inter, sans-serif; color: #687266; } @bottom-right { content: "Strona " counter(page) " z " counter(pages); font: 8pt 'Inter Variable', Inter, sans-serif; color: #687266; } }`}</style>
 
       <header className="pd-title">
-        <p className="pd-kicker">Asystent Wodny · raport wodny działki rolnej</p>
+        <p className="pd-kicker">Hydrowise · raport wodny działki rolnej</p>
         <h1>Działka {p.number}</h1>
         <p className="pd-sub">
           {crops} · stan na {r.dateLong}

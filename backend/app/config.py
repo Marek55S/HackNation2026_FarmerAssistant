@@ -12,6 +12,11 @@ KC_POZA = 0.3
 
 # Scenariusze (etap 3b)
 N_SCEN = 10                   # 10 albo 30 – rozstrzyga hindcast (T12.8)
+# Ile pełnych minionych lat pogody pobieramy z Open‑Meteo: 10 sezonów historii i scenariuszy + 1 rok na rozruch bilansu
+# wody w glebie (startuje od pełnego profilu). 31 lat liczyło się jako ok. 800 wywołań darmowego limitu (600/min,
+# 10 000/dobę) i kończyło się HTTP 429; 11 lat to ok. 290. Norma opadu i parowania jest teraz z 10 lat.
+LATA_POGODY = 11
+LATA_NORMY = 10
 PROG_SUSZA_NADCHODZI = 0.70   # udział przebiegów
 PROG_ZAGROZENIE = 0.30
 

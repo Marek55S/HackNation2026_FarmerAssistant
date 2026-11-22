@@ -1,4 +1,4 @@
-// Asystent Wodny service worker.
+// Hydrowise service worker.
 // - pages: network first, cached copy when offline (the last opened report works in the field)
 // - static assets (/_next/static, icons, fonts): cache first
 // - map tiles (Geoportal orthophoto, OpenStreetMap): cache first, last ~600 tiles kept

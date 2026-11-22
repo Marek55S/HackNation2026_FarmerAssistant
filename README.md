@@ -1,4 +1,4 @@
-# Asystent Wodny
+# Hydrowise
 
 **HackNation 2026 · zadanie KOWR „Zatrzymaj wodę, chroń plony – inteligentne wsparcie gospodarowania wodą w rolnictwie”**
 
@@ -41,7 +41,10 @@ corepack pnpm dev
   Bez nich zdjęcia satelitarne idą z Microsoft Planetary Computer, a mapa upraw Copernicus (2017–2024) jest niedostępna.
 - W Dockerze: `docker compose up dev` w `backend/` i w `frontend/` (dwa terminale).
 - Wdrożenie na Google Cloud Run: `./deploy.sh` (buduje obrazy z zacommitowanego kodu, wdraża i sprawdza oba serwisy;
-  klucze CDSE są w Secret Manager).
+  klucze CDSE są w Secret Manager). Cache backendu (pogoda, zdjęcia satelitarne, DEM, zlewnie) leży w buckecie
+  `gs://asystent-wodny-hn26-cache` zamontowanym jako `.cache` – dane pobrane raz zostają dla wszystkich instancji
+  i wdrożeń, więc nowa instancja nie wyczerpuje darmowego limitu Open‑Meteo. `deploy.sh` sam zakłada bucket
+  (pliki starsze niż 180 dni są usuwane) i daje kontu usługi backendu prawo zapisu.
 
 ---
 

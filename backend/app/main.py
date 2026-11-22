@@ -23,7 +23,7 @@ import os
 FRONT = Path(os.environ.get("AW_STATIC_DIR", Path(__file__).resolve().parents[2] / "frontend_html"))
 ID_RE = re.compile(r"^[0-9A-Za-z_./-]{5,60}$")
 
-app = FastAPI(title="Asystent Wodny – API", version="0.1")
+app = FastAPI(title="Hydrowise – API", version="0.1")
 
 
 class CzescWybor(BaseModel):

@@ -16,7 +16,7 @@ import httpx
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / ".cache"
 CACHE_DIR.mkdir(exist_ok=True)
-UA = {"User-Agent": "AsystentWodny/0.1 (prototyp HackNation)"}
+UA = {"User-Agent": "Hydrowise/0.1 (prototyp HackNation)"}
 
 
 def limit(s: float) -> httpx.Timeout:

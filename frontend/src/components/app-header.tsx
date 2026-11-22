@@ -32,7 +32,7 @@ export function AppHeader({
           <Logo size={30} />
           <span className="flex flex-col leading-tight">
             <span className="brand-name font-[family-name:var(--font-display)] text-[17px] font-bold tracking-tight text-heading">
-              Asystent Wodny
+              Hydrowise
             </span>
             <span className="brand-sub text-[11px] text-muted max-sm:hidden">woda na Twojej działce</span>
           </span>

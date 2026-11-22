@@ -15,7 +15,7 @@ export function stepDefs(date: string, isToday: boolean): StepDef[] {
   const win = historyWindow(date);
   return [
     { label: "Granice działki i uprawy", src: "ULDK GUGiK · deklaracje ARiMR · mapa upraw Copernicus", seconds: 0.8 },
-    { label: `Pogoda ${y - 30}–${y}`, src: "Open-Meteo ERA5-Land · opad, parowanie, wilgotność gleby", seconds: 0.8 },
+    { label: `Pogoda ${y - 11}–${y}`, src: "Open-Meteo ERA5-Land · opad, parowanie, wilgotność gleby", seconds: 0.8 },
     { label: "Gleba i pokrycie terenu", src: "kategoria podatności IUNG-PIB + SoilGrids", seconds: 0.6 },
     { label: "Rzeźba terenu", src: "NMT GUGiK 1 m (z pamięci) albo Copernicus DEM 30 m", seconds: 0.6 },
     { label: "Rowy, cieki i zbiorniki", src: "BDOT10k (paczka powiatu)", seconds: 0.6 },

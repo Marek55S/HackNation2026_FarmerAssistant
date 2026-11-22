@@ -65,7 +65,7 @@ def test_anomalia_filtruje_lata_i_odmawia_przy_malej_probie():
     zbo = satellite.anomalia(w, {2019, 2021, 2024})
     assert zbo.ok and zbo.dane["lata_ref"] == [2019, 2021, 2024] and zbo.dane["z_med"] < -1   # suszej niż zwykle zboża
     malo = satellite.anomalia(w, {2019, 2021})
-    assert not malo.ok and "za mało sezonów" in malo.powod
+    assert not malo.ok and "potrzeba co najmniej 3" in malo.powod
     powod = satellite.anomalia(w, set(), "mapa upraw nie odpowiedziała")
     assert not powod.ok and powod.powod == "mapa upraw nie odpowiedziała"
 

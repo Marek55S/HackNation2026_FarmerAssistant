@@ -56,7 +56,7 @@ Okno historii: `[D − 10 lat, D]`. Dla SPEI dodatkowo 30 lat przed `D`.
 
 | # | Dane | Źródło / endpoint | Zakres czasu | Fallback |
 |---|---|---|---|---|
-| P1 | opad, ET0 (FAO‑56), Tmax, Tmin – dobowo | Open‑Meteo Archive `archive-api.open-meteo.com/v1/archive?latitude=…&longitude=…&start_date=…&end_date=D&daily=precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,temperature_2m_min` | 30 lat przed `D` (1 zapytanie) | stacje IMGW (archiwum dobowe) |
+| P1 | opad, ET0 (FAO‑56), Tmax, Tmin – dobowo | Open‑Meteo Archive `archive-api.open-meteo.com/v1/archive?latitude=…&longitude=…&start_date=…&end_date=D&daily=precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,temperature_2m_min` | 10 lat przed `D` + rok na rozruch bilansu (zmiana 22.11.2026: 30 lat przekraczało darmowy limit Open‑Meteo, HTTP 429) | stacje IMGW (archiwum dobowe) |
 | P2 | wilgotność gleby 0–7 / 7–28 / 28–100 cm | Open‑Meteo Archive `daily=soil_moisture_0_to_7cm_mean,soil_moisture_7_to_28cm_mean,soil_moisture_28_to_100cm_mean` (dobowe – 0,6 s; godzinowe 4 s) | 10 lat | brak → bez tego wskaźnika |
 | P3 | prognoza 16 dni (opad, ET0); reguły używają 7 dni (F11) | Open‑Meteo Forecast `api.open-meteo.com/v1/forecast` | tylko gdy `D` = dziś | dla dat archiwalnych **klimatologia** (średnie z 10 lat dla kolejnych 7 dni) |
 | P4 | kategoria podatności gleby I–IV **+ pokrycie terenu** | IUNG WMS `sgeo.iung.pl/geoserver/Susza/wms`, warstwa `Susza:katgl_landuse2024`, GetFeatureInfo w 5–9 punktach działki → dominanta. Kody: 1–4 kategorie, **5 gleby organiczne**, 11 las, 12 woda, 13 zabudowa, 14 drogi/nieużytki, 19/99 niesklasyfikowane | stała | SoilGrids → kategoria z uziarnienia |
@@ -89,7 +89,7 @@ Okno historii: `[D − 10 lat, D]`. Dla SPEI dodatkowo 30 lat przed `D`.
 | **F4p próg stresu** | `1 − p` (p z FAO‑56 dla uprawy, np. kukurydza 0,55) | F0 | 45% |
 | **F5 częstość suszy** | dla każdego z 10 sezonów: czy w którymkolwiek okresie KBW < próg (dla **uprawy z tego roku**, F0h); liczba lat + miesiące z największą liczbą przekroczeń | P1, P6, F0h | 5 z 10, VI–VII |
 | **F5s potrzeba wody w sezonie** | dla każdego z 10 lat: `Σ(ET0×Kc − opad_eff)` w oknie wrażliwości uprawy → mediana i 80. percentyl | P1, F0 | 60 / 110 mm |
-| **F14 opad vs norma** | opad 60 dni / średnia z tych samych dni w 30 latach; SPI/SPEI‑2 | P1 | 53%, SPEI −1,7 |
+| **F14 opad vs norma** | opad 60 dni / średnia z tych samych dni w 10 latach (wcześniej 30 — patrz P1); SPI/SPEI‑2 | P1 | 53%, SPEI −1,7 |
 | **F15 upał** | liczba dni z Tmax > 30°C w 30 dniach przed D; ET0 60 dni vs norma | P1 | 9 dni |
 | **F7 spadek** | spadek z NMT; maksymalny i średni w działce, mapa stref > 3% | P7 | maks. 7% (wschód) |
 | **F7b spływ** | kierunki i akumulacja spływu (D8); punkty, w których spływ wychodzi poza działkę; udział odpływu metodą SCS‑CN (λ = 0,05, zob. METODY.md §2) dla dni z opadem > 10 mm | P7, F6 | 18% |
@@ -254,7 +254,7 @@ jako uzasadnienie. Każda karta zalecenia dostaje też **„Co zyskasz”** z F2
 | Krok | Szacunek | Uwagi |
 |---|---|---|
 | ULDK | < 1 s | – |
-| P1–P6, P9, P12 równolegle | 2–4 s | Open‑Meteo: 1 zapytanie na 30 lat |
+| P1–P6, P9, P12 równolegle | 2–4 s | Open‑Meteo: archiwum 10 lat + rok rozruchu |
 | P7 teren | < 1 s (Copernicus DEM 30 m) | NMT 1 m z GUGiK trwa 60–117 s → w tle / cache |
 | P8 rowy | 1–2 s (4 pliki z ZIP-a przez HTTP Range) | < 0,1 s z cache powiatu |
 | P10 satelita, 10 sezonów | 5–15 s | Planetary Computer, okna wrażliwości, ≤ 3 sceny/sezon, ≤ 40% chmur, odczyt tylko pikseli działki z COG; wyniki per (działka, scena) w cache |

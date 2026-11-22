@@ -1,4 +1,4 @@
-# Asystent Wodny – instrukcje dla Claude Code
+# Hydrowise – instrukcje dla Claude Code
 
 ## Projekt
 - Plan i logika: `pipeline_plan.md` (identyfikatory P*, F*, C*, R*), zadania: `TODO.md`, metody: `METODY.md`, źródła: `ZRODLA_DANYCH.md`.

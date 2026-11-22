@@ -10,6 +10,7 @@ from pathlib import Path
 import httpx
 
 from . import geo
+from . import config as C
 from .net import Wynik, get
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -82,11 +83,11 @@ METEO_DAILY = ("precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,
                "soil_moisture_0_to_7cm_mean,soil_moisture_7_to_28cm_mean,soil_moisture_28_to_100cm_mean")
 
 
-async def meteo_archiwum(client, lat: float, lon: float, d: date, lata: int = 31) -> Wynik:
-    """30 lat przed `D` (+ rok zapasu na rozruch bilansu); siatka zaokrąglona do 0,05° (cache).
+async def meteo_archiwum(client, lat: float, lon: float, d: date, lata: int = C.LATA_POGODY) -> Wynik:
+    """10 lat przed `D` (+ rok zapasu na rozruch bilansu); siatka zaokrąglona do 0,05° (cache).
 
     Open‑Meteo liczy zapytanie o długi okres jako wiele wywołań (każde 2 tygodnie ≈ 1 wywołanie), a darmowy limit
-    to 600/min i 10 000/dobę — 31 lat naraz to ok. 800 wywołań. Dlatego pobieramy osobno pełne minione lata
+    to 600/min i 10 000/dobę — 11 lat to ok. 290 wywołań (31 lat było ok. 800 i kończyło się HTTP 429). Pobieramy osobno pełne minione lata
     (cache bez wygasania, ten sam dla każdej daty D w danej komórce siatki) i bieżący rok do D (mały koszt)."""
     end = min(d, date.today() - timedelta(days=1))
     url = "https://archive-api.open-meteo.com/v1/archive"

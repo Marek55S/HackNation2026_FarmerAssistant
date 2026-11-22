@@ -1,4 +1,4 @@
-# Asystent Wodny — frontend (PWA)
+# Hydrowise — frontend (PWA)
 
 Next.js 16 + TypeScript + Tailwind 4, the same setup as [quickReport](https://github.com/Marek55S/quickReport).
 The UI follows the mockups in [`../makieta-ui`](../makieta-ui). Data comes from the Python backend in [`../backend`](../backend) (`BACKEND_URL`, default `http://127.0.0.1:8000`).

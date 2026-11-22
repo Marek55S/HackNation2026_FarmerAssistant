@@ -11,9 +11,9 @@ import "./globals.css";
 const THEME_SCRIPT = `try{var t=localStorage.getItem("asystent-wodny:wyglad");if(t==="trace"){document.documentElement.dataset.theme="trace";var m=document.querySelector('meta[name="theme-color"]');if(m)m.content="#0c1113"}}catch(e){}`;
 
 export const metadata: Metadata = {
-  title: { default: "Asystent Wodny", template: "%s · Asystent Wodny" },
+  title: { default: "Hydrowise", template: "%s · Hydrowise" },
   description: "Woda na Twojej działce — susza, przyczyny i co zrobić, z bezpłatnych danych publicznych.",
-  appleWebApp: { capable: true, title: "Asystent Wodny", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Hydrowise", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
