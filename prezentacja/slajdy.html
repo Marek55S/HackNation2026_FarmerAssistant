@@ -69,13 +69,14 @@ p { margin: 0; }
 .step p { font-size: 19px; color: var(--muted); margin-top: 4px; }
 
 /* 3 */
-.src { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; flex: 1; min-height: 0; }
-.card { background: var(--paper); border: 1px solid var(--rule); border-radius: 20px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 12px; border-top: 6px solid var(--c); min-height: 0; }
-.card .th { flex: 1; min-height: 0; background: #fff; border-radius: 12px; display: grid; place-items: center; overflow: hidden; }
-.card .th img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-.card h3 { font-size: 22px; }
-.card .api { font-size: 15px; font-weight: 600; color: var(--c); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
-.card p { font-size: 16px; color: var(--ink-2); line-height: 1.35; }
+.src { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: 18px 22px; flex: 1; min-height: 0; }
+.card { background: var(--paper); border: 1px solid var(--rule); border-radius: 20px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; border-top: 6px solid var(--c); min-height: 0; }
+.card .th { flex: 1; min-height: 0; background: #fff; border-radius: 12px; overflow: hidden; display: grid; place-items: center; padding: 6px; }
+.card .th img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.card h3 { font-size: 22px; line-height: 1.15; }
+.card .api { font-size: 13px; font-weight: 600; color: var(--c); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+.card p { font-size: 15px; color: var(--ink-2); line-height: 1.3; }
+.card p b { color: var(--ink); font-weight: 700; }
 .flowbar { display: flex; align-items: center; gap: 16px; font-family: var(--f-d); font-weight: 700; font-size: 22px; color: var(--ink-2); }
 .flowbar span { background: var(--paper); border: 1px solid var(--rule); border-radius: 99px; padding: 10px 22px; }
 .flowbar span.on { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -118,7 +119,7 @@ p { margin: 0; }
 .mc .k { font-family: var(--f-d); font-weight: 800; font-size: 64px; color: var(--primary); line-height: 1; opacity: .25; }
 .mc h3 { font-size: 30px; line-height: 1.15; }
 .mc .frame { flex: 1; background: #fff; display: grid; place-items: center; padding: 14px; }
-.mc .frame img { object-fit: contain; object-position: center; }
+.mc .frame img { object-fit: contain; object-position: center; max-width: 100%; max-height: 100%; }
 .mc .cap { font-size: 19px; }
 .strip { font-size: 20px; color: var(--ink-2); background: var(--paper); border: 1px solid var(--rule); border-radius: 16px; padding: 16px 24px; }
 
@@ -130,7 +131,29 @@ p { margin: 0; }
 .chain .n.dark { background: var(--primary); border-color: var(--primary); }
 .chain .n.dark b, .chain .n.dark span { color: #f1f3ea; }
 .chain i { align-self: center; font-style: normal; font-size: 28px; color: var(--muted); }
-.formula { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 19px; background: var(--chip); border-radius: 12px; padding: 16px 20px; line-height: 1.6; white-space: pre; color: var(--ink); }
+.formula { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 18px; background: var(--chip); border-radius: 12px; padding: 14px 18px; line-height: 1.55; white-space: pre; color: var(--ink); }
+.dec8 { display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; flex: 1; min-height: 0; }
+.dec8 .viz { background: var(--paper); border: 1px solid var(--rule); border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.dec8 .viz h3 { font-size: 24px; }
+.dec8 .viz .frame { flex: 1; background: #fff; border-radius: 14px; display: grid; place-items: center; padding: 8px; min-height: 0; }
+.dec8 .viz .frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.dec8 .big { display: flex; gap: 14px; align-items: stretch; flex: none; }
+.dec8 .big .n { flex: 1; border-radius: 14px; padding: 12px 14px; text-align: center; }
+.dec8 .big .n.bad { background: #f8e4e1; }
+.dec8 .big .n.good { background: #e4ead9; }
+.dec8 .big .n b { display: block; font-family: var(--f-d); font-size: 42px; line-height: 1; }
+.dec8 .big .n.bad b { color: var(--red); }
+.dec8 .big .n.good b { color: var(--ret); }
+.dec8 .big .n span { font-size: 14px; color: var(--ink-2); }
+.dec8 .right { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.dec8 .right .box { padding: 18px 20px; gap: 12px; flex: none; }
+.dec8 .right .box.grow { flex: 1; min-height: 0; }
+.dec8 .right .box .frame { flex: 1; min-height: 0; }
+.slide.s8 { gap: 22px; padding-top: 64px; padding-bottom: 56px; }
+.slide.s8 h2 { font-size: 46px; }
+.slide.s8 .chain .n { padding: 14px 16px; }
+.slide.s8 .chain .n b { font-size: 22px; }
+.slide.s8 .formula { font-size: 16px; padding: 12px 14px; }
 
 /* 9 */
 .sig { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -190,19 +213,47 @@ p { margin: 0; }
 
 <!-- 3 ─────────────────────────────── -->
 <section class="slide">
-  <div><span class="eyebrow">Krok 2 · dane</span></div>
-  <h2>Dla każdej działki pobieramy na żywo dane z 5 wymaganych kategorii</h2>
+  <div><span class="eyebrow">Krok 2 · dane · działka 47/15</span></div>
+  <h2>Sześć warstw z API – heatmapy i geometrie dla tej działki</h2>
   <div class="src">
-    <div class="card" style="--c: var(--primary)"><div class="th"><img src="img/c_uldk.png" alt=""></div><h3>Granica działki</h3><span class="api">ULDK · GUGiK</span><p>geometria, gmina, obręb</p></div>
-    <div class="card" style="--c: var(--irr)"><div class="th"><img src="img/c_meteo.png" alt=""></div><h3>Pogoda 31 lat + prognoza</h3><span class="api">Open‑Meteo · IMGW‑PIB</span><p>opad i parowanie ET0 dzień po dniu</p></div>
-    <div class="card" style="--c: var(--agro)"><div class="th"><img src="img/c_iung.png" alt=""></div><h3>Podatność gleby na suszę</h3><span class="api">IUNG‑PIB</span><p>kategoria I–V i progi suszy rolniczej</p></div>
-    <div class="card" style="--c: var(--agro)"><div class="th"><img src="img/c_soil.png" alt=""></div><h3>Skład gleby</h3><span class="api">ISRIC SoilGrids</span><p>piasek, ił, węgiel → ile wody trzyma gleba</p></div>
-    <div class="card" style="--c: var(--amber)"><div class="th"><img src="img/c_uprawy.png" alt=""></div><h3>Uprawy rok po roku</h3><span class="api">ARiMR · Copernicus CLMS</span><p>co rosło w każdym z 10 lat</p></div>
-    <div class="card" style="--c: #123f78"><div class="th"><img src="img/c_dem.png" alt=""></div><h3>Rzeźba terenu</h3><span class="api">Copernicus DEM · NMT Geoportal</span><p>spadki, spływ, zagłębienia</p></div>
-    <div class="card" style="--c: #123f78"><div class="th"><img src="img/c_bdot.png" alt=""></div><h3>Rowy, cieki, zlewnia</h3><span class="api">BDOT10k · MPHP10k · IMGW</span><p>rów 3 m od granicy</p></div>
-    <div class="card" style="--c: var(--ret)"><div class="th"><img src="img/c_ndmi.png" alt=""></div><h3>Wilgotność roślin</h3><span class="api">Sentinel‑2 NDMI · EDO</span><p>woda w liściach, tło suszy w Europie</p></div>
+    <div class="card" style="--c: var(--irr)">
+      <div class="th"><img src="img/hm_pogoda.png" alt="Heatmapa kalendarzowa P−ET0"></div>
+      <h3>Pogoda</h3>
+      <span class="api">Open‑Meteo · ERA5‑Land</span>
+      <p>każdy dzień: <b>P − ET0</b> (czerwony = deficyt); 31 lat + prognoza 7 dni</p>
+    </div>
+    <div class="card" style="--c: var(--agro)">
+      <div class="th"><img src="img/hm_gleba.png" alt="Kategoria gleby IUNG i piasek SoilGrids"></div>
+      <h3>Gleba</h3>
+      <span class="api">IUNG‑PIB · ISRIC SoilGrids</span>
+      <p><b>kat. I</b> w punktach działki · <b>71% piasku</b> → mała pojemność wodna</p>
+    </div>
+    <div class="card" style="--c: #123f78">
+      <div class="th"><img src="img/hm_teren.png" alt="Copernicus DEM heatmapa wysokości"></div>
+      <h3>Rzeźba terenu</h3>
+      <span class="api">Copernicus DEM 30 m</span>
+      <p>wysokość → spadki i spływ D8; tu <b>53% działki wypływa jednym punktem</b></p>
+    </div>
+    <div class="card" style="--c: var(--ret)">
+      <div class="th"><img src="img/hm_ndmi.png" alt="Raster NDMI Sentinel-2"></div>
+      <h3>Wilgotność (satelita)</h3>
+      <span class="api">Sentinel‑2 NDMI · CDSE</span>
+      <p>woda w liściach w masce działki; potem <b>z‑score vs lata z kukurydzą</b></p>
+    </div>
+    <div class="card" style="--c: #123f78">
+      <div class="th"><img src="img/hm_hydro.png" alt="Rowy cieki zbiorniki BDOT10k"></div>
+      <h3>Rowy, cieki, zbiorniki</h3>
+      <span class="api">BDOT10k · MPHP10k</span>
+      <p>hydrografia do 600 m; tu rów <b>3 m</b> od granicy → R1</p>
+    </div>
+    <div class="card" style="--c: var(--amber)">
+      <div class="th"><img src="img/hm_uprawy.png" alt="Podział działki na uprawy ARiMR"></div>
+      <h3>Uprawy na działce</h3>
+      <span class="api">ARiMR GSA 2025</span>
+      <p>split kolorami: <b>kukurydza 9,73 ha</b> + zboża jare 0,12 ha</p>
+    </div>
   </div>
-  <div class="flowbar"><span>13 źródeł na żywo</span><i>→</i><span>fakty F0–F21</span><i>→</i><span>przyczyny C1–C6</span><i>→</i><span>reguły R1–R9</span><i>→</i><span class="on">raport z mapą i PDF</span></div>
+  <div class="flowbar"><span>13 API na żywo</span><i>→</i><span>warstwy działki</span><i>→</i><span>metryki</span><i>→</i><span>reguły R1–R9</span><i>→</i><span class="on">raport</span></div>
   <span class="num">3</span>
 </section>
 
@@ -279,48 +330,61 @@ p { margin: 0; }
 
 <!-- 7 ─────────────────────────────── -->
 <section class="slide">
-  <div><span class="eyebrow">Metoda</span></div>
+  <div><span class="eyebrow">Metoda · trzy kluczowe metryki</span></div>
   <h2>Trzy decyzje, które odróżniają ocenę działki od mapy suszy</h2>
   <div class="meth">
-    <div class="mc"><span class="k">01</span><h3>Próg suszy zależy od uprawy i gleby</h3>
+    <div class="mc"><span class="k">01</span><h3>KBW względem progu IUNG</h3>
       <div class="frame"><img src="img/c_kbw.png" alt="Klimatyczny bilans wodny względem progu IUNG"></div>
-      <p class="cap">Klimatyczny bilans wodny z 61 dni porównany z progiem IUNG dla <b>kukurydzy na glebie kat. I</b>: −127 mm przy progu −156 mm.</p></div>
-    <div class="mc"><span class="k">02</span><h3>Woda w glebie liczona dzień po dniu</h3>
+      <p class="cap"><b>KBW = Σ(P − ET0)</b> w 60 dniach vs próg IUNG dla <b>tej uprawy i gleby</b>. Tu −127 mm przy progu −156 mm.</p></div>
+    <div class="mc"><span class="k">02</span><h3>Zapas wody w korzeniach</h3>
       <div class="frame"><img src="img/c_bilans.png" alt="Zapas wody w strefie korzeni 2025"></div>
-      <p class="cap">Bilans FAO‑56: opad, parowanie, faza uprawy i pojemność gleby. Zapas <b>41% przy progu stresu 45%</b> – kukurydza już cierpi.</p></div>
-    <div class="mc"><span class="k">03</span><h3>Satelita porównany z latami tej samej uprawy</h3>
-      <div class="frame"><img src="img/c_ndmi_z.png" alt="Odchylenie NDMI na działce"></div>
-      <p class="cap">Odchylenie NDMI liczone tylko względem <b>2021–2023, gdy rosła kukurydza</b> – inaczej mierzylibyśmy różnicę roślin, nie suszę. Wynik: 2,3 ha najsuchszej strefy.</p></div>
+      <p class="cap">FAO‑56 dzień po dniu: opad − ETc względem pojemności gleby. Tu <b>41% &lt; próg stresu 45%</b> (Ks&lt;1).</p></div>
+    <div class="mc"><span class="k">03</span><h3>Odchylenie NDMI (z‑score)</h3>
+      <div class="frame"><img src="img/c_ndmi_z.png" alt="z-score NDMI na działce"></div>
+      <p class="cap"><b>z = (NDMI − μ) / σ</b> tylko vs lata z kukurydzą. Inaczej mierzymy rośliny, nie suszę. Tu z = −0,4 · <b>2,3 ha</b>.</p></div>
   </div>
-  <p class="strip">Historię 10 sezonów liczymy dla uprawy, która rosła w danym roku (ARiMR, Copernicus) · spływ D8 i zagłębienia na modelu terenu · brak danych = jawny komunikat, nie zgadywanie</p>
+  <p class="strip">To trzy metryki, które decydują o diagnozie – nie pełna mapa suszy dla województwa, tylko liczby z tej działki, uprawy i gleby.</p>
   <span class="num">7</span>
 </section>
 
 <!-- 8 ─────────────────────────────── -->
-<section class="slide">
+<section class="slide s8">
   <div><span class="eyebrow">Model decyzyjny</span></div>
-  <h2>Od faktów do działania: reguły, scenariusze i miejsce na mapie</h2>
+  <h2>Od metryk do działania – bez zgadywania, z jawnym „ile zmienia”</h2>
   <div class="chain">
-    <div class="n"><b>Fakty F0–F21</b><span>zapas wody, bilans, susza w historii, spadek, rów, NDMI</span></div><i>→</i>
-    <div class="n"><b>Przyczyny C1–C6</b><span>każda 0–3: deszcz, upał, gleba, spływ, rów, faza uprawy</span></div><i>→</i>
-    <div class="n"><b>Czy jest potrzeba?</b><span>susza teraz, w ≥ 3 z 10 lat lub ryzyko ≥ 70%</span></div><i>→</i>
-    <div class="n"><b>Reguły R1–R9</b><span>jawny warunek z danych dla każdego działania</span></div><i>→</i>
-    <div class="n dark"><b>Miejsce i kolejność</b><span>pinezka z danych, retencja → pole → woda, jedno „pilne”</span></div>
+    <div class="n"><b>Metryki</b><span>zapas, KBW, historia, spadek, rów, NDMI…</span></div><i>→</i>
+    <div class="n"><b>Przyczyny C1–C6</b><span>każda 0–3 z faktów działki</span></div><i>→</i>
+    <div class="n"><b>Potrzeba?</b><span>susza teraz / ≥ 3 z 10 lat / ryzyko ≥ 70%</span></div><i>→</i>
+    <div class="n"><b>Reguły R1–R9</b><span>warunek spełniony → zalecenie</span></div><i>→</i>
+    <div class="n dark"><b>Miejsce + efekt</b><span>pinezka + ile scenariuszy ratuje</span></div>
   </div>
-  <div class="row grow">
-    <div class="frame grow" style="background:#fff; padding: 18px; display:grid; place-items:center"><img src="img/c_scen.png" alt="10 scenariuszy zapasu wody: bez działań i po podlaniu 20 mm" style="object-fit:contain; object-position:center"></div>
-    <div style="width: 720px; display:flex; flex-direction:column; gap: 20px;">
-      <div class="box">
-        <h3>10 scenariuszy pogody</h3>
-        <p class="cap">Od dzisiejszego stanu gleby puszczamy pogodę z tych samych tygodni lat 2015–2024. Każde działanie liczymy w tych samych scenariuszach – widać, ile naprawdę zmienia.</p>
+  <div class="dec8">
+    <div class="viz">
+      <h3>Co znaczy „10 scenariuszy”?</h3>
+      <p class="cap">To <b>nie Monte Carlo</b>. Bierzemy dzisiejszy zapas gleby i puszczamy pogodę z tych samych tygodni lat <b>2015–2024</b> (10 realnych historii). Liczymy, w ilu z nich roślina wpada w stres.</p>
+      <div class="big">
+        <div class="n bad"><b>10/10</b><span>bez działań – stres w 2 tyg.</span></div>
+        <div class="n good"><b>6/10</b><span>po podlaniu 20 mm dziś</span></div>
       </div>
+      <div class="frame"><img src="img/c_ryzyko.png" alt="Ryzyko stresu: bez działań vs z planem, słupki z 10 scenariuszy"></div>
+      <p class="cap">Słupki = ile z 10 lat kończy się stresem w danym tygodniu. Czerwony: bez działań. Zielony: z podlaniem.</p>
+    </div>
+    <div class="right">
       <div class="box">
-        <h3>Przykład: reguła „Podlej teraz”</h3>
+        <h3>Przykład: reguła „Podlej teraz” (R7)</h3>
         <div class="formula">zapas 41% &lt; próg 45%                    ✔
 brak 65 mm − deszcz 7 dni 23 mm = 42 mm ✔
 kukurydza w oknie lipiec–sierpień       ✔
-dawka = min(42, limit gleby kat. I 20) = 20 mm</div>
-        <p class="cap">Stres w 2 tygodnie: <b>10/10 → 6/10</b> scenariuszy.</p>
+dawka = min(42, limit gleby kat. I 20) = 20 mm
+miejsce = najsuchsze 2,3 ha z NDMI</div>
+        <p class="cap">Warunki z metryk → dawka i miejsce → efekt w tych samych 10 scenariuszach.</p>
+      </div>
+      <div class="box grow">
+        <h3>Dlaczego działać? Przyczyny C1–C6</h3>
+        <div class="frame" style="background:#fff; display:grid; place-items:center; padding:6px">
+          <img src="img/c_przyczyny.png" alt="Przyczyny ryzyka C1–C6 oceny 0–3" style="max-width:100%; max-height:100%; object-fit:contain">
+        </div>
+        <p class="cap">Dominuje <b>lekka gleba (3)</b>, potem rów i faza – stąd retencja + podlewanie, nie sama mapa suszy.</p>
       </div>
     </div>
   </div>
