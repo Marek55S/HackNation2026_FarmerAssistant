@@ -19,7 +19,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz, powod_bledu
+from .net import CACHE_DIR, Wynik, cache_czytaj, cache_zapisz, powod_bledu, limit
 from .satellite import surowe
 
 STAC = "https://stac.dataspace.copernicus.eu/v1/search"
@@ -76,7 +76,7 @@ async def _piksele_rok(client, item: dict, rings, E0, N0) -> tuple[int, list[tup
         if path.exists():
             content = path.read_bytes()
         else:
-            r = await client.get(THUMB, params=params, timeout=30)
+            r = await client.get(THUMB, params=params, timeout=limit(30))
             if r.status_code != 200 or not r.headers.get("content-type", "").startswith("image"):
                 return rok, [], 0
             content = r.content
@@ -122,7 +122,7 @@ async def _stac_lata(client: httpx.AsyncClient, rings) -> tuple[dict[int, dict],
     x0, y0, x1, y1 = geo.bbox(rings)
     try:
         s = await client.post(STAC, json={"collections": ["clms_vlcc_crop-types_europe_10m_yearly_v1"],
-                                          "bbox": [x0, y0, x1, y1], "limit": 20}, timeout=20)
+                                          "bbox": [x0, y0, x1, y1], "limit": 20}, timeout=limit(20))
         items = s.json().get("features", [])
     except Exception as e:  # noqa: BLE001
         return {}, 0, 0, f"katalog CDSE: {type(e).__name__}"
@@ -201,7 +201,7 @@ async def _token(client) -> str | None:
     if not env.get("CDSE_CLIENT_ID"):
         return None
     r = await client.post(TOKEN_URL, data={"grant_type": "client_credentials", "client_id": env["CDSE_CLIENT_ID"],
-                                           "client_secret": env["CDSE_CLIENT_SECRET"]}, timeout=20)
+                                           "client_secret": env["CDSE_CLIENT_SECRET"]}, timeout=limit(20))
     if r.status_code != 200:
         return None
     j = r.json()
@@ -235,7 +235,7 @@ async def ndmi_sh(client, rings, a: date, b: date) -> dict | None:
                           "mosaickingOrder": "leastCC", "maxCloudCoverage": 80}}]},
             "output": {"width": w, "height": h, "responses": [{"identifier": "default", "format": {"type": "image/tiff"}}]},
             "evalscript": EVAL_NDMI}
-    r = await client.post(PROCESS, json=body, headers={"Authorization": f"Bearer {tok}"}, timeout=40)
+    r = await client.post(PROCESS, json=body, headers={"Authorization": f"Bearer {tok}"}, timeout=limit(40))
     if r.status_code != 200:
         return None
     with rasterio.MemoryFile(r.content) as mf, mf.open() as ds:

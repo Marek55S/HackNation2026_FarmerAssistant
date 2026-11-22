@@ -7,7 +7,7 @@ export type BaseLayer = "orto" | "osm";
 
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-const STYLE: StyleSpecification = {
+export const STYLE: StyleSpecification = {
   version: 8,
   sources: {
     orto: { type: "raster", tiles: [ORTO_TILES], tileSize: 256, maxzoom: 19, attribution: "Ortofotomapa © GUGiK (geoportal.gov.pl)" },

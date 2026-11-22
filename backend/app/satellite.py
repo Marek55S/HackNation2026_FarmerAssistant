@@ -16,8 +16,9 @@ from datetime import date, timedelta
 import httpx
 import numpy as np
 
+from . import config as C
 from . import geo
-from .net import CACHE_DIR, Wynik, powod_bledu
+from .net import CACHE_DIR, Wynik, powod_bledu, limit
 
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
 TOKEN = "https://planetarycomputer.microsoft.com/api/sas/v1/token/sentinel-2-l2a"
@@ -30,7 +31,7 @@ async def _szukaj(client, geom, a: date, b: date, limit=12, tile=None):
             "query": {"eo:cloud_cover": {"lt": 60}}, "sortby": [{"field": "datetime", "direction": "desc"}], "limit": limit}
     if tile:
         body["query"]["s2:mgrs_tile"] = {"eq": tile}
-    r = await client.post(STAC, json=body, timeout=20)
+    r = await client.post(STAC, json=body, timeout=limit(20))
     r.raise_for_status()
     return r.json().get("features", [])
 
@@ -47,7 +48,7 @@ def _czytaj(item: dict, token: str, rings) -> dict | None:
         z = np.load(path)
         return {k: z[k] for k in z.files}
     href = lambda b: item["assets"][b]["href"] + "?" + token
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_TIMEOUT="20"):
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_TIMEOUT="20", GDAL_HTTP_CONNECTTIMEOUT=str(int(C.TIMEOUT_POLACZENIA_S))):
         with rasterio.open(href("B8A")) as ds:
             tr = Transformer.from_crs(4326, ds.crs, always_xy=True)
             xs, ys = tr.transform([x0, x1, x0, x1], [y0, y0, y1, y1])
@@ -134,7 +135,7 @@ async def ndmi_anomalia(client: httpx.AsyncClient, rings, D: date, okno: tuple[d
         return Wynik(zr, None, powod="dla lat przed 2016 potrzebny Landsat — jeszcze niepodpięty")
     geom = {"type": "Polygon", "coordinates": [[list(p) for p in rings[0]]]}
     try:
-        tok = (await client.get(TOKEN, timeout=15)).json()["token"]
+        tok = (await client.get(TOKEN, timeout=limit(15))).json()["token"]
         a, b = okno
         items = await _szukaj(client, geom, a, min(b, D), limit=8)
         if not items:
@@ -195,7 +196,7 @@ def _czytaj_ls(item: dict, token: str, rings) -> dict | None:
         z = np.load(path)
         return {k: z[k] for k in z.files}
     out = {}
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_TIMEOUT="20"):
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_TIMEOUT="20", GDAL_HTTP_CONNECTTIMEOUT=str(int(C.TIMEOUT_POLACZENIA_S))):
         for b in ("nir08", "swir16", "qa_pixel"):
             with rasterio.open(item["assets"][b]["href"] + "?" + token) as ds:
                 with WarpedVRT(ds, crs="EPSG:4326", transform=tr, width=w, height=h,
@@ -220,7 +221,7 @@ async def _szukaj_ls(client, geom, a: date, b: date, limit=8):
     body = {"collections": ["landsat-c2-l2"], "intersects": geom, "datetime": f"{a.isoformat()}/{b.isoformat()}",
             "query": {"eo:cloud_cover": {"lt": 70}, "platform": {"in": LS_PLATFORMY}},
             "sortby": [{"field": "datetime", "direction": "desc"}], "limit": limit}
-    r = await client.post(STAC, json=body, timeout=20)
+    r = await client.post(STAC, json=body, timeout=limit(20))
     r.raise_for_status()
     return r.json().get("features", [])
 
@@ -231,7 +232,7 @@ async def ndmi_landsat(client: httpx.AsyncClient, rings, D: date, okno: tuple[da
     zr = "Landsat 5/7/8/9 C2 L2 (Planetary Computer)"
     geom = {"type": "Polygon", "coordinates": [[list(p) for p in rings[0]]]}
     try:
-        tok = (await client.get(LS_TOKEN, timeout=15)).json()["token"]
+        tok = (await client.get(LS_TOKEN, timeout=limit(15))).json()["token"]
         a, b = okno
         items = await _szukaj_ls(client, geom, a, min(b, D), limit=12)
         cel = None

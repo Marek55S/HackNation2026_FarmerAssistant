@@ -45,6 +45,15 @@ BUDZET_MPHP_S = 12.0          # usługa Wód Polskich bywa wolna (zmierzone 2,6�
 # Budżet czasu źródeł kontekstowych analizy (EDO, SoilGrids, mapa upraw, prognoza) – wolna usługa nie trzyma raportu (s).
 BUDZET_KONTEKST_S = 8.0
 
+# Usługa, która w ogóle nie odpowiada (nie przyjmuje połączenia), ma odpaść szybko, a nie po 15–40 s: czas na
+# nawiązanie połączenia z każdym zewnętrznym źródłem (s). Czas na samą odpowiedź zostaje dłuższy, bo np. Sentinel Hub
+# liczy obraz kilka sekund, zanim cokolwiek odeśle.
+TIMEOUT_POLACZENIA_S = 3.0
+# Cały łańcuch zdjęć satelitarnych (Sentinel Hub → Planetary Computer → Landsat). Bez limitu potrafił trzymać raport
+# ponad minutę, gdy kolejne zapasowe usługi nie odpowiadały. Zmierzone działające pobranie: 3–6,5 s na zimno,
+# szybciej z cache; 5 s to kompromis — przy wolnym, ale działającym Sentinel Hub raport czasem pójdzie bez satelity.
+BUDZET_SATELITA_S = 5.0
+
 # Podział działki na części uprawne (czesci.py). Skrawek poniżej tych progów to zwykle niedokładność granic
 # deklaracji ARiMR względem ewidencji, a nie osobna uprawa – dołączamy go do reszty działki.
 CZESC_MIN_HA = 0.10

@@ -15,7 +15,7 @@ import httpx
 import numpy as np
 
 from . import geo
-from .net import Wynik, powod_bledu
+from .net import Wynik, powod_bledu, limit
 
 STAC = "https://earth-search.aws.element84.com/v1/search"
 BUF_M = 400.0
@@ -50,7 +50,7 @@ async def pobierz_dem(client: httpx.AsyncClient, rings) -> Wynik:
     dlon = BUF_M / (111320 * math.cos(math.radians(lat0)))
     b = (x0 - dlon, y0 - dlat, x1 + dlon, y1 + dlat)
     try:
-        r = await client.post(STAC, json={"collections": ["cop-dem-glo-30"], "bbox": list(b), "limit": 4}, timeout=15)
+        r = await client.post(STAC, json={"collections": ["cop-dem-glo-30"], "bbox": list(b), "limit": 4}, timeout=limit(15))
         urls = [_https(f["assets"]["data"]["href"]) for f in r.json()["features"]]
         if not urls:
             return Wynik("Copernicus DEM 30 m", None, powod="brak kafla DEM dla tego miejsca")
