@@ -8,10 +8,10 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type ExpressionSpecification } from "maplibre-gl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { LngLat, MapLayer, RasterGrid, ReportMap, Zalecenie } from "@/lib/types";
+import type { LngLat, MapLayer, RasterGrid, ReportMap, ReportPart, Zalecenie } from "@/lib/types";
 import { BaseSwitch } from "../map/base-switch";
 import { createMap, fitPadding, setBase, watchOrtho, type BaseLayer } from "../map/base-map";
-import { CAT, LAYERS, RASTER_RGBA } from "./map-style";
+import { CAT, LAYERS, partColor, RASTER_RGBA } from "./map-style";
 
 
 // Selected recommendation: a white halo, which reads on the photo without adding another colour.
@@ -117,7 +117,16 @@ export default function ParcelMap({
   pin,
   onPin,
   children,
+  parts = [],
+  part = null,
+  picked = false,
 }: {
+  /** The farmer has picked an action themselves (not just the preselected urgent one) */
+  picked?: boolean;
+  /** Crop parts of the parcel, drawn each in its own colour when there is more than one */
+  parts?: ReportPart[];
+  /** The part shown on its own (tab above the map); null = the whole parcel */
+  part?: string | null;
   /** Floating panel rendered over the map (top-right on tablets and up) */
   children?: ReactNode;
   parcel: LngLat[];
@@ -174,6 +183,20 @@ export default function ParcelMap({
       });
 
       map.addLayer({ id: "pole-wypelnienie", type: "fill", source: "pole", paint: { "fill-color": FIELD, "fill-opacity": 0.14 } });
+      // Crop parts (only when the parcel has more than one): own colour each, emphasis set by the "part" effect below.
+      const drawn = parts.filter((p) => p.geometry && p.geometry.length > 0);
+      if (parts.length > 1 && drawn.length > 0) {
+        map.addSource("czesci", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: parts.flatMap((p, i) =>
+              p.geometry ? [{ type: "Feature" as const, properties: { id: p.id, kolor: partColor(i) }, geometry: { type: "MultiPolygon" as const, coordinates: p.geometry } }] : [],
+            ),
+          },
+        });
+        map.addLayer({ id: "czesci-wypelnienie", type: "fill", source: "czesci", paint: { "fill-color": ["get", "kolor"], "fill-opacity": 0.22 } });
+      }
       for (const k of RASTER_KEYS) {
         if (!data.rasters[k]) continue;
         map.addLayer({
@@ -184,8 +207,9 @@ export default function ParcelMap({
           paint: { "raster-opacity": 1, "raster-resampling": "linear", "raster-fade-duration": 0 },
         });
       }
-      map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2a78d6", "fill-opacity": 0.22 } });
-      map.addLayer({ id: "zaglebienie", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "fill-color": "#9ec5f4", "fill-opacity": 0.75 } });
+      // Irrigation zone: a light tint, not a blanket over the field (it is a hull around the driest pixels, often large).
+      map.addLayer({ id: "strefa", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "fill-color": "#2a78d6", "fill-opacity": 0.1 } });
+      map.addLayer({ id: "zaglebienie", type: "fill", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "fill-color": "#9ec5f4", "fill-opacity": 0.3 } });
       map.addLayer({
         id: "wyroznienie",
         type: "line",
@@ -194,8 +218,8 @@ export default function ParcelMap({
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": HL, "line-width": 9, "line-opacity": 0.85, "line-blur": 1.5 },
       });
-      map.addLayer({ id: "strefa-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "line-color": "#1f6fc9", "line-width": 2, "line-dasharray": [3, 2] } });
-      map.addLayer({ id: "zaglebienie-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "line-color": "#123f78", "line-width": 2, "line-dasharray": [2, 1.5] } });
+      map.addLayer({ id: "strefa-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "strefa-podlewania"], paint: { "line-color": "#1f6fc9", "line-width": 1.5, "line-opacity": 0.75, "line-dasharray": [2, 2] } });
+      map.addLayer({ id: "zaglebienie-linia", type: "line", source: "obiekty", filter: ["==", ["get", "kind"], "zaglebienie"], paint: { "line-color": "#123f78", "line-width": 1.5, "line-opacity": 0.7, "line-dasharray": [2, 1.5] } });
       map.addLayer({
         id: "pas",
         type: "line",
@@ -222,6 +246,13 @@ export default function ParcelMap({
       });
       map.addLayer({ id: "pole-obwodka", type: "line", source: "pole", paint: { "line-color": "#1A1C19", "line-width": 5, "line-opacity": 0.35 } });
       map.addLayer({ id: "pole", type: "line", source: "pole", layout: { "line-join": "round" }, paint: { "line-color": FIELD, "line-width": 2.5 } });
+      // Part boundaries on top of everything (irrigation zones and depressions would hide them otherwise);
+      // the mask dims the other parts when one crop is shown on its own.
+      if (map.getSource("czesci")) {
+        map.addLayer({ id: "czesci-maska", type: "fill", source: "czesci", paint: { "fill-color": "#0b1210", "fill-opacity": 0 } });
+        map.addLayer({ id: "czesci-obwodka", type: "line", source: "czesci", layout: { "line-join": "round" }, paint: { "line-color": "#ffffff", "line-width": 5, "line-opacity": 0.8 } });
+        map.addLayer({ id: "czesci-linia", type: "line", source: "czesci", layout: { "line-join": "round" }, paint: { "line-color": ["get", "kolor"], "line-width": 2.5 } });
+      }
 
       // Labels (fixed size HTML markers)
       labels.current = data.labels.map((l) => {
@@ -241,6 +272,8 @@ export default function ParcelMap({
       mapRef.current = null;
       setLoadedMap(null);
     };
+    // Parts come with the same report as `data`; re-creating on them is the same as on data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parcel, data]);
 
   // Pins
@@ -264,9 +297,22 @@ export default function ParcelMap({
     const map = loadedMap;
     if (!map || map !== mapRef.current) return;
     const inLayer: ExpressionSpecification = ["in", `,${layer},`, ["get", "ls"]];
+    const sel = actions.find((a) => a.n === pin);
+    // Big areas from the backend (irrigation zone, terrain depression — often larger than the parcel) are not on the
+    // default plan: they appear on their own view or once the farmer picks the action they belong to.
+    const showZone = layer === "sucho" || (picked && (sel?.regula === "R7" || sel?.regula === "R8"));
+    const showHollow = layer === "teren" || (picked && sel?.regula === "R2");
     for (const id of ["strefa", "zaglebienie", "strefa-linia", "zaglebienie-linia", "pas", "row", "splyw"]) {
       const kind = { strefa: "strefa-podlewania", "strefa-linia": "strefa-podlewania", zaglebienie: "zaglebienie", "zaglebienie-linia": "zaglebienie", pas: "pas-zadrzewien", row: "row", splyw: "splyw" }[id]!;
       // The depression is filled only on the action plan; on the terrain view it is just outlined.
+      if ((id === "strefa" || id === "strefa-linia") && !showZone) {
+        map.setFilter(id, ["==", ["get", "kind"], "-"]);
+        continue;
+      }
+      if ((id === "zaglebienie" || id === "zaglebienie-linia") && !showHollow) {
+        map.setFilter(id, ["==", ["get", "kind"], "-"]);
+        continue;
+      }
       if (id === "zaglebienie" && layer !== "plan") {
         map.setFilter(id, ["==", ["get", "kind"], "-"]);
         continue;
@@ -275,7 +321,6 @@ export default function ParcelMap({
     }
     for (const k of RASTER_KEYS) if (map.getLayer(`raster-${k}`)) map.setLayoutProperty(`raster-${k}`, "visibility", k === layer ? "visible" : "none");
 
-    const sel = actions.find((a) => a.n === pin);
     const rule = sel?.regula === "R8" ? "R7" : (sel?.regula ?? "-");
     map.setFilter("wyroznienie", ["==", ["get", "regula"], rule]);
     map.setPaintProperty("pole", "line-color", sel?.regula === "R5" ? HL : FIELD);
@@ -284,7 +329,33 @@ export default function ParcelMap({
 
     labels.current.forEach((l) => (l.el.style.display = l.layers.includes(layer) ? "" : "none"));
     pins.current.forEach((el, n) => styleSelected(el, n === pin));
-  }, [layer, pin, loadedMap, actions, data]);
+  }, [layer, pin, loadedMap, actions, data, picked]);
+
+  // One crop part on its own: its colour comes forward, the rest fades, the view zooms to it, other parts' pins hide.
+  const lastPart = useRef<string | null>(null);
+  useEffect(() => {
+    const map = loadedMap;
+    if (!map || map !== mapRef.current || !map.getLayer("czesci-wypelnienie")) return;
+    const on: ExpressionSpecification = ["==", ["get", "id"], part ?? "-"];
+    // Whole parcel: each part lightly tinted (plan view only — on raster views the tint would mix with their colours).
+    // One part: no tint, the other parts darkened, its own outline thick.
+    map.setPaintProperty("czesci-wypelnienie", "fill-opacity", layer === "plan" && !part ? 0.22 : 0);
+    map.setPaintProperty("czesci-maska", "fill-opacity", part ? ["case", on, 0, 0.5] : 0);
+    map.setPaintProperty("czesci-linia", "line-width", part ? ["case", on, 4, 1.5] : 2.5);
+    map.setPaintProperty("czesci-obwodka", "line-width", part ? ["case", on, 7, 0] : 5);
+    map.setPaintProperty("czesci-obwodka", "line-opacity", part ? 0.9 : 0.6);
+    map.setPaintProperty("pole-wypelnienie", "fill-opacity", 0);
+    pins.current.forEach((el, n) => {
+      const a = actions.find((x) => x.n === n);
+      el.style.display = part && a?.czesc && a.czesc !== part ? "none" : "";
+    });
+    if (part !== lastPart.current && box.current) {
+      const p = parts.find((x) => x.id === part);
+      const ring = p?.geometry ? p.geometry.flat(2) : parcel;
+      map.fitBounds(bounds(ring), { padding: fitPadding(box.current), maxZoom: 18, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600 });
+    }
+    lastPart.current = part;
+  }, [part, layer, loadedMap, parts, parcel, actions, pin]);
 
   const sel = actions.find((a) => a.n === pin);
   return (

@@ -95,3 +95,14 @@ def test_piksele_clms_daja_wielokaty_a_kod_zero_to_uzytek_zielony():
     wg_key = {p["key"]: p for p in pola}
     assert wg_key["kukurydza"]["geom"].area > wg_key["laka"]["geom"].area
     assert wg_key["laka"]["nazwa"] == "użytek zielony / pastewne"
+
+
+def test_status_bez_uprawy_zachowuje_pewnosc_i_sygnaly():
+    # Działka bez wskazanej uprawy: status jest podmieniany, ale raport (raport_front) potrzebuje pewności i sygnałów.
+    from app.analysis import status_bez_uprawy
+
+    st = status_bez_uprawy({"label": "Spokojnie", "pewnosc": "średnia", "sygnaly": [{"t": "satelita", "v": True}], "F4": 0.7})
+    assert st["label"] == "Bez uprawy"
+    assert st["pewnosc"] == "średnia" and st["sygnaly"] == [{"t": "satelita", "v": True}]
+    assert "F4" not in st  # zapas wody liczony dla zastępczej uprawy nie trafia do statusu „bez uprawy”
+    assert status_bez_uprawy({})["pewnosc"] == "—"

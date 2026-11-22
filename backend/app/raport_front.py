@@ -348,7 +348,7 @@ def do_raportu(out: dict, today: str, od: str | None = None) -> dict:
         "stressThresholdPct": round(100 * st["F4p"]) if st.get("F4p") is not None else None,
         "status": {"label": st["label"], "tone": tone},
         "headline": st["head"], "summary": st["sub"],
-        "confidence": {"level": st["pewnosc"] if st["pewnosc"] in ("wysoka", "średnia", "niska") else "niska",
+        "confidence": {"level": st.get("pewnosc") if st.get("pewnosc") in ("wysoka", "średnia", "niska") else "niska",
                        "agreeing": zgod, "total": len(dost), "note": ("brak: " + ", ".join(brak)) if brak else None},
         "urgent": {"n": pil["n"], "label": "PILNE TERAZ" if pil["id"] == "R7" else "NAJLEPIEJ TERAZ",
                    "title": pil["title"], "sub": pil["when"]} if pil else None,

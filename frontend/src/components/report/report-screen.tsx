@@ -12,8 +12,8 @@ import { SlidingPill } from "../sliding-pill";
 import { printLight, ThemeToggle } from "../theme-toggle";
 import { shortDate } from "@/lib/dates";
 import { Card, ICON, Icon, StatusPill } from "../ui";
-import { CAT, LAYERS, LEGEND } from "./map-style";
-import { ActionList, Causes, CropParts, Justification, PeriodSummaryCard, Risk, RULE_ICON, SectionHead, Sources, Vulnerability } from "./sections";
+import { CAT, LAYERS, LEGEND, partColor } from "./map-style";
+import { ActionList, Causes, CropParts, PeriodSummaryCard, Risk, RULE_ICON, SectionHead, Sources, Vulnerability } from "./sections";
 
 // MapLibre needs the browser (WebGL), so the map is loaded on the client only.
 const ParcelMap = dynamic(() => import("./parcel-map"), {
@@ -202,15 +202,15 @@ function MapSummary({ report }: { report: Report }) {
 
 /**
  * Short jumps to the report's sections, sticky while scrolling; the section being read is highlighted.
- * Order is the report's own (KOWR 3.3: state → 10 years and causes → plan → what next → sources).
+ * Order is the report's own (state → plan → causes → what next → 10 years → sources).
  */
 function JumpNav({ report }: { report: Report }) {
   const items = [
     { id: "stan", label: "Stan" },
-    report.vulnerability && (report.justification?.history.length ?? 0) > 0 ? { id: "historia", label: "10 lat" } : null,
-    report.causes.length > 0 ? { id: "przyczyny", label: "Przyczyny" } : null,
     { id: "mapa", label: "Plan" },
+    report.causes.length > 0 ? { id: "przyczyny", label: "Przyczyny" } : null,
     report.risk ? { id: "co-dalej", label: "Co dalej" } : null,
+    report.vulnerability && (report.justification?.history.length ?? 0) > 0 ? { id: "historia", label: "10 lat" } : null,
     { id: "zrodla", label: "Źródła" },
   ].filter((x): x is { id: string; label: string } => !!x);
   const [active, setActive] = useState(items[0].id);
@@ -426,11 +426,19 @@ function AgriReport({ report }: { report: Report }) {
   const urgentAction = report.actions.find((a) => a.n === report.urgent?.n) ?? report.actions[0];
   const [pin, setPin] = useState<number>(urgentAction?.n ?? 0);
   const [layer, setLayer] = useState<MapLayer>("plan");
+  // The crop part drawn on its own on the map (tabs above it); null = the whole parcel.
+  const [part, setPart] = useState<string | null>(null);
+  // Set on the farmer's first own pick; until then the map shows the plan without the irrigation zone.
+  const [picked, setPicked] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
+  const manyParts = report.parts.length > 1;
 
   const select = (a: Zalecenie, scroll = false) => {
+    setPicked(true);
     setPin(a.n);
     setLayer(a.warstwa);
+    // An action of another crop than the one on screen: switch the map to that crop so its pin is visible.
+    if (part && a.czesc && a.czesc !== part) setPart(a.czesc);
     if (scroll) mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const showLayer = (l: MapLayer) => {
@@ -440,39 +448,51 @@ function AgriReport({ report }: { report: Report }) {
 
   return (
     <>
-      {/* Co Cię czeka: dark feature card with the state in numbers (Planto's weather card) + the one urgent action */}
+      {/* Co Cię czeka: the state (dark card, or crop cards when the parcel has several crops) + the one urgent action */}
       <section id="stan" className="print-break-avoid grid gap-5 max-sm:gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" aria-label="Co Cię czeka">
-        <div className="flex flex-col gap-5 rounded-[var(--r-card)] bg-feature p-6 text-feature-ink max-sm:p-4">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <StatusPill tone={report.status.tone} label={report.status.label} onDark />
-            <span className="text-[13px] text-feature-muted">
-              pewność <b className="font-semibold text-feature-ink">{report.confidence.level}</b> · {report.confidence.agreeing} z{" "}
-              {report.confidence.total} wskaźników zgodne · stan na {shortDate(report.date)}
-              {report.confidence.note && <> · {report.confidence.note}</>}
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-feature-ink max-sm:text-[22px]">{report.headline}</h2>
-            <p className="max-w-[68ch] text-[15px] leading-relaxed text-feature-muted">{report.summary}</p>
-          </div>
-          <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {stateCells(report).map((c, i, all) => (
-              <div
-                key={c.label}
-                className={`flex items-center gap-3 rounded-2xl bg-feature-cell px-4 py-3 ${all.length % 2 === 1 && i === all.length - 1 ? "max-sm:col-span-2" : ""}`}
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <dt className="text-xs text-feature-muted">{c.label}</dt>
-                  <dd className="tabular font-[family-name:var(--font-display)] text-2xl font-semibold leading-none">
-                    <CountUp value={c.value} />
-                  </dd>
-                  <dd className="text-[11px] text-feature-muted">{c.note}</dd>
+        {/* Several crops: one card per crop says the same as the dark card, but per crop — so it replaces it. */}
+        {manyParts ? (
+          <CropParts
+            report={report}
+            top
+            onPick={(n) => {
+              const a = report.actions.find((x) => x.n === n);
+              if (a) select(a, true);
+            }}
+          />
+        ) : (
+          <div className="flex flex-col gap-5 rounded-[var(--r-card)] bg-feature p-6 text-feature-ink max-sm:p-4">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <StatusPill tone={report.status.tone} label={report.status.label} onDark />
+              <span className="text-[13px] text-feature-muted">
+                pewność <b className="font-semibold text-feature-ink">{report.confidence.level}</b> · {report.confidence.agreeing} z{" "}
+                {report.confidence.total} wskaźników zgodne · stan na {shortDate(report.date)}
+                {report.confidence.note && <> · {report.confidence.note}</>}
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight text-feature-ink max-sm:text-[22px]">{report.headline}</h2>
+              <p className="max-w-[68ch] text-[15px] leading-relaxed text-feature-muted">{report.summary}</p>
+            </div>
+            <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {stateCells(report).map((c, i, all) => (
+                <div
+                  key={c.label}
+                  className={`flex items-center gap-3 rounded-2xl bg-feature-cell px-4 py-3 ${all.length % 2 === 1 && i === all.length - 1 ? "max-sm:col-span-2" : ""}`}
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <dt className="text-xs text-feature-muted">{c.label}</dt>
+                    <dd className="tabular font-[family-name:var(--font-display)] text-2xl font-semibold leading-none">
+                      <CountUp value={c.value} />
+                    </dd>
+                    <dd className="text-[11px] text-feature-muted">{c.note}</dd>
+                  </div>
+                  {c.tank && <SoilTank {...c.tank} />}
                 </div>
-                {c.tank && <SoilTank {...c.tank} />}
-              </div>
-            ))}
-          </dl>
-        </div>
+              ))}
+            </dl>
+          </div>
+        )}
         {report.urgent && urgentAction && (
           <button
             onClick={() => select(urgentAction, true)}
@@ -520,24 +540,7 @@ function AgriReport({ report }: { report: Report }) {
         )}
       </section>
 
-      <CropParts
-        report={report}
-        onPick={(n) => {
-          const a = report.actions.find((x) => x.n === n);
-          if (a) select(a, true);
-        }}
-      />
-
-      <PeriodSummaryCard report={report} />
-
-      {/* Order follows the KOWR task (3.3 pt 4–5), not the mock-up: state on day D (above) → 10-year vulnerability and
-          causes → plan → scenarios. See makieta-ui/README.md. */}
-      <section className="flex flex-col gap-5 max-sm:gap-4" aria-label="Podatność i przyczyny">
-        <Vulnerability report={report} />
-        <Causes report={report} onShow={showLayer} />
-      </section>
-
-      {/* Map with layers + action list */}
+      {/* Map with layers + action list, right under the state: where on the parcel comes first (user decision 22.11.2026). */}
       <section className="flex flex-wrap items-start gap-5" aria-label="Plan na działce">
         <div
           ref={mapRef}
@@ -561,7 +564,45 @@ function AgriReport({ report }: { report: Report }) {
               ))}
             </div>
           </div>
-          <ParcelMap parcel={report.parcel.geometry} data={report.map} actions={report.actions} layer={layer} pin={pin} onPin={select}>
+          {manyParts && (
+            <div role="radiogroup" aria-label="Część działki na mapie" className="no-print relative flex gap-1 self-start overflow-x-auto rounded-[22px] bg-chip p-1 [scrollbar-width:none] max-sm:self-stretch">
+              <SlidingPill active={part ?? "cala"} />
+              {[{ id: null as string | null, label: "Cała działka", color: null as string | null, ha: report.parcel.areaHa }, ...report.parts.map((p, i) => ({
+                id: p.id as string | null,
+                label: p.crop?.id === "brak" ? "Brak uprawy" : (p.crop?.name ?? "Bez uprawy"),
+                color: partColor(i) as string | null,
+                ha: p.areaHa,
+              }))].map((t) => (
+                <button
+                  key={t.id ?? "cala"}
+                  type="button"
+                  role="radio"
+                  aria-checked={part === t.id}
+                  onClick={() => setPart(t.id)}
+                  className={`relative inline-flex min-h-10 flex-none items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-[13px] ${part === t.id ? "font-bold text-ink" : "font-medium text-ink-2 hover:text-ink"}`}
+                >
+                  {t.color ? (
+                    <span className="h-3 w-3 flex-none rounded-[4px] border-2" style={{ borderColor: t.color, background: `${t.color}40` }} aria-hidden="true" />
+                  ) : (
+                    <Icon d={ICON.fields} size={15} stroke={1.8} />
+                  )}
+                  {t.label}
+                  <span className="tabular font-normal text-muted">{t.ha.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ha</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <ParcelMap
+            parcel={report.parcel.geometry}
+            data={report.map}
+            actions={report.actions}
+            layer={layer}
+            pin={pin}
+            onPin={select}
+            parts={report.parts}
+            part={part}
+            picked={picked}
+          >
             <MapSummary report={report} />
           </ParcelMap>
           <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
@@ -587,11 +628,17 @@ function AgriReport({ report }: { report: Report }) {
         </aside>
       </section>
 
+
+      <PeriodSummaryCard report={report} />
+
+      {/* Then the KOWR task (3.3 pt 5): causes → scenarios. The 10-year history closes the report, above the sources. */}
+      <Causes report={report} onShow={showLayer} />
+
       <section className="flex flex-wrap items-stretch gap-5 max-sm:gap-4" aria-label="Co może się wydarzyć">
         <Risk report={report} />
       </section>
 
-      <Justification report={report} />
+      <Vulnerability report={report} />
     </>
   );
 }

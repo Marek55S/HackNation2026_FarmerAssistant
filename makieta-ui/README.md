@@ -21,3 +21,5 @@ Logika, którą makieta ilustruje: [../pipeline_plan.md](../pipeline_plan.md).
 raportu w aplikacji idzie za strukturą zadania KOWR (3.3 pkt 4–5): stan na dzień D → jak często brakowało wody w 10 sezonach
 i przyczyny → plan na działce → scenariusze „jak bywało” → uzasadnienie. Nagłówek opisuje stan w dniu analizy, a nie scenariusz
 na przyszły sezon. Komponenty i wygląd są jak w makiecie. Nie przywracać kolejności z makiety.
+Zmiana 22.11.2026: mapa z planem na działce stoi zaraz pod stanem na dzień D (przed 10 sezonami i przyczynami), żeby od razu
+było widać, gdzie na działce co zrobić; z zakładkami osobnych upraw, gdy działka ma kilka części.

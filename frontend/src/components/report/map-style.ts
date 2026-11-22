@@ -76,3 +76,8 @@ export const LEGEND: Record<MapLayer, { style: CSSProperties; t: string }[]> = {
     { style: sw(rgba(RASTER_RGBA.gleba[2])), t: "piasek — przepuszcza" },
   ],
 };
+
+/** One colour per crop part of a parcel (map fill/outline and the part tabs above the map). Kept apart from
+ *  the status and action colours so a part never reads as "drought" or as an action category. */
+export const PART_COLORS = ["#7c5cc4", "#d0832c", "#17a398", "#c4507f", "#5b8c2a"];
+export const partColor = (i: number) => PART_COLORS[i % PART_COLORS.length];

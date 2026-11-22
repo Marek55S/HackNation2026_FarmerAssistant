@@ -1050,11 +1050,18 @@ async def analizuj_dzialke(ident: str | None, lon: float | None, lat: float | No
         return glowna | {"czesci": lista}
     out = _scal_czesci(glowna, wyniki, kolejnosc, lista)
     if tylko_brak:
-        out["status"] = {"label": "Bez uprawy", "head": "Brak wskazanej uprawy na działce",
-                         "sub": "Pokazujemy teren, glebę i retencję. Wskaż uprawę, jeśli chcesz zalecenia polowe i podlewanie."}
+        out["status"] = status_bez_uprawy(out["status"])
         out["uprawa"] = {"key": "brak", "nazwa": "Brak uprawy", "zrodlo": "przyjęto brak uprawy", "okno": "—"}
         out["akcje"] = [a for a in out.get("akcje", []) if a.get("cat") == "ret" or a.get("czesc") is None]
     return out
+
+
+def status_bez_uprawy(st: dict) -> dict:
+    """Status działki, na której nic nie wskazano do uprawy. Pewność i sygnały dotyczą działki (pogoda, gleba,
+    satelita), nie uprawy, więc zostają z analizy działkowej — raport ich potrzebuje (raport_front: confidence)."""
+    return {"label": "Bez uprawy", "head": "Brak wskazanej uprawy na działce",
+            "sub": "Pokazujemy teren, glebę i retencję. Wskaż uprawę, jeśli chcesz zalecenia polowe i podlewanie.",
+            "pewnosc": st.get("pewnosc", "—"), "sygnaly": st.get("sygnaly", [])}
 
 
 def _rings_czesci(c: dict) -> list | None:
